@@ -1,0 +1,79 @@
+.resume {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .education {
+    margin-top: 100px;
+    margin-bottom: 200px;
+  }
+  
+  .resume-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 100px;
+  }
+  
+  .resume-item-image {
+    width: 100px;
+    height: 100px;
+    margin-right: 150px;
+    object-fit: cover;
+  }
+  
+  .resume-item-details {
+    flex: 1;
+  }
+  
+  .resume-item-title {
+    font-size: 1.5em;
+    margin: 0;
+  }
+  
+  .resume-item-description {
+    font-size: 1em;
+    color: #555;
+  }
+  
+  .education-title,
+  .experience-title {
+    font-size: 2em;
+    font-weight: 400;
+    margin: 150px 0 75px;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .resume {
+      margin: 10px;
+      padding: 10px;
+    }
+  
+    .education {
+      margin-top: 50px;
+      margin-bottom: 100px;
+    }
+  
+    .resume-item {
+      flex-direction: column; /* Stack items vertically */
+      margin-bottom: 50px;
+    }
+  
+    .resume-item-image {
+      margin-right: 0;
+      margin-bottom: 20px; /* Add space between image and details */
+    }
+  
+    .resume-item-details {
+      text-align: center; /* Center text for smaller screens */
+    }
+  
+    .education-title,
+    .experience-title {
+      font-size: 1.5em;
+      margin: 75px 0 50px;
+    }
+  }
+  

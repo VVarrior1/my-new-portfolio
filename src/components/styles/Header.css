@@ -1,0 +1,47 @@
+a {
+  text-decoration: none;
+  color: #333;
+}
+.header.scrolled {
+  background-color: blanchedalmond; /* Change to your desired color */
+  transition: background-color 0.5s ease;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 10px 0;
+  text-align: center;
+  z-index: 1000; /* Ensure it is on top */
+}
+
+.header ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Ensures vertical alignment */
+}
+
+.header li {
+  font-size: 25px;
+  font-weight: 200;
+  cursor: pointer;
+  position: relative;
+}
+
+.header li + li:before {
+  content: "|";
+  margin: 0 10px;
+}
+
+.header a {
+  transition: all 0.1s linear; /* Smooth transition */
+}
+
+.header a:hover {
+  color: #3e464f;
+  font-weight: 450;
+}

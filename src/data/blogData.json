@@ -1,0 +1,42 @@
+[
+  {
+    "title": " Data Analysis with Python",
+    "date": "2024-06-24",
+    "image": "https://cdn.pixabay.com/photo/2023/08/05/15/42/panda-8171354_1280.jpg",
+    "content": [
+      {
+        "heading": "My Story",
+        "paragraph": [
+          "I got into data analysis before I started university. I began exploring this field even before I had fully learned Python. It all started the year after I graduated from high school. Like many others, I was unsure about what I wanted to do with my life. Working out was my main hobby, and I thought, \"Probably Kinesiology.\" I also dreamed of becoming a millionaire and considered studying business.",
+          "One day, I had a brilliant idea: Why not do a quick Google search on the best, highest-demand, future-proof careers? Consistently at the top of the list were \"Computer Science,\" \"Data Science,\" and other IT-related fields. This reminded me of when I was first introduced to Scratch at age 10, JavaScript for graphics at 12, and Python at 13. I spent a week or two fiddling with them and found them fun, but I was young and more interested in exploring the world, so I didn't dive deep into any of them.",
+          "Deciding to give it another shot, I bought a $15 course on Udemy called \"100 Days of Code.\" I spent the next 30 days focused on this course and was hooked. I loved everything about Python, from its intuitiveness to the speed at which I could create applications from ideas that popped into my head. One of the first applications I created without any guidance turned out to be an application that made me thousands of dollars indirectly. Here’s how it happened:",
+          "Long story short, after around 30 days of learning Python, I found a data entry job which I automated using Pandas and PyAutoGUI. I used Pandas to handle the data cleanly, pixel color recognition from PyAutoGUI, and time.sleep to coordinate human-like actions that input data as fast and accurately as possible. Before my Python script, this task was done manually for years, costing the company thousands of dollars and many human hours.s"
+        ]
+      },
+      {
+        "heading": "That was my first brush with Pandas.",
+        "paragraph": [
+          "That's when I realized how powerful Python, the Pandas library, and coding in general are. Before this experience, I was uncertain about going into computer science. After this experience, I was excited and couldn’t wait to get started, to learn more, and to discover everything Pandas had to offer. Fast forward a few years, and I'm working on training data analysis for AI models. I use Pandas daily, making plots with Matplotlib and Seaborn, cleaning up data, and calculating means.",
+          "So here's a quick tutorial for Pandas that I'm writing off the top of my head, with no revision."
+        ]
+      },
+      {
+        "heading": "Pandas Tutorial",
+        "paragraph": [
+          "Notice that this will be a quick overview to showcase the power of Pandas as far as I know it. The Pandas library is extremely powerful, and I don't think I've explored all it has to offer yet. So here goes nothing.",
+          "Pandas allows you to feed a Python script any Excel-like file, performing an extremely wide range of operations on it. It can process a CSV file (or Excel, TSV, etc.) and creates an object in Python called a DataFrame. Pandas mainly works with two objects: the Series and the DataFrame. The DataFrame is much more common, but the Series is important too. The Series is very similar to a Python array, while the DataFrame is akin to a 2D Python array. Here is how every data analysis project typically starts:",
+          "`df = pd.read_csv(path)` This line of code is extremely common in any Python script that uses Pandas. It simply reads a CSV file provided by the path variable and turns it into a DataFrame so that you can work with it in Python. It is the gateway from an Excel sheet into Python code.",
+          "After that, you usually want to inspect the data to understand it better. You could use the following lines of code:",
+          "`df.info()` This displays all columns and their types. Sometimes you might think a column is of a numerical type but find out it's of an object type. You would have to convert object types to numerical types often if you want to work with numbers to extract values such as average or median.",
+          "`df.head(10).to_markdown()` I personally find this line of code very useful in PyCharm. It displays the first 10 rows of the DataFrame in Markdown, which means it will look nice and clean. I prefer this sometimes to looking at the data in Excel.",
+          "Now, say one of the columns is called Total and has 30 entries representing the total price of different items. If you would like to find the average price of all 30 items, you would do something like this:",
+          "`avg = df[\"Total\"].mean()` `print(avg)`",
+          "You have now used Pandas to perform a complex calculation on an Excel sheet. This is barely scratching the surface of what Pandas is capable of. For example, other capabilities of Pandas include data cleaning, data manipulation, handling missing data, merging datasets, and supporting time series analysis, which means it can comprehend a wide range of time formats (with the help of the datetime library), etc. Every day, I aim to become a better data analyst, and every day, I find pandas a little cuter ;) I might drop a more advanced data analysis blog soon as I settle more in the career of data analysis or data science, so stay tuned."
+        ]
+      },
+      {
+        "image": "https://images.seattletimes.com/wp-content/uploads/2021/02/panda-050c061c-60de-11eb-9061-07abcc1f9229.jpg?d=1020x680"
+      }
+    ]
+  }
+]
