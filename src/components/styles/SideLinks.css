@@ -45,3 +45,10 @@
 .footer-links button:focus {
   outline: none;
 }
+
+@media screen and (max-width: 768px) {
+  .sticky-sidebar {
+    display: none;
+  }
+  
+}
