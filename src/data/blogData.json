@@ -1,6 +1,4 @@
-
 [
-  
   {
     "title": "Machine Learning Foundations",
     "date": "2024-08-03",
@@ -37,7 +35,7 @@
     "content": [
       {
         "heading": "Prompt Engineering",
-        "paragraph": "Working at DA, I got to interact with different tweaked LLM models. I got into prompt engineering. Here are some engineered prompts you can copy paste to get optimal responses from a LLM like chatGPT or GeminiAI."
+        "paragraph": "Working at DA, I got to interact with different tweaked LLM models. I got into prompt engineering. Here are some engineered prompts you can copy paste to get optimal responses from a LLM like chatGPT or GeminiAI. The possibilities are endless. You can even use AI to meta-engineer prompts by giving them instructions that ask for improvements to the prompt you're considering."
       },
       {
         "heading": "Fitness",
@@ -56,6 +54,29 @@
           "10. Goal Setting and Tracking Progress: Explain how to set realistic fitness goals, track progress effectively, and stay motivated.",
           "",
           "Please provide specific examples, actionable advice, and clear explanations in each response."
+        ]
+      },
+      {
+        "heading": "Learning DSA",
+
+        "paragraph": [
+          "I want to become proficient in Data Structures and Algorithms (DSA) and excel at LeetCode problem-solving. Guide me through a structured learning and practice plan, incorporating the following:",
+          "1. Learning Path:",
+          "   - Recommended resources: Suggest comprehensive and beginner-friendly resources for learning DSA concepts (e.g., books, online courses, websites).",
+          "   - Concept prioritization: Outline a prioritized list of DSA topics to focus on, starting with fundamentals and progressing to advanced concepts.",
+          "   - Active learning strategies: Recommend effective techniques for internalizing concepts (e.g., note-taking, visualization, teaching others).",
+          "2. LeetCode Practice:",
+          "   - Structured approach: Describe a systematic approach to tackling LeetCode problems (e.g., understanding the problem, planning a solution, coding, testing, optimization).",
+          "   - Problem selection: Suggest a strategy for selecting problems based on difficulty, topic, and relevance to interviews.",
+          "   - Pattern recognition: Help me identify common problem patterns and develop strategies for solving similar problems efficiently.",
+          "3. Progress Tracking and Improvement:",
+          "   - Tracking methods: Recommend tools or methods for tracking progress and identifying areas for improvement.",
+          "   - Analysis and reflection: Guide me on analyzing my solutions, understanding time and space complexity, and learning from mistakes.",
+          "   - Community engagement: Suggest ways to engage with the coding community for support and feedback.",
+          "4. Time Management and Consistency:",
+          "   - Realistic goals: Help me set achievable goals and develop a consistent study schedule.",
+          "   - Motivation and accountability: Suggest strategies for staying motivated and accountable throughout the learning process.",
+          "Bonus: Include tips on preparing for coding interviews and showcasing DSA skills to potential employers."
         ]
       },
       {
