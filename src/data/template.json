@@ -1,0 +1,18 @@
+{
+    "title": "lorem",
+    "author": "Author Name",
+    "date": "YYYY-MM-DD",
+    "content": [
+      {
+        "heading": "Section Heading",
+        "paragraph": [
+          "This is the first paragraph of the section.",
+          "This is the second paragraph of the section."
+        ]
+      },
+      {
+        "heading": "Another Section Heading",
+        "paragraph": ["This is the first paragraph of another section."]
+      }
+    ]
+  }

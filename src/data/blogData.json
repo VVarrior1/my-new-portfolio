@@ -1,4 +1,80 @@
+
 [
+  
+  {
+    "title": "Machine Learning Foundations",
+    "date": "2024-08-03",
+    "content": [
+      {
+        "heading": "Introduction",
+        "paragraph": [
+          "I have been working with LLM models for a while now, and every day I'm fascinated by how good they are becoming. However, they still have plenty of shortcomings.",
+          "A few days ago, I realized I have a passion for AI and decided to dive deeper into the field. I started by taking a course on Coursera for ML, and I'm loving it!",
+          "I've learned so many things in a short amount of time and finally put the linear algebra course that I took in my first year of university to use. Here is some of what I've learned in a beginner-friendly way."
+        ]
+      },
+      {
+        "heading": "Some basics",
+        "paragraph": [
+          "I'm going to summarize every major topic I've learned, so it might not be too intuitive, but here we go! Keep in mind that I'm still learning these topics and am no expert.",
+          "Supervised learning is when the model is trained on labeled data. An example is predicting house prices based on different parameters such as size and the number of bedrooms, given already known house prices and their parameters.",
+          "Unsupervised learning is when the model is trained on unlabeled data. An example is clustering similar articles together based on their content. This is different from supervised learning, as there are no labels to guide the model.",
+          "Linear regression is a supervised learning algorithm that uses an optimization algorithm like gradient descent or the normal equation to minimize the cost function (the difference between the predicted value and the actual value) and create a line of best fit. This best fit line doesn't have to be a straight line; it could be a polynomial if that would better fit the data."
+        ]
+      },
+      {
+        "heading": "Why Linear Algebra?",
+        "paragraph": [
+          "When I was taking Math 211 at university, I couldn't imagine a use case for linear algebra, but recently I found out it's quite useful. Using matrices and vectors is essential in ML for mapping out parameters, expected values, and performing complex operations on them.",
+          "Take the normal equation, for example; linear algebra is fundamental for performing optimization using it. Linear algebra becomes even more useful when the number of parameters increases."
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Prompt Engineering Best Prompts",
+    "date": "2024-07-01",
+    "content": [
+      {
+        "heading": "Prompt Engineering",
+        "paragraph": "Working at DA, I got to interact with different tweaked LLM models. I got into prompt engineering. Here are some engineered prompts you can copy paste to get optimal responses from a LLM like chatGPT or GeminiAI."
+      },
+      {
+        "heading": "Fitness",
+        "paragraph": [
+          "I want to create a comprehensive guide to fitness and body aesthetics for men, focusing on gym-based training. Please act as a knowledgeable fitness coach and break down the information into 10 separate responses, covering the following topics in detail:",
+          "",
+          "1. Foundational Principles: Explain the core principles of muscle growth, fat loss, and overall health improvement.",
+          "2. Macronutrients: Detail the role of protein, carbohydrates, and fats in a fitness-oriented diet, including recommended daily intake ranges for men.",
+          "3. Protein Deep Dive: Focus specifically on protein – types, sources, optimal timing for consumption, and its crucial role in muscle building.",
+          "4. Workout Splits: Explain different workout splits (e.g., full body, push/pull/legs) and their advantages/disadvantages.",
+          "5. Exercise Selection: Discuss key compound exercises and isolation exercises for each muscle group, emphasizing proper form and technique.",
+          "6. Progressive Overload: Explain the importance of progressively increasing weight, reps, or sets over time to stimulate muscle growth.",
+          "7. Rest and Recovery: Highlight the significance of rest days, sleep, and active recovery for muscle repair and growth.",
+          "8. Diet Planning Basics: Provide a step-by-step guide to creating a personalized diet plan based on calorie needs and macronutrient ratios.",
+          "9. Supplement Considerations: Discuss popular fitness supplements (e.g., creatine, whey protein), their potential benefits and drawbacks, and safe usage.",
+          "10. Goal Setting and Tracking Progress: Explain how to set realistic fitness goals, track progress effectively, and stay motivated.",
+          "",
+          "Please provide specific examples, actionable advice, and clear explanations in each response."
+        ]
+      },
+      {
+        "heading": "Lacking Purpose",
+        "paragraph": [
+          "Universal Prompt (When you feel lost):",
+          "",
+          "\"I'm feeling lost and lacking direction in my life. Imagine you're a wise mentor who deeply understands me. What activities, skills, or areas of exploration do you think would be worth my time and energy right now? Consider my interests [list a few of your interests] and any skills or knowledge I already possess [mention any relevant skills].\"",
+          "",
+          "Scenario-Based Prompts:",
+          "",
+          "1. Feeling unmotivated in the morning: \"I'm struggling to find the motivation to start my day. Can you suggest three small, achievable actions I could take today that might make me feel more accomplished and engaged?\"",
+          "2. Unsure of career path: \"I'm feeling uncertain about my career path. Based on my interests in [list interests], skills in [list skills], and values of [list values], what are some potential career paths or fields I should explore?\"",
+          "3. Yearning for a creative outlet: \"I'm looking for a creative outlet to express myself. What are some unique or unconventional creative activities you would recommend for someone who enjoys [list hobbies or interests]?\"",
+          "4. Wanting to make a difference: \"I want to contribute to the world in a meaningful way but don't know where to start. What are some pressing issues that need attention, and how could someone with my skills and interests [list skills and interests] get involved?\""
+        ]
+      }
+    ]
+  },
   {
     "title": " Data Analysis with Python",
     "date": "2024-06-24",

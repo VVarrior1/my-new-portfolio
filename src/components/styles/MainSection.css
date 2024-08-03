@@ -7,6 +7,17 @@
   background: rgba(0, 0, 0) ;
 }
 
+.profile-picture {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px; /* Adjust size as needed */
+  height: 150px;
+  border-radius: 50%;
+  z-index: 3; /* Ensure it appears above the main image */
+}
+
 
 .image-overlay {
   opacity: 1;
@@ -33,7 +44,7 @@ img {
 }
 .main-text {
   position: absolute;
-  top: 195px;
+  top: 240px;
   left: 20px;
   z-index: 2;
   text-align: left;

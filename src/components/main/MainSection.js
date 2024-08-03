@@ -1,6 +1,7 @@
-import React, { useEffect} from "react";
+import React, { useEffect } from "react";
 import "../styles/MainSection.css";
-import landscape from "../../assets/landscape.jpg"; 
+import landscape from "../../assets/landscape.jpg";
+import profilePicture from "../../assets/pfp.png"; // Add your profile picture here
 import Header from "./Header";
 
 const MainSection = () => {
@@ -18,9 +19,11 @@ const MainSection = () => {
   return (
     <main className="main-section">
       <Header />
-
       <div className="image-overlay">
         <img src={landscape} alt="Landscape" className="main-image" />
+        <div className="profile-picture-container">
+          <img src={profilePicture} alt="Profile" className="profile-picture" />
+        </div>
         <div className="main-text-section">
           <div className="main-text">
             <h3>Hello,</h3>
