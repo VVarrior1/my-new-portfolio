@@ -12,7 +12,7 @@ const MainSection = () => {
     textElements.forEach((element, index) => {
       setTimeout(() => {
         element.classList.add("fade-in");
-      }, index * 1300); 
+      }, index * 1300);
     });
   }, []);
 

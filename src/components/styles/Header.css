@@ -2,8 +2,9 @@ a {
   text-decoration: none;
   color: #333;
 }
+
 .header.scrolled {
-  background-color: blanchedalmond; /* Change to your desired color */
+  background-color: blanchedalmond;
   transition: background-color 0.5s ease;
 }
 
@@ -13,7 +14,7 @@ a {
   width: 100%;
   padding: 10px 0;
   text-align: center;
-  z-index: 1000; /* Ensure it is on top */
+  z-index: 1000;
 }
 
 .header ul {
@@ -22,7 +23,7 @@ a {
   margin: 0;
   display: flex;
   justify-content: center;
-  align-items: center; /* Ensures vertical alignment */
+  align-items: center;
 }
 
 .header li {
@@ -38,7 +39,7 @@ a {
 }
 
 .header a {
-  transition: all 0.1s linear; /* Smooth transition */
+  transition: all 0.1s linear;
 }
 
 .header a:hover {
