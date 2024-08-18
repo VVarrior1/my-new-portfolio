@@ -3,7 +3,7 @@ import "../styles/SideLinks.css";
 
 const SideLinks = () => {
   const copyToClipboard = () => {
-    const email = "mohamed.abdelrahman00155@gmail.com";
+    const email = "abdelrahman.moham1@ucalgary.ca";
     navigator.clipboard.writeText(email).then(() => {
       alert("Email copied to clipboard");
     });
