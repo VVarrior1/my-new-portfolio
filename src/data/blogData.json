@@ -1,24 +1,28 @@
 [
   {
-    "title": "The Leet Code Grind",
+    "title": "The LeetCode Grind",
     "date": "2024-09-07",
     "content": [
       {
         "heading": "What and why?",
         "paragraph": [
-          "I decided about a month ago to start grinding LeetCode. I've heard that it can help you with interviews and stuff. I mean I did a bunch of problems in the past few years here and there but didn't reallyl enjoy it all that much",
-          "I decided I'll give it a good shot this time, and have been going at it consistently for the past month ish. I've been doing a few problems a day, and I'm starting to enjoy it.",
-          "This reminds me of when I start anything new, especially things that are inherently difficult. They start off really annoying or boring, but as I get better, I start to enjoy them more and more. I believe it's because us as humans enjoy the things we're good at, but in order to get good at something, we have to go through the initial annoying and difficult parts first.",
-          "I started off doing it to enhance my DSA knowledge and land an internship, but I'm enjoying it too much, I might just keep doing it for fun, the benefits are nice as well."
+          "About a month ago, I decided to really dive into LeetCode. I’d always heard it was great for prepping for interviews and such. I’d done a handful of problems over the years but never really got into it—I just didn’t enjoy it much.",
+          "This time, I committed to giving it a real shot. For the past month or so, I’ve been consistently solving a few problems every day, and, surprisingly, I’m starting to enjoy it.",
+          "It reminds me of how things usually go when I start something new, especially when it’s something difficult. In the beginning, it’s frustrating or even boring, but as I improve, it becomes more fun. I think it’s human nature—we tend to enjoy things we’re good at. But to get good, we have to push through that initial tough phase.",
+          "I originally started this grind to sharpen my DSA skills and land an internship, but now I’m enjoying it so much that I might keep at it just for fun. Of course, the benefits don’t hurt either."
         ]
       },
       {
         "heading": "Has it helped me yet?",
-        "paragraph": ["It actually has helped me, even just a month of doing it, and I feel like i'm already so much more confident at doing interview questions and online assesments. I am currently applying to internships, I've started recently, and I went through some OA's. I can physically tell the difference in my problem-solving and DSA skill. I still got ways to go, but it definitely is one of those high return activities in my opinion."]
+        "paragraph": [
+          "It’s actually been helping a lot. Even after just a month, I already feel way more confident with interview questions and online assessments. I’ve recently started applying for internships, and after going through a few OAs (Online Assessments), I can physically feel the difference in my problem-solving and DSA skills. There’s still a lot of room for improvement, but this feels like one of those activities that give you high returns for your effort."
+        ]
       },
       {
         "heading": "The Plan Going Forward",
-        "paragraph": ["I've done about 100 problems so far mostly mediums and easys. I plan to do about 200 more, and redo the ones I've done. Later down the line I'll start doing hards when I feel like i've gotten to expert level. I'm also planning on doing some system design problems, and mock interviews. I mean the goal is to land a nice internship, but the plan is to enjoy the process."]
+        "paragraph": [
+          "So far, I’ve done about 100 problems, mostly mediums and easies. My plan is to hit around 200 more and go back to review the ones I’ve already solved. Once I feel like I’ve reached an expert level, I’ll start tackling the hard problems. I’m also planning to dive into system design problems and do a few mock interviews down the line. The ultimate goal is to land a solid internship, but honestly, I’m here to enjoy the journey as much as the destination."
+        ]
       }
     ]
   },
