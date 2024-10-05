@@ -1,5 +1,36 @@
 [
   {
+    "title": "Super Powers",
+    "date": "2024-10-04",
+    "content": [
+      {
+        "heading": "Omega 3",
+        "paragraph": [
+          "For a long time I've been learning about the power of omega 3 fatty acids, and their ability to enhance brain abilities. I've been taking fish oil supplements just based off this general knowledge, but recently I've seen some crazy statistics and gotten some deeper knoledge on the topic."
+        ]
+      },
+      {
+        "heading": "DHA",
+        "paragraph": [
+          "Japan's avg IQ is almost 9 points higher than USA's avg IQ (106.5 vs 98). There could be a plethora of factors at play but one of the more interesting possibile reasons is that japan's diet involves a lot of fish.",
+          "Studies done on animals have shown that animals like dolphins and whales are generally smarter than animals like rhinos and cows partly due to their food sources. Dolphins and whales eat fish, which contain DHA, a type of omega-3 fatty acid that is crucial for brain development and function. On the other hand, rhinos and cows are herbivores and don't consume fish or DHA-rich foods. They are rather, eating the antidote to DHA, LA or linoleic acid, which is found in seed oils",
+          "I read before that seed oils are bad for you, but this takes it a step further. Since seed oils are high in LA, and LA competes with DHA for the same enzymes, it's possible that the more LA one consumes, the dumber one gets. I can't afford this in this line of work haha.",
+          "To summarize and put into actionable steps, reduce seed oil intake, and switch to animal fat like butter, and eat more fish, or take more omega 3 supplements."
+        ]
+      },
+      {
+        "heading": "Exercise",
+        "paragraph": [
+          "\"If there is a pill worth more than a billion dollars it would be exercise.\" I remember reading that quote somewhere but I'm only recently starting to understand the full extent of it. Just 2 weeks bed ridden could cause significant detorioration in muscles. Fasting without exercise vs fasting with exercise lead to completely different outcomes (with significant muscle retention in the latter). There is a lot more that I've read on the topic, but I can safely and confidently say that exercising regularly gives you super powers in a sedentary world. Stereotypically, my career choice as a computer science professional is largely sedentary, but I'm going against the grain with this one, ensuring I get my daily exercise in."
+        ]
+      },
+      {
+        "heading": "Mindfullness",
+        "paragraph": ["To be continued..."]
+      }
+    ]
+  },
+  {
     "title": "The LeetCode Grind",
     "date": "2024-09-07",
     "content": [
