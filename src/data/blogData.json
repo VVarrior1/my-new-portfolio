@@ -1,8 +1,16 @@
 [
   {
-    "title": "Super Powers",
+    "title": "Bio-Hacking",
     "date": "2024-10-04",
     "content": [
+      {
+        "heading": "Bio-hacking and knowledge work",
+        "paragraph": [
+          "Bio-hacking is the practice of making changes to your lifestyle, habits and diet to maximize performance in all domains (physical and mental) which will enahnce your ability to be competent overall.",
+          "This relates to knowledge work because often times, a knowledge worker will have to learn new technologies, master a few topics and adapt quickly to the quickly changing realm of technology. To be able to do this competently, they should have a clear mind and be able to engage in deep work (referencing the book deep work by Cal Newport).",
+          "Bio-hacking comes in to help by enhancing one's cognitive abilities, focus and attention spans, while also improving their physicality and overall health. Below I'll discuss some of the bio-hacks I've been implementing and the science behind them, not in any specific order."
+        ]
+      },
       {
         "heading": "Omega 3",
         "paragraph": [
@@ -25,8 +33,10 @@
         ]
       },
       {
-        "heading": "Mindfullness",
-        "paragraph": ["To be continued..."]
+        "heading": "Extras",
+        "paragraph": [
+          "Mindfulness, nootropics (caffeine), intermittent fasting, cold exposure, sleep optimization. To be continued..."
+        ]
       }
     ]
   },
