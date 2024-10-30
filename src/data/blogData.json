@@ -81,7 +81,34 @@
     ]
   },
   {
-    "title": "Machine Learning Foundations",
+    "title": "LeetCode?",
+    "date": "2024-09-07",
+    "content": [
+      {
+        "heading": "What and why?",
+        "paragraph": [
+          "About a month ago, I decided to really dive into LeetCode. I’d always heard it was great for prepping for interviews and such. I’d done a handful of problems over the years but never really got into it—I just didn’t enjoy it much.",
+          "This time, I committed to giving it a real shot. For the past month or so, I’ve been consistently solving a few problems every day, and, surprisingly, I’m starting to enjoy it.",
+          "It reminds me of how things usually go when I start something new, especially when it’s something difficult. In the beginning, it’s frustrating or even boring, but as I improve, it becomes more fun. I think it’s human nature—we tend to enjoy things we’re good at. But to get good, we have to push through that initial tough phase.",
+          "I originally started this grind to sharpen my DSA skills and land an internship thinking it's going to be a chore, but now I’m enjoying it alot. It's like i'm a twitch streamer that gets paid to play games they enjoy (although I don't get paid right now, I just kindof hope it gets me paid in the near future haha."
+        ]
+      },
+      {
+        "heading": "Has it helped me yet?",
+        "paragraph": [
+          "It’s actually been helping a lot. Even after just a month, I already feel way more confident with interview questions and online assessments. I’ve recently started applying for internships, and after going through a few OAs (Online Assessments), I can physically feel the difference in my problem-solving and DSA skills. There’s still a lot of room for improvement, but this feels like one of those activities that give you high returns for your effort."
+        ]
+      },
+      {
+        "heading": "The Plan Going Forward",
+        "paragraph": [
+          "So far, I’ve done about 100 problems, mostly mediums and easies. My plan is to hit around 200 more and go back to review the ones I’ve already solved. Once I feel like I’ve reached an expert level, I’ll start tackling the hard problems. I’m also planning to dive into system design problems and do a few mock interviews down the line. The ultimate goal is to land a solid internship, but honestly, I’m here to enjoy the journey as much as the destination."
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Machine Learning",
     "date": "2024-08-03",
     "content": [
       {
@@ -111,7 +138,7 @@
     ]
   },
   {
-    "title": "Prompt Engineering Best Prompts",
+    "title": "Prompt Engineering",
     "date": "2024-07-01",
     "content": [
       {
@@ -178,7 +205,7 @@
     ]
   },
   {
-    "title": " Data Analysis with Python",
+    "title": " Data Analysis",
     "date": "2024-06-24",
     "image": "https://cdn.pixabay.com/photo/2023/08/05/15/42/panda-8171354_1280.jpg",
     "content": [

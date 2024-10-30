@@ -28,10 +28,7 @@ const MainSection = () => {
           <div className="main-text">
             <h3>Hello,</h3>
             <p>I'm Abdelrahman, a Computer Science student in my third year</p>
-            <p>
-              I'm passionate about data analysis, machine learning, and web
-              development.
-            </p>
+            <p>I'm passionate about data science, machine learning, and AI.</p>
             <p>
               I'm currently training AI to become better coders and data
               analysts.
