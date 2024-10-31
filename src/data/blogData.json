@@ -141,20 +141,19 @@
           "Logistic regression is a supervised learning algorithm used for binary classification tasks. Unlike linear regression, which predicts a continuous value, logistic regression predicts the probability that an input belongs to a particular class.",
           "The key to logistic regression is the use of the sigmoid function, which transforms the output into a probability between 0 and 1. This allows logistic regression to classify data points based on a threshold, typically 0.5.",
           "The cost function for logistic regression is the binary cross-entropy or log-loss, which measures how well the predicted probabilities match the actual binary outcomes."
-        ],
-        "subsection": [
-          {
-            "heading": "Regularization",
-            "paragraph": [
-              "Regularization is a technique to prevent overfitting by adding a penalty to the model's cost function. In logistic regression, common regularization techniques include L1 (Lasso) and L2 (Ridge) regularization.",
-              "L2 regularization penalizes large coefficients by adding the squared magnitude of coefficients to the cost function, helping to reduce variance without increasing bias too much. L1 regularization, on the other hand, adds the absolute value of coefficients, often resulting in sparse models by driving some coefficients to zero.",
-              "The regularization parameter, lambda, controls the strength of the penalty. A higher lambda value increases the regularization effect, which can be useful when working with a large number of features."
-            ]
-          }
+        ]
+      },
+      {
+        "heading": "Regularization",
+        "paragraph": [
+          "Regularization is a technique to prevent overfitting by adding a penalty to the model's cost function. In logistic regression, common regularization techniques include L1 (Lasso) and L2 (Ridge) regularization.",
+          "L2 regularization penalizes large coefficients by adding the squared magnitude of coefficients to the cost function, helping to reduce variance without increasing bias too much. L1 regularization, on the other hand, adds the absolute value of coefficients, often resulting in sparse models by driving some coefficients to zero.",
+          "The regularization parameter, lambda, controls the strength of the penalty. A higher lambda value increases the regularization effect, which can be useful when working with a large number of features."
         ]
       }
     ]
   },
+
   {
     "title": "Prompt Engineering",
     "date": "2024-07-01",
