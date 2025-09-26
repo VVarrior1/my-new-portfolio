@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #020617;
+  color: rgb(248 250 252 / 0.95);
+  font-family: "Inter", "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -30;
+}
+
+body::before {
+  background: linear-gradient(120deg, rgba(148, 163, 184, 0.12) 0%, transparent 45%, transparent 55%, rgba(148, 163, 184, 0.12) 100%);
+}
+
+body::after {
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.75), transparent 55%);
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.pattern-grid {
+  position: absolute;
+  inset: -2px;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
+  opacity: 0.5;
+}
+
+.marquee {
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
