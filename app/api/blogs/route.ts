@@ -1,9 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { revalidatePath } from "next/cache";
+import { getAllBlogs, appendBlog, type BlogPost } from "@/lib/blogs";
 
-const DATA_PATH = path.join(process.cwd(), "data", "blogs.json");
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
 type BlogPayload = {
@@ -14,17 +12,7 @@ type BlogPayload = {
   token?: string;
 };
 
-type BlogEntry = {
-  slug: string;
-  title: string;
-  date: string;
-  excerpt: string;
-  content: Array<{
-    heading?: string;
-    paragraph?: string[];
-    image?: string;
-  }>;
-};
+// BlogPost type is now imported from lib/blogs
 
 function slugify(input: string): string {
   return input
@@ -35,7 +23,7 @@ function slugify(input: string): string {
 
 function parseBodyToBlocks(body: string) {
   const lines = body.split(/\r?\n/);
-  const blocks: BlogEntry["content"] = [];
+  const blocks: BlogPost["content"] = [];
   let currentBlock: { heading?: string; paragraph: string[] } | null = null;
 
   const pushCurrent = () => {
@@ -88,17 +76,8 @@ function parseBodyToBlocks(body: string) {
     );
 }
 
-async function readExistingBlogs(): Promise<BlogEntry[]> {
-  const file = await fs.readFile(DATA_PATH, "utf8");
-  return JSON.parse(file) as BlogEntry[];
-}
-
-async function writeBlogs(blogs: BlogEntry[]) {
-  await fs.writeFile(DATA_PATH, JSON.stringify(blogs, null, 2));
-}
-
 export async function GET() {
-  const blogs = await readExistingBlogs();
+  const blogs = await getAllBlogs();
   return NextResponse.json(blogs);
 }
 
@@ -140,7 +119,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const blogs = await readExistingBlogs();
+  const blogs = await getAllBlogs();
   let slug = slugify(payload.title);
   const baseSlug = slug;
   let counter = 1;
@@ -154,7 +133,7 @@ export async function POST(request: NextRequest) {
 
   const excerpt = (payload.excerpt && payload.excerpt.trim()) || paragraphs.slice(0, 2).join(" ");
 
-  const newBlog: BlogEntry = {
+  const newBlog: BlogPost = {
     slug,
     title: payload.title,
     date,
@@ -162,8 +141,15 @@ export async function POST(request: NextRequest) {
     content,
   };
 
-  const updated = [newBlog, ...blogs];
-  await writeBlogs(updated);
+  try {
+    await appendBlog(newBlog);
+  } catch (error) {
+    console.error("Failed to persist blog", error);
+    return NextResponse.json(
+      { error: (error as Error).message ?? "Failed to persist blog" },
+      { status: 500 }
+    );
+  }
 
   revalidatePath("/blogs");
   revalidatePath(`/blogs/${slug}`);
