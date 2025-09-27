@@ -4,6 +4,10 @@ import path from "path";
 const galleryHost = process.env.NEXT_PUBLIC_GALLERY_HOST ?? "storage.googleapis.com";
 const galleryPath = process.env.NEXT_PUBLIC_GALLERY_PATH ?? "";
 
+const normalizedPath = galleryPath
+  ? `/${galleryPath.replace(/^\/+/, "").replace(/\/+$/, "")}/**`
+  : "/**";
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   images: {
@@ -11,7 +15,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: galleryHost,
-        pathname: galleryPath ? `${galleryPath}/**` : "**",
+        pathname: normalizedPath,
       },
     ],
   },
