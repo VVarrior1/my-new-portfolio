@@ -1,4 +1,5 @@
 import { getGalleryItems } from "@/lib/gallery";
+import { formatDate } from "@/lib/date-utils";
 import Image from "next/image";
 
 export async function GalleryGrid() {
@@ -35,11 +36,7 @@ export async function GalleryGrid() {
                 {item.description && <p className="text-sm">{item.description}</p>}
               </div>
               <span className="text-xs uppercase tracking-[0.25em] text-emerald-200/80">
-                {new Date(item.createdAt).toLocaleDateString("en-CA", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
+                {formatDate(item.createdAt)}
               </span>
             </div>
             {item.tags.length > 0 && (

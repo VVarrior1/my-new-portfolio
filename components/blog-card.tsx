@@ -1,12 +1,9 @@
 import Link from "next/link";
 import type { BlogPost } from "@/lib/blogs";
+import { formatDate } from "@/lib/date-utils";
 
 export function BlogCard({ blog }: { blog: BlogPost }) {
-  const date = new Date(blog.date).toLocaleDateString("en-CA", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const date = formatDate(blog.date);
 
   return (
     <article className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60">

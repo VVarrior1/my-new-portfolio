@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Navbar } from "@/components/navbar";
+import { formatDate } from "@/lib/date-utils";
 
 const sections = [{ id: "admin", label: "Admin" }];
 
@@ -411,11 +412,7 @@ export default function AdminPage() {
               <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
                 <h3 className="text-xl font-semibold text-white">{title || "Untitled"}</h3>
                 <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
-                  {new Date(date).toLocaleDateString("en-CA", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  {formatDate(date)}
                 </p>
                 <p className="mt-4 text-white/70">
                   {excerpt || "Excerpt will be auto-generated from the first paragraphs."}
