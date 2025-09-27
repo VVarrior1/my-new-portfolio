@@ -8,18 +8,22 @@ import { ProjectGrid } from "@/components/project-grid";
 import { SectionHeading } from "@/components/section-heading";
 import { SkillMarquee } from "@/components/skill-marquee";
 import { SkillsGrid } from "@/components/skills-grid";
+import { GalleryGrid } from "@/components/gallery-grid";
 
 const sections = [
   { id: "about", label: "About" },
   { id: "skills", label: "Skills" },
   { id: "experience", label: "Experience" },
   { id: "projects", label: "Projects" },
+  { id: "gallery", label: "Gallery" },
   { id: "blog", label: "Blog" },
   { id: "contact", label: "Contact" },
 ];
 
-export default function Home() {
+export default async function Home() {
   const year = new Date().getFullYear();
+  const gallery = await GalleryGrid();
+
   return (
     <div className="relative text-white">
       <Navbar sections={sections} />
@@ -64,6 +68,19 @@ export default function Home() {
             }
           />
           <ProjectGrid />
+        </section>
+
+        <section id="gallery" className="space-y-8 scroll-mt-32">
+          <SectionHeading
+            eyebrow="Gallery"
+            title="Snapshots from the work"
+            kicker={
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/70">
+                Build logs & ship moments
+              </span>
+            }
+          />
+          {gallery}
         </section>
 
         <section id="blog" className="space-y-8 scroll-mt-32">

@@ -1,50 +1,100 @@
-# Abdelrahman Mohamed — Portfolio
+# Abdelrahman Mohamed — AI Engineer Portfolio
 
-Modern AI-first engineering portfolio built with Next.js 15, TypeScript, and Tailwind CSS 4. It showcases Abdelrahman Mohamed’s experience across AI agents, ML pipelines, and full-stack product delivery.
+A modern, story-driven personal site for Abdelrahman Mohamed. Built with the Next.js App Router, typed end-to-end with TypeScript, and styled via Tailwind CSS v4. It spotlights AI agent work, full-stack delivery, and research-driven projects while offering a lightweight CMS experience for blog posts and résumé-driven content.
 
-## Tech stack
-- Next.js (App Router + Turbopack)
-- TypeScript with strict mode
-- Tailwind CSS v4 (utility-first styling)
-- System font stack with custom gradients and glassmorphism accents
+## Feature Overview
+- Cinematic hero with matrix rain background, stats, and terminal-style typewriter.
+- Sticky navbar with scroll progress, active-section tracking, and mobile-friendly hamburger menu.
+- Resume-driven content model (`lib/content.ts`) powering skills, projects, stats, and contact cards.
+- Blog engine sourced from `data/blogs.json`, with an authenticated `/admin` UI to publish Markdown and image blocks.
+- Gallery pipeline backed by Google Cloud Storage and `data/gallery.json`, with admin uploads routed through signed URLs.
+- Responsive layouts across hero, timeline, gallery-ready sections, and call-to-action cards.
+- Netlify-ready configuration (Next.js runtime plugin + `.next` publish folder).
 
-## Highlights
-- Glassmorphism hero with animated stats and gradient-backed background system
-- Sticky navigation with scroll progress indicator for deep scrolling
-- Auto-rotating skill marquee and hover-reactive cards across skills, experience, and projects
-- Resume-driven data model for one-touch content edits and PDF download CTA
-- Matrix-style rainy background and terminal typewriter to set the tone for AI-first work
-- Blog system with legacy articles, dynamic admin publishing, and statically generated detail pages
+## Tech Stack
+- **Framework**: Next.js 15 (App Router, server components)
+- **Language**: TypeScript (strict)
+- **Styling**: Tailwind CSS v4, custom globals for matrix rain aesthetic
+- **Fonts**: System stack (Inter/SF) via CSS
+- **Tooling**: ESLint (Next config), Turbopack dev server
+- **Deployment**: Netlify with `@netlify/plugin-nextjs`
 
-## Structure
-- `app/` – App Router pages and global layout
-- `components/` – Reusable UI building blocks (hero, navigation, grids)
-- `lib/content.ts` – Resume-driven content and structured data
-- `public/` – Static assets, including downloadable résumé
+## Directory Structure
+```
+app/              # App Router pages, layouts, API routes
+components/       # Reusable UI building blocks (hero, navbar, cards, etc.)
+data/blogs.json   # Serialized blog posts consumed at build time
+lib/              # Content models and helper utilities
+public/           # Static assets (favicon, résumé PDF)
+docs/             # Additional documentation (roadmap, ideas)
+netlify.toml      # Netlify build + plugin configuration
+```
 
-## Getting started
+## Getting Started
 ```bash
 npm install
 npm run dev
 ```
-Visit [http://localhost:3000](http://localhost:3000) to view the site. Edit `lib/content.ts` to update projects, experience, or skills.
+Visit http://localhost:3000 to browse the site.
 
-## Deployment
-The app is production-ready for platforms like Vercel or Netlify:
-```bash
-npm run build
-npm start
+### Environment Variables
+Create `.env.local` in the project root:
 ```
-This runs the optimized Next.js production build.
+ADMIN_TOKEN=your-secret-token
+# Gallery configuration
+GCS_BUCKET_NAME=your-public-gallery-bucket
+GCS_SERVICE_ACCOUNT_EMAIL=service-account@project.iam.gserviceaccount.com
+GCS_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+NEXT_PUBLIC_GALLERY_HOST=storage.googleapis.com
+NEXT_PUBLIC_GALLERY_PATH=your-public-gallery-bucket
+```
+- `ADMIN_TOKEN` gates the `/admin` publishing UI and API routes.
+- `GCS_*` values come from a service account with `storage.objects.create` on the bucket.
+- `NEXT_PUBLIC_GALLERY_*` controls which remote host Next.js allows; point it at your public bucket (e.g. `storage.googleapis.com` + bucket name).
 
-## Blog admin
-- Set an `ADMIN_TOKEN` environment variable before running `npm run dev` or deploying.
-- Visit `/admin`, enter the token, and draft markdown content (supports `## Headings` and `![alt](url)` images).
-- The form publishes through `/api/blogs`, updates `data/blogs.json`, and triggers ISR on `/`, `/blogs`, and `/blogs/[slug]`.
+### Useful Scripts
+| Command          | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| `npm run dev`    | Start the dev server (Turbopack)                |
+| `npm run lint`   | Run ESLint against the entire project           |
+| `npm run build`  | Production build (required for Netlify deploys) |
+| `npm run start`  | Run the production server locally               |
 
-## Customization tips
-- Adjust palette, spacing, and global styles in `app/globals.css`
-- Update SEO metadata (Open Graph, Twitter) in `app/layout.tsx`
-- Add new sections by composing the existing SectionHeading + grid components
+## Content Management
+- **Résumé & stats**: Update copy and metadata in `lib/content.ts`.
+- **Projects**: Each entry contains tech tags, highlights, and optional URLs.
+- **Blog posts**: Sourced from `data/blogs.json`. Each post includes `slug`, `title`, `date`, `excerpt`, and mixed content blocks.
+- **Gallery**: Items live in `data/gallery.json` and store `title`, `description`, `tags`, `imageUrl`, and `createdAt`. Assets are delivered from your Google Cloud Storage bucket.
 
-Pull requests and issues are welcome.
+## Blog Admin Workflow
+1. Ensure `ADMIN_TOKEN` is set (and pass it to Netlify if deployed).
+2. Navigate to `/admin`.
+3. Enter your token once per session.
+4. Draft Markdown content (`## headings`, blank lines to split paragraphs, `![alt](url)` for images).
+5. Publish to store the post in `data/blogs.json` and trigger incremental revalidation for `/`, `/blogs`, and `/blogs/[slug]`.
+
+## Deployment (Netlify)
+The repository includes `netlify.toml` pointing Netlify at `.next` and enabling the Next.js runtime.
+
+If configuring through the UI:
+- **Build command**: `npm run build`
+- **Publish directory**: `.next`
+- **Environment**: define `ADMIN_TOKEN`, `GCS_BUCKET_NAME`, `GCS_SERVICE_ACCOUNT_EMAIL`, `GCS_PRIVATE_KEY`, `NEXT_PUBLIC_GALLERY_HOST`, and `NEXT_PUBLIC_GALLERY_PATH`.
+
+Netlify installs `@netlify/plugin-nextjs` automatically when it sees the plugin entry in `netlify.toml`. Ensure your bucket allows public reads so gallery images render (Uniform bucket-level access + public IAM or signed-serving CDN).
+
+## Roadmap & Ideas
+Future enhancements and recruiter-focused ideas live in [`docs/portfolio-growth.md`](docs/portfolio-growth.md). Highlights:
+- Visual gallery with filtering and lightbox
+- Case-study deep dives with architecture diagrams
+- Testimonials, logos, and shareable recruiter packs
+- Calendly “coffee chat” CTA and health indicators for live products
+
+## Maintenance Checklist
+- Refresh `lib/content.ts` with your latest achievements before application cycles.
+- Keep `data/blogs.json` and blog posts fresh (the admin UI makes it easy).
+- Confirm Netlify deploys succeed with the `.next` publish folder.
+- Run `npm run lint` before pushing substantial changes.
+
+## License
+Personal portfolio—feel free to reference for learning, but please do not republish wholesale.

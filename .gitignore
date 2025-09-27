@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Service account keys
+gallery-uploader-key.json
+.env
+.env.local
+.env.*.local
+.env.local.example
