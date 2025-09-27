@@ -9,8 +9,10 @@ type BlogPageProps = {
 };
 
 const sections = [
-  { id: "top", label: "Top" },
-  { id: "article", label: "Article" },
+  { id: "home", label: "Home", href: "/" },
+  { id: "blogs", label: "← All Blogs", href: "/blogs" },
+  { id: "gallery", label: "Gallery", href: "/gallery" },
+  { id: "contact", label: "Contact", href: "/#contact" },
 ];
 
 export async function generateStaticParams() {

@@ -442,6 +442,11 @@ export default function AdminPage() {
                 </div>
               </div>
             </section>
+
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold">Manage existing blogs</h2>
+              <ExistingBlogs token={token} />
+            </section>
           </>
         ) : (
           <section className="grid gap-8">
@@ -596,6 +601,105 @@ export default function AdminPage() {
           </section>
         )}
       </main>
+    </div>
+  );
+}
+
+type BlogPost = {
+  slug: string;
+  title: string;
+  date: string;
+  excerpt: string;
+};
+
+function ExistingBlogs({ token }: { token: string }) {
+  const [blogs, setBlogs] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchBlogs() {
+      try {
+        const response = await fetch('/api/blogs');
+        if (response.ok) {
+          const blogsData = await response.json();
+          setBlogs(blogsData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch blogs:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBlogs();
+  }, []);
+
+  const handleDelete = async (slug: string) => {
+    if (!confirm('Are you sure you want to delete this blog? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeleting(slug);
+    try {
+      const response = await fetch(`/api/blogs/${slug}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-token': token,
+        },
+      });
+
+      if (response.ok) {
+        setBlogs(prev => prev.filter(blog => blog.slug !== slug));
+      } else {
+        const error = await response.json();
+        alert(`Failed to delete blog: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Failed to delete blog. Please try again.');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <p className="text-white/60">Loading blogs...</p>
+      </div>
+    );
+  }
+
+  if (blogs.length === 0) {
+    return (
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <p className="text-white/60">No blogs found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {blogs.map((blog) => (
+        <div
+          key={blog.slug}
+          className="flex items-center justify-between rounded-3xl border border-white/10 bg-white/5 p-4"
+        >
+          <div className="space-y-1">
+            <h3 className="font-medium text-white">{blog.title}</h3>
+            <p className="text-xs text-white/60">{formatDate(blog.date)} • /blogs/{blog.slug}</p>
+            <p className="text-sm text-white/70">{blog.excerpt.slice(0, 100)}...</p>
+          </div>
+          <button
+            onClick={() => handleDelete(blog.slug)}
+            disabled={deleting === blog.slug}
+            className="rounded-full bg-rose-500/20 px-4 py-2 text-sm text-rose-300 transition hover:bg-rose-500/30 disabled:opacity-50"
+          >
+            {deleting === blog.slug ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
