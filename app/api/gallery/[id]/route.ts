@@ -38,6 +38,7 @@ export async function DELETE(request: NextRequest, context: any) {
     objectPath = extractObjectNameFromUrl(item.imageUrl) ?? undefined;
   }
 
+  // Always try to delete from GCS first, even if objectPath is missing
   if (objectPath) {
     try {
       const { signedUrl } = generateSignedUrl({
@@ -60,10 +61,14 @@ export async function DELETE(request: NextRequest, context: any) {
           deleteResponse.status,
           await deleteResponse.text()
         );
+        // Continue with metadata deletion even if GCS deletion fails
       }
     } catch (error) {
-      console.warn("Error generating signed URL for deletion", error);
+      console.warn("Error deleting from GCS", error);
+      // Continue with metadata deletion even if GCS deletion fails
     }
+  } else {
+    console.warn(`No objectPath found for gallery item ${idParam}, skipping GCS deletion`);
   }
 
   const removed = await deleteGalleryItem(idParam);

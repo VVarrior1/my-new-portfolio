@@ -49,6 +49,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Validate that the image URL is accessible before saving metadata
+  try {
+    const imageResponse = await fetch(payload.imageUrl, { method: 'HEAD' });
+    if (!imageResponse.ok) {
+      return NextResponse.json(
+        { error: "Image URL is not accessible. Please ensure the image was uploaded successfully." },
+        { status: 400 }
+      );
+    }
+    const contentType = imageResponse.headers.get('content-type');
+    if (!contentType || !contentType.startsWith('image/')) {
+      return NextResponse.json(
+        { error: "URL does not point to a valid image" },
+        { status: 400 }
+      );
+    }
+  } catch (error) {
+    console.error("Failed to validate image URL:", error);
+    return NextResponse.json(
+      { error: "Failed to validate image URL. Please try uploading again." },
+      { status: 400 }
+    );
+  }
+
   const tags = Array.isArray(payload.tags)
     ? payload.tags
     : typeof payload.tags === "string"

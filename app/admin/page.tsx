@@ -101,6 +101,7 @@ export default function AdminPage() {
   const [galleryDeletingId, setGalleryDeletingId] = useState<string | null>(null);
   const [galleryStatus, setGalleryStatus] = useState<Status>(null);
   const [isGallerySubmitting, setIsGallerySubmitting] = useState(false);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
 
   useEffect(() => {
     const loadGallery = async () => {
@@ -295,6 +296,47 @@ export default function AdminPage() {
       setGalleryStatus({ ok: false, message: (error as Error).message });
     } finally {
       setGalleryDeletingId(null);
+    }
+  };
+
+  const handleCleanupGallery = async () => {
+    if (!confirm("This will remove all gallery entries with broken or inaccessible images. Continue?")) {
+      return;
+    }
+
+    setIsCleaningUp(true);
+    try {
+      const response = await fetch("/api/gallery/cleanup", {
+        method: "POST",
+        headers: {
+          "x-admin-token": token,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error ?? "Failed to clean up gallery");
+      }
+
+      const result = await response.json();
+      setGalleryStatus({
+        ok: true,
+        message: result.message
+      });
+
+      // Refresh the gallery list
+      const galleryResponse = await fetch("/api/gallery");
+      if (galleryResponse.ok) {
+        const updatedItems = await galleryResponse.json();
+        setGalleryItems(updatedItems);
+      }
+    } catch (error) {
+      setGalleryStatus({
+        ok: false,
+        message: (error as Error).message
+      });
+    } finally {
+      setIsCleaningUp(false);
     }
   };
 
@@ -542,7 +584,17 @@ export default function AdminPage() {
             </form>
 
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold">Recent uploads</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold">Recent uploads</h2>
+                <button
+                  type="button"
+                  onClick={handleCleanupGallery}
+                  disabled={isCleaningUp}
+                  className="rounded-full border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-400/20 disabled:opacity-50"
+                >
+                  {isCleaningUp ? "Cleaning..." : "Clean Up Broken Images"}
+                </button>
+              </div>
               {galleryItems.length === 0 ? (
                 <p className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-6 text-sm text-white/60">
                   No images yet. Upload your first gallery item to see it here.
