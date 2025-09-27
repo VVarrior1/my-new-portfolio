@@ -1,4 +1,4 @@
-import { appendGalleryItem, getGalleryItems } from "@/lib/gallery";
+import { appendGalleryItem, getGalleryItems, inferObjectPath } from "@/lib/gallery";
 import { NextResponse, type NextRequest } from "next/server";
 import { randomUUID } from "crypto";
 
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     description?: string;
     tags?: string | string[];
     imageUrl?: string;
+    objectPath?: string;
     featured?: boolean;
     token?: string;
   };
@@ -55,12 +56,15 @@ export async function POST(request: NextRequest) {
         .filter(Boolean)
     : [];
 
+  const objectPath = payload.objectPath || inferObjectPath(payload.imageUrl ?? "");
+
   const item = {
     id: randomUUID(),
     title: payload.title,
     description: payload.description?.trim() || undefined,
     tags,
     imageUrl: payload.imageUrl,
+    objectPath,
     featured: payload.featured ?? false,
     createdAt: new Date().toISOString(),
   };

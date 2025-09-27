@@ -7,7 +7,7 @@ A modern, story-driven personal site for Abdelrahman Mohamed. Built with the Nex
 - Sticky navbar with scroll progress, active-section tracking, and mobile-friendly hamburger menu.
 - Resume-driven content model (`lib/content.ts`) powering skills, projects, stats, and contact cards.
 - Blog engine sourced from `data/blogs.json`, with an authenticated `/admin` UI to publish Markdown and image blocks.
-- Gallery pipeline backed by Google Cloud Storage and `data/gallery.json`, with admin uploads routed through signed URLs.
+- Gallery pipeline fully backed by Google Cloud Storage (images + JSON metadata), with admin uploads/deletions routed through signed URLs.
 - Responsive layouts across hero, timeline, gallery-ready sections, and call-to-action cards.
 - Netlify-ready configuration (Next.js runtime plugin + `.next` publish folder).
 
@@ -64,7 +64,7 @@ NEXT_PUBLIC_GALLERY_PATH=your-public-gallery-bucket
 - **Résumé & stats**: Update copy and metadata in `lib/content.ts`.
 - **Projects**: Each entry contains tech tags, highlights, and optional URLs.
 - **Blog posts**: Sourced from `data/blogs.json`. Each post includes `slug`, `title`, `date`, `excerpt`, and mixed content blocks.
-- **Gallery**: Items live in `data/gallery.json` and store `title`, `description`, `tags`, `imageUrl`, and `createdAt`. Assets are delivered from your Google Cloud Storage bucket.
+- **Gallery**: Items are stored as JSON in your bucket (`gallery/metadata/index.json`) and contain `title`, `description`, `tags`, `imageUrl`, `objectPath`, and `createdAt`. Assets and metadata are served straight from Google Cloud Storage.
 
 ## Blog Admin Workflow
 1. Ensure `ADMIN_TOKEN` is set (and pass it to Netlify if deployed).
