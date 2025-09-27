@@ -5,7 +5,9 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { formatDate } from "@/lib/date-utils";
 
-const sections = [{ id: "admin", label: "Admin" }];
+const sections = [
+  { id: "home", label: "← Back to Site", href: "/" }
+];
 
 type Status = { ok: boolean; message: string } | null;
 

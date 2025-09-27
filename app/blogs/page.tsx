@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 const sections = [
   { id: "home", label: "Home", href: "/" },
   { id: "gallery", label: "Gallery", href: "/gallery" },
-  { id: "admin", label: "Admin", href: "/admin" },
 ];
 
 export default async function BlogsPage() {

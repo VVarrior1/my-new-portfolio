@@ -6,7 +6,6 @@ import Image from "next/image";
 const sections = [
   { id: "home", label: "Home", href: "/" },
   { id: "blog", label: "Blog", href: "/blogs" },
-  { id: "admin", label: "Admin", href: "/admin" },
 ];
 
 export default async function GalleryPage() {
