@@ -14,13 +14,13 @@ export function Background() {
     if (!ctx) return;
 
     let animationFrameId: number;
-    const fontSize = 14;
+    const fontSize = 16;
     let columns = Math.floor(window.innerWidth / fontSize);
     let drops: number[] = [];
     let speeds: number[] = [];
     let glyphs: string[] = [];
 
-    const makeSpeed = () => 0.24 + Math.random() * 0.18; // ~0.24 - 0.42
+    const makeSpeed = () => 0.26 + Math.random() * 0.18; // ~0.26 - 0.44
     const makeGlyph = () => CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
 
     const initialise = () => {
@@ -46,6 +46,10 @@ export function Background() {
       drops.forEach((drop, column) => {
         const x = column * fontSize;
         const y = drop * fontSize;
+
+        if (Math.random() > 0.98) {
+          glyphs[column] = glyphs[column] === "0" ? "1" : "0";
+        }
 
         ctx.fillText(glyphs[column], x, y);
 
