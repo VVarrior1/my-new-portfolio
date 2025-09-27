@@ -10,21 +10,17 @@ export const metadata: Metadata = {
 };
 
 const sections = [
-  { id: "home", label: "Home", href: "/" },
-  { id: "gallery", label: "Gallery", href: "/gallery" },
-  { id: "about", label: "About", href: "/#about" },
-  { id: "projects", label: "Projects", href: "/#projects" },
-  { id: "contact", label: "Contact", href: "/#contact" },
+  { id: "top", label: "Top" },
 ];
 
 export default async function BlogsPage() {
   const blogs = await getAllBlogs();
 
   return (
-    <div className="relative bg-slate-950 text-white">
+    <div className="relative text-white">
       <Navbar sections={sections} />
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-16 px-6 pb-24 pt-16 sm:px-8">
-        <header className="space-y-4">
+        <header id="top" className="space-y-4">
           <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
             Essays & Logs
           </p>

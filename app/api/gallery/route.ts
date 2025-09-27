@@ -7,7 +7,9 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
 export async function GET() {
   const items = await getGalleryItems();
-  return NextResponse.json(items);
+  const response = NextResponse.json(items);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }
 
 export async function POST(request: NextRequest) {

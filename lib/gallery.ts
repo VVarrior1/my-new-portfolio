@@ -18,7 +18,7 @@ async function fetchGalleryIndex(): Promise<GalleryItem[]> {
     return [];
   }
 
-  const url = `https://storage.googleapis.com/${gcsBucketName}/${INDEX_OBJECT}`;
+  const url = `https://storage.googleapis.com/${gcsBucketName}/${INDEX_OBJECT}?ts=${Date.now()}`;
 
   try {
     const response = await fetch(url, { cache: "no-store" });
