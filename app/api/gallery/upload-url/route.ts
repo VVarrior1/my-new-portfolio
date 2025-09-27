@@ -6,6 +6,7 @@ const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
 export async function POST(request: NextRequest) {
   if (!ADMIN_TOKEN) {
+    console.error("ADMIN_TOKEN not configured in environment");
     return NextResponse.json(
       { error: "ADMIN_TOKEN environment variable not set" },
       { status: 500 }
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ uploadUrl: signedUrl, publicUrl, objectName });
   } catch (error) {
+    console.error("Failed to generate signed URL", error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

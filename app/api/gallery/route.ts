@@ -11,6 +11,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   if (!ADMIN_TOKEN) {
+    console.error("ADMIN_TOKEN not configured in environment");
     return NextResponse.json(
       { error: "ADMIN_TOKEN environment variable not set" },
       { status: 500 }
@@ -69,7 +70,15 @@ export async function POST(request: NextRequest) {
     createdAt: new Date().toISOString(),
   };
 
-  await appendGalleryItem(item);
+  try {
+    await appendGalleryItem(item);
+  } catch (error) {
+    console.error("Failed to persist gallery metadata", error);
+    return NextResponse.json(
+      { error: (error as Error).message ?? "Failed to persist gallery item" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json(item, { status: 201 });
 }

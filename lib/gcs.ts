@@ -14,6 +14,11 @@ function encodeRfc3986(value: string) {
 
 export function ensureGcsConfig() {
   if (!GCS_BUCKET || !SERVICE_ACCOUNT_EMAIL || !PRIVATE_KEY) {
+    console.error("Missing GCS configuration:", {
+      bucket: !!GCS_BUCKET,
+      email: !!SERVICE_ACCOUNT_EMAIL,
+      key: !!PRIVATE_KEY
+    });
     throw new Error("GCS credentials are not configured");
   }
 }

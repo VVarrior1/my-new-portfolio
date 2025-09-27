@@ -45,3 +45,6 @@ gallery-uploader-key.json
 .env.local
 .env.*.local
 .env.local.example
+
+# Local Netlify folder
+.netlify
