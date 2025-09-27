@@ -10,7 +10,9 @@ export const metadata: Metadata = {
 };
 
 const sections = [
-  { id: "top", label: "Top" },
+  { id: "home", label: "Home", href: "/" },
+  { id: "gallery", label: "Gallery", href: "/gallery" },
+  { id: "admin", label: "Admin", href: "/admin" },
 ];
 
 export default async function BlogsPage() {
@@ -20,7 +22,7 @@ export default async function BlogsPage() {
     <div className="relative bg-slate-950 text-white">
       <Navbar sections={sections} />
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-16 px-6 pb-24 pt-16 sm:px-8">
-        <header className="space-y-4" id="top">
+        <header className="space-y-4">
           <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
             Essays & Logs
           </p>

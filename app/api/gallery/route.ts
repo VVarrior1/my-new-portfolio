@@ -1,6 +1,7 @@
 import { appendGalleryItem, getGalleryItems, inferObjectPath } from "@/lib/gallery";
 import { NextResponse, type NextRequest } from "next/server";
 import { randomUUID } from "crypto";
+import { revalidatePath } from "next/cache";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
@@ -72,6 +73,11 @@ export async function POST(request: NextRequest) {
 
   try {
     await appendGalleryItem(item);
+
+    // Revalidate gallery pages to show new content immediately
+    revalidatePath("/gallery");
+    revalidatePath("/");
+
   } catch (error) {
     console.error("Failed to persist gallery metadata", error);
     return NextResponse.json(

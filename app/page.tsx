@@ -1,4 +1,3 @@
-import { BlogPreview } from "@/components/blog-preview";
 import { ContactCard } from "@/components/contact-card";
 import { EducationCard } from "@/components/education-card";
 import { ExperienceTimeline } from "@/components/experience-timeline";
@@ -8,21 +7,20 @@ import { ProjectGrid } from "@/components/project-grid";
 import { SectionHeading } from "@/components/section-heading";
 import { SkillMarquee } from "@/components/skill-marquee";
 import { SkillsGrid } from "@/components/skills-grid";
-import { GalleryGrid } from "@/components/gallery-grid";
+import Link from "next/link";
 
 const sections = [
   { id: "about", label: "About" },
   { id: "skills", label: "Skills" },
   { id: "experience", label: "Experience" },
   { id: "projects", label: "Projects" },
-  { id: "gallery", label: "Gallery" },
-  { id: "blog", label: "Blog" },
+  { id: "gallery", label: "Gallery", href: "/gallery" },
+  { id: "blog", label: "Blog", href: "/blogs" },
   { id: "contact", label: "Contact" },
 ];
 
 export default async function Home() {
   const year = new Date().getFullYear();
-  const gallery = await GalleryGrid();
 
   return (
     <div className="relative text-white">
@@ -70,30 +68,55 @@ export default async function Home() {
           <ProjectGrid />
         </section>
 
-        <section id="gallery" className="space-y-8 scroll-mt-32">
+        <section className="space-y-8 scroll-mt-32">
           <SectionHeading
-            eyebrow="Gallery"
-            title="Snapshots from the work"
+            eyebrow="More"
+            title="Explore beyond the portfolio"
             kicker={
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/70">
-                Build logs & ship moments
+                Gallery & Writing
               </span>
             }
           />
-          {gallery}
-        </section>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Link
+              href="/gallery"
+              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60"
+            >
+              <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.25),transparent_65%)]" />
+              </div>
+              <div className="relative space-y-3">
+                <h3 className="text-2xl font-semibold text-white">Gallery</h3>
+                <p className="text-sm text-white/70">
+                  Build logs, ship moments, and project snapshots
+                </p>
+                <div className="inline-flex items-center gap-2 text-sm font-medium text-emerald-300 transition group-hover:gap-3">
+                  View Gallery
+                  <span aria-hidden>↗</span>
+                </div>
+              </div>
+            </Link>
 
-        <section id="blog" className="space-y-8 scroll-mt-32">
-          <SectionHeading
-            eyebrow="Writing"
-            title="Notes from the field"
-            kicker={
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/70">
-                Lessons learned shipping
-              </span>
-            }
-          />
-          <BlogPreview />
+            <Link
+              href="/blogs"
+              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-emerald-300/60"
+            >
+              <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.25),transparent_65%)]" />
+              </div>
+              <div className="relative space-y-3">
+                <h3 className="text-2xl font-semibold text-white">Writing</h3>
+                <p className="text-sm text-white/70">
+                  Essays on AI, product velocity, and building in public
+                </p>
+                <div className="inline-flex items-center gap-2 text-sm font-medium text-emerald-300 transition group-hover:gap-3">
+                  Read Posts
+                  <span aria-hidden>↗</span>
+                </div>
+              </div>
+            </Link>
+          </div>
         </section>
 
         <section

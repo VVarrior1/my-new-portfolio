@@ -8,6 +8,7 @@ import { ScrollProgress } from "./scroll-progress";
 type SectionLink = {
   id: string;
   label: string;
+  href?: string; // Optional external link
 };
 
 export function Navbar({ sections }: { sections: SectionLink[] }) {
@@ -42,12 +43,13 @@ export function Navbar({ sections }: { sections: SectionLink[] }) {
 
   const menuItems = useMemo(
     () =>
-      sections.map(({ id, label }) => {
+      sections.map(({ id, label, href }) => {
         const isActive = activeId === id;
+        const linkHref = href || `#${id}`;
         return (
           <Link
             key={id}
-            href={`#${id}`}
+            href={linkHref}
             onClick={() => {
               setActiveId(id);
               setIsMenuOpen(false);

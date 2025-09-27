@@ -1,6 +1,7 @@
 import { deleteGalleryItem, getGalleryItems } from "@/lib/gallery";
 import { generateSignedUrl, extractObjectNameFromUrl } from "@/lib/gcs";
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
@@ -69,6 +70,10 @@ export async function DELETE(request: NextRequest, context: any) {
   if (!removed) {
     return NextResponse.json({ error: "Failed to delete gallery entry" }, { status: 500 });
   }
+
+  // Revalidate gallery pages to reflect deletion immediately
+  revalidatePath("/gallery");
+  revalidatePath("/");
 
   return NextResponse.json({ success: true });
 }
