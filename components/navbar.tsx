@@ -13,24 +13,25 @@ export function Navbar({ sections }: { sections: SectionLink[] }) {
   const [activeId, setActiveId] = useState<string>(sections[0]?.id ?? "");
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]?.target.id) {
-          setActiveId(visible[0].target.id);
+    const handleScroll = () => {
+      const checkpoint = window.scrollY + window.innerHeight * 0.35;
+
+      let currentId = sections[0]?.id ?? "";
+      sections.forEach(({ id }) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        if (checkpoint >= element.offsetTop) {
+          currentId = id;
         }
-      },
-      { rootMargin: "-40% 0px -40% 0px", threshold: [0.25, 0.4, 0.6] }
-    );
+      });
 
-    sections.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+      setActiveId(currentId);
+    };
 
-    return () => observer.disconnect();
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [sections]);
 
   return (
