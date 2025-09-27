@@ -46,6 +46,7 @@ export function Navbar({ sections }: { sections: SectionLink[] }) {
               <Link
                 key={id}
                 href={`#${id}`}
+                onClick={() => setActiveId(id)}
                 className={`rounded-full px-4 py-2 transition duration-200 ${
                   isActive
                     ? "bg-gradient-to-r from-emerald-400 via-sky-500 to-violet-500 text-black shadow-[0_10px_25px_-15px_rgba(14,165,233,0.8)]"

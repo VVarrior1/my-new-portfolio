@@ -9,7 +9,7 @@ export function Hero() {
   return (
     <section
       id="about"
-      className="relative isolate overflow-hidden rounded-[48px] border border-white/10 bg-gradient-to-br from-white/10 via-black/40 to-black/80 px-8 pb-12 pt-14 text-white shadow-[0_30px_120px_-50px_rgba(16,185,129,0.6)]"
+      className="relative isolate overflow-hidden scroll-mt-32 rounded-[48px] border border-white/10 bg-gradient-to-br from-white/10 via-black/40 to-black/80 px-8 pb-12 pt-14 text-white shadow-[0_30px_120px_-50px_rgba(16,185,129,0.6)]"
     >
       <div className="absolute inset-0 -z-10 opacity-60">
         <div className="pattern-grid" />

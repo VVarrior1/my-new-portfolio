@@ -27,7 +27,7 @@ export default function Home() {
         <Hero />
         <SkillMarquee />
 
-        <section id="skills" className="space-y-8">
+        <section id="skills" className="space-y-8 scroll-mt-32">
           <SectionHeading
             eyebrow="Capabilities"
             title="Technical toolkit"
@@ -40,7 +40,7 @@ export default function Home() {
           <SkillsGrid />
         </section>
 
-        <section id="experience" className="space-y-8">
+        <section id="experience" className="space-y-8 scroll-mt-32">
           <SectionHeading
             eyebrow="Experience"
             title="Building across founders, Big Tech, and ML stacks"
@@ -53,7 +53,7 @@ export default function Home() {
           <ExperienceTimeline />
         </section>
 
-        <section id="projects" className="space-y-8">
+        <section id="projects" className="space-y-8 scroll-mt-32">
           <SectionHeading
             eyebrow="Selected Work"
             title="Projects with measurable impact"
@@ -66,7 +66,7 @@ export default function Home() {
           <ProjectGrid />
         </section>
 
-        <section id="blog" className="space-y-8">
+        <section id="blog" className="space-y-8 scroll-mt-32">
           <SectionHeading
             eyebrow="Writing"
             title="Notes from the field"
@@ -81,7 +81,7 @@ export default function Home() {
 
         <section
           id="contact"
-          className="grid gap-6 lg:grid-cols-[2fr_1fr] lg:items-start"
+          className="grid gap-6 scroll-mt-32 lg:grid-cols-[2fr_1fr] lg:items-start"
         >
           <div className="space-y-8">
             <SectionHeading
