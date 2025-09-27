@@ -7,6 +7,7 @@ export type GalleryItem = {
   description?: string;
   tags: string[];
   imageUrl: string;
+  objectPath?: string;
   createdAt: string;
   featured?: boolean;
 };
@@ -27,4 +28,15 @@ export async function appendGalleryItem(item: GalleryItem) {
   const items = await readGallery();
   items.unshift(item);
   await fs.writeFile(GALLERY_PATH, JSON.stringify(items, null, 2));
+}
+
+
+export async function deleteGalleryItem(id: string) {
+  const items = await readGallery();
+  const filtered = items.filter((item) => item.id !== id);
+  if (filtered.length === items.length) {
+    return false;
+  }
+  await fs.writeFile(GALLERY_PATH, JSON.stringify(filtered, null, 2));
+  return true;
 }

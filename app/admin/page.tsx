@@ -26,6 +26,7 @@ type GalleryItem = {
   description?: string;
   tags: string[];
   imageUrl: string;
+  objectPath?: string;
   createdAt: string;
   featured?: boolean;
 };
@@ -94,6 +95,7 @@ export default function AdminPage() {
   const [galleryFile, setGalleryFile] = useState<File | null>(null);
   const [galleryPreviewUrl, setGalleryPreviewUrl] = useState<string | null>(null);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [galleryDeletingId, setGalleryDeletingId] = useState<string | null>(null);
   const [galleryStatus, setGalleryStatus] = useState<Status>(null);
   const [isGallerySubmitting, setIsGallerySubmitting] = useState(false);
 
@@ -181,9 +183,10 @@ export default function AdminPage() {
         throw new Error(payload.error ?? "Failed to create upload URL");
       }
 
-      const { uploadUrl, publicUrl } = (await uploadRes.json()) as {
+      const { uploadUrl, publicUrl, objectName } = (await uploadRes.json()) as {
         uploadUrl: string;
         publicUrl: string;
+        objectName: string;
       };
 
       const uploadResponse = await fetch(uploadUrl, {
@@ -210,6 +213,7 @@ export default function AdminPage() {
           description: galleryDescription,
           tags: galleryTags,
           imageUrl: publicUrl,
+          objectPath: objectName,
           featured: galleryFeatured,
         }),
       });
@@ -257,6 +261,39 @@ export default function AdminPage() {
       </button>
     </div>
   );
+
+  const handleGalleryDelete = async (id: string) => {
+    if (!token) {
+      setGalleryStatus({ ok: false, message: "Enter admin token first." });
+      return;
+    }
+
+    if (!window.confirm("Remove this gallery item?")) {
+      return;
+    }
+
+    setGalleryDeletingId(id);
+    try {
+      const response = await fetch(`/api/gallery/${id}`, {
+        method: "DELETE",
+        headers: {
+          "x-admin-token": token,
+        },
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error ?? "Failed to delete gallery item");
+      }
+
+      setGalleryItems((items) => items.filter((item) => item.id !== id));
+      setGalleryStatus({ ok: true, message: "Gallery item deleted." });
+    } catch (error) {
+      setGalleryStatus({ ok: false, message: (error as Error).message });
+    } finally {
+      setGalleryDeletingId(null);
+    }
+  };
 
   return (
     <div className="relative text-white">
@@ -520,13 +557,25 @@ export default function AdminPage() {
                         height={400}
                         className="h-40 w-full object-cover"
                       />
-                      <figcaption className="space-y-2 p-4 text-white/80">
-                        <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                        {item.description && (
-                          <p className="line-clamp-2 text-sm text-white/60">
-                            {item.description}
-                          </p>
-                        )}
+                      <figcaption className="space-y-3 p-4 text-white/80">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                            {item.description && (
+                              <p className="line-clamp-2 text-sm text-white/60">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleGalleryDelete(item.id)}
+                            className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-rose-200 transition hover:border-rose-300 hover:bg-rose-300 hover:text-black"
+                            disabled={galleryDeletingId === item.id}
+                          >
+                            {galleryDeletingId === item.id ? "Deleting..." : "Remove"}
+                          </button>
+                        </div>
                         {item.tags.length > 0 && (
                           <ul className="flex flex-wrap gap-2 text-[0.65rem] uppercase tracking-[0.35em] text-white/50">
                             {item.tags.map((tag) => (
