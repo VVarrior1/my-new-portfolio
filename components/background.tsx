@@ -14,35 +14,47 @@ export function Background() {
     if (!ctx) return;
 
     let animationFrameId: number;
-    const fontSize = 16;
+    const fontSize = 14;
     let columns = Math.floor(window.innerWidth / fontSize);
-    let drops = new Array(columns).fill(0);
+    let drops: number[] = [];
+    let speeds: number[] = [];
+    let glyphs: string[] = [];
+
+    const makeSpeed = () => 0.24 + Math.random() * 0.18; // ~0.24 - 0.42
+    const makeGlyph = () => CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
+
+    const initialise = () => {
+      columns = Math.floor(window.innerWidth / fontSize);
+      drops = new Array(columns).fill(0);
+      speeds = new Array(columns).fill(0).map(makeSpeed);
+      glyphs = new Array(columns).fill("0").map(makeGlyph);
+    };
 
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      columns = Math.floor(canvas.width / fontSize);
-      drops = new Array(columns).fill(0);
+      initialise();
     };
 
     const draw = () => {
-      ctx.fillStyle = "rgba(2, 6, 23, 0.15)";
+      ctx.fillStyle = "rgba(2, 6, 23, 0.24)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "rgba(16, 185, 129, 0.9)";
+      ctx.fillStyle = "rgba(16, 185, 129, 0.78)";
       ctx.font = `${fontSize}px "Courier New", monospace`;
 
       drops.forEach((drop, column) => {
-        const text = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)];
         const x = column * fontSize;
         const y = drop * fontSize;
 
-        ctx.fillText(text, x, y);
+        ctx.fillText(glyphs[column], x, y);
 
-        if (y > canvas.height && Math.random() > 0.975) {
-          drops[column] = 0;
+        if (y > canvas.height && Math.random() > 0.97) {
+          drops[column] = -Math.random() * 15;
+          speeds[column] = makeSpeed();
+          glyphs[column] = makeGlyph();
         } else {
-          drops[column] = drop + 1;
+          drops[column] = drop + speeds[column];
         }
       });
 
