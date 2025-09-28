@@ -32,7 +32,7 @@ export default async function BlogsPage() {
             Random thoughts and discoveries
           </h1>
           <p className="max-w-2xl text-white/80">
-            Quick notes on cool stuff I'm learning while building things.
+            Quick notes on cool stuff I&apos;m learning while building things.
           </p>
         </header>
         <section className="grid gap-6 md:grid-cols-2">
