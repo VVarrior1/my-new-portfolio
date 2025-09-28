@@ -45,7 +45,7 @@ export default async function Home() {
         <section id="experience" className="space-y-8 scroll-mt-32">
           <SectionHeading
             eyebrow="Experience"
-            title="Building across founders, Big Tech, and ML stacks"
+            title="Turning ideas into shipped product and code"
             kicker={
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/70">
                 2024 – Present
