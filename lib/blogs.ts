@@ -146,6 +146,7 @@ async function deleteBlogPost(slug: string) {
   const { signedUrl } = generateSignedUrl({
     objectName,
     method: "DELETE",
+    contentType: "application/json",
   });
 
   const response = await fetch(signedUrl, {
