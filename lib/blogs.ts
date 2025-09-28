@@ -146,20 +146,21 @@ async function deleteBlogPost(slug: string) {
   const { signedUrl } = generateSignedUrl({
     objectName,
     method: "DELETE",
-    contentType: "application/json",
+    contentType: "application/octet-stream",
   });
 
   const response = await fetch(signedUrl, {
     method: "DELETE",
     headers: {
+      "Content-Type": "application/octet-stream",
       "x-goog-content-sha256": "UNSIGNED-PAYLOAD",
-      "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
-      "Pragma": "no-cache",
     },
   });
 
   if (!response.ok && response.status !== 404) {
-    throw new Error(`Failed to delete blog post ${slug}: ${response.status}`);
+    const errorText = await response.text();
+    console.error(`Delete failed for ${slug}:`, response.status, errorText);
+    throw new Error(`Failed to delete blog post ${slug}: ${response.status} - ${errorText}`);
   }
 }
 
