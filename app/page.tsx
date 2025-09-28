@@ -89,7 +89,7 @@ export default async function Home() {
               <div className="relative space-y-3">
                 <h3 className="text-2xl font-semibold text-white">Gallery</h3>
                 <p className="text-sm text-white/70">
-                  Build logs, ship moments, and project snapshots
+                  Lifestyle snapshots with the occasional launch highlight
                 </p>
                 <div className="inline-flex items-center gap-2 text-sm font-medium text-emerald-300 transition group-hover:gap-3">
                   View Gallery

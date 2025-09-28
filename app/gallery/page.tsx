@@ -22,11 +22,11 @@ export default async function GalleryPage() {
             <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
               Gallery
             </p>
-            <h1 className="text-4xl font-semibold">Build logs & ship moments</h1>
+            <h1 className="text-4xl font-semibold">Life lately & work highlights</h1>
           </div>
           <p className="max-w-3xl text-white/75">
-            Snapshots from the work — from prototype sketches to production launches,
-            these images capture the journey of building AI-first products.
+            Mostly everyday life—travel, family, late-night cityscapes—with the occasional
+            launch when something ships. A peek into what I’m living and making right now.
           </p>
         </header>
 
