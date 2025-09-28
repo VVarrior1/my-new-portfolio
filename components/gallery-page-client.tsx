@@ -39,59 +39,54 @@ export function GalleryPageClient({ items }: GalleryPageClientProps) {
   }
 
   return (
-    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
       {visibleItems.map((item) => (
         <figure
           key={item.id}
-          className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_20px_60px_-35px_rgba(16,185,129,0.8)] transition duration-300 hover:-translate-y-2 hover:border-emerald-300/60"
+          tabIndex={0}
+          className="group relative mb-6 break-inside-avoid rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_-45px_rgba(16,185,129,0.8)] transition duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 hover:-translate-y-1 hover:rotate-1 hover:border-emerald-300/60 hover:shadow-[0_45px_120px_-60px_rgba(52,211,153,0.9)]"
         >
-          <div className="relative aspect-[4/3] w-full overflow-hidden">
-            <GalleryImage
-              src={item.imageUrl}
-              alt={item.title}
-              width={800}
-              height={600}
-              className="object-cover transition duration-300 group-hover:scale-105"
-              onError={() => handleImageError(item.id)}
-            />
-          </div>
-          <figcaption className="space-y-4 p-6 text-white/80">
-            <div className="space-y-2">
+          <GalleryImage
+            src={item.imageUrl}
+            alt={item.title}
+            width={800}
+            height={600}
+            className="block h-auto w-full object-contain transition duration-700 ease-out group-hover:scale-[1.03] group-hover:saturate-125"
+            onError={() => handleImageError(item.id)}
+          />
+          <figcaption className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/10 to-transparent p-6 opacity-0 translate-y-6 transform-gpu transition duration-300 ease-out group-focus-visible:opacity-100 group-focus-visible:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0">
+            <div className="space-y-3 text-white">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-xl font-semibold text-white">{item.title}</h3>
-                {item.featured && (
-                  <span className="rounded-full border border-emerald-300/60 bg-emerald-300/10 px-2 py-1 text-xs uppercase tracking-[0.3em] text-emerald-100/80">
-                    Featured
-                  </span>
-                )}
-              </div>
-              {item.description && (
-                <p className="text-sm leading-relaxed text-white/70">
-                  {item.description}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.25em] text-emerald-200/80">
-                {formatDate(item.createdAt)}
-              </span>
-              {item.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {item.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={`${item.id}-${tag}`}
-                      className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs uppercase tracking-[0.3em] text-white/60"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {item.tags.length > 3 && (
-                    <span className="text-xs text-white/40">
-                      +{item.tags.length - 3}
-                    </span>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold tracking-tight">
+                    {item.title}
+                  </h3>
+                  {item.description && (
+                    <p className="text-sm text-white/80">
+                      {item.description}
+                    </p>
                   )}
                 </div>
+                <span className="text-xs uppercase tracking-[0.3em] text-emerald-200/90">
+                  {formatDate(item.createdAt)}
+                </span>
+              </div>
+              {item.tags.length > 0 && (
+                <ul className="flex flex-wrap gap-2 text-[0.65rem] uppercase tracking-[0.35em] text-white/70">
+                  {item.tags.slice(0, 4).map((tag) => (
+                    <li
+                      key={`${item.id}-${tag}`}
+                      className="rounded-full border border-white/20 bg-white/10 px-3 py-1"
+                    >
+                      {tag}
+                    </li>
+                  ))}
+                  {item.tags.length > 4 && (
+                    <li className="rounded-full border border-white/20 bg-white/10 px-3 py-1">
+                      +{item.tags.length - 4}
+                    </li>
+                  )}
+                </ul>
               )}
             </div>
           </figcaption>
