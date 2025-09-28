@@ -167,13 +167,14 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    name: "CYD Soccer Performance Hub",
+    name: "CYD Soccer Academy Programs",
     tech: ["Next.js", "TypeScript", "Supabase", "Tailwind"],
+    link: "https://cydsoccer.com",
     description:
-      "Data-powered club platform tracking player metrics, fixtures, and operational workflows for a Calgary youth program.",
+      "Customer-facing site for CYD Soccer Academy that showcases training programs, handles plan purchases with Stripe, and syncs signups into Google Sheets via GCP automations.",
     highlights: [
-      "Built real-time dashboards for coaches to review match metrics, attendance, and progress using Supabase live queries.",
-      "Shipped roster management tools, training plans, and automated email updates to families and volunteers.",
+      "Crafted responsive program catalog, testimonials, and FAQ so families can explore plans and enroll from any device.",
+      "Integrated Stripe checkout with GCP automations that log enrollments to Google Sheets—processing $15K+ while maintaining a 100% performance score for 3K monthly visitors.",
     ],
   },
   {
@@ -188,18 +189,20 @@ export const projects: Project[] = [
     ],
   },
   {
-    name: "Founder Ops – Vertex AI Agent Suite",
+    name: "GenLabs – AI Agents",
     tech: ["Python", "Vertex AI", "Cloud Run", "BigQuery"],
+    link: "https://genlabs.ca",
     description:
-      "Internal GenLabs stack orchestrating retrieval, tool use, and reporting pipelines for production AI agents.",
+      "Production AI agents with voice + text orchestration, embedding search, and automated reporting for GenLabs clients.",
     highlights: [
-      "Designed modular agent graph with Vertex AI Extensions and Cloud Functions to automate B2B workflows.",
-      "Implemented metrics ingestion and cost dashboards on BigQuery + Looker to keep stakeholders aligned in weekly sprints.",
+      "Built multi-modal agents that handle voice or chat requests, route tools, and trigger automations over Vertex AI.",
+      "Shipped an AI search that blends embeddings, similarity search, and structured data so teams find answers instantly.",
     ],
   },
   {
     name: "KanDoIt – KanBan Suite",
     tech: ["Next.js", "Prisma", "PostgreSQL", "Docker"],
+    link: "https://github.com/VVarrior1/KanDoIt",
     description:
       "Team KanBan tool with RBAC, collaborative workflows, and production-ready DevOps.",
     highlights: [
@@ -210,6 +213,7 @@ export const projects: Project[] = [
   {
     name: "AI Fashion Recommendation Engine",
     tech: ["Python", "Faiss", "Vertex AI", "RAG"],
+    link: "https://github.com/VVarrior1/Vectorized-fashion-ai",
     description:
       "Vector search system surfacing hyper-personalized apparel recommendations.",
     highlights: [

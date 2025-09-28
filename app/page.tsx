@@ -143,9 +143,19 @@ export default async function Home() {
               <a
                 href="/Abdelrahman_Mohamed_Resume.pdf"
                 download
-                className="flex items-center justify-center rounded-3xl border border-white/10 bg-white/5 px-6 py-8 text-center text-sm uppercase tracking-[0.3em] text-white/70 transition duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:text-white"
+                className="group flex h-full flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-6 text-white/70 transition duration-200 hover:-translate-y-1 hover:border-emerald-300/60 hover:bg-white/10"
               >
-                Download Résumé
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-white">Résumé</h3>
+                  <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[0.65rem] uppercase tracking-[0.3em] text-white/60">
+                    PDF
+                  </span>
+                </div>
+                <p className="text-sm text-white/60">Download the latest copy.</p>
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-emerald-200 transition group-hover:gap-3">
+                  Download
+                  <span aria-hidden>↗</span>
+                </span>
               </a>
             </div>
           </div>

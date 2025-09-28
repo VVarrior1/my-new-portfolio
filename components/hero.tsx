@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { hero } from "@/lib/content";
+import { education, hero } from "@/lib/content";
 import { StatGrid } from "./stat-grid";
 import { Typewriter } from "./typewriter";
 
@@ -45,6 +45,14 @@ export function Hero() {
           </h1>
           <h2 className="text-lg sm:text-xl text-emerald-200/90">{hero.title}</h2>
           <p className="text-base text-white/75 sm:text-lg">{hero.summary}</p>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-white/70">
+            <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/60">
+              Education
+            </span>
+            <span>
+              {education.degree}, {education.school} · Graduating {education.graduation}
+            </span>
+          </div>
           <div className="rounded-2xl border border-emerald-400/40 bg-black/30 p-4 font-mono text-sm text-emerald-200/80 shadow-[0_15px_60px_-30px_rgba(16,185,129,0.7)]">
             <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-emerald-300/70">
               <span className="flex items-center gap-1.5">
@@ -58,6 +66,7 @@ export function Hero() {
           <div className="flex flex-wrap gap-3">
             {hero.actions.map((action) => {
               const isExternal = action.href.startsWith("http");
+
               return (
                 <Link
                   key={action.href}
@@ -65,7 +74,7 @@ export function Hero() {
                   target={isExternal ? "_blank" : undefined}
                   rel={isExternal ? "noreferrer" : undefined}
                   download={action.download}
-                  className="rounded-full border border-emerald-300/60 px-5 py-2 text-sm font-medium text-emerald-200 transition hover:bg-emerald-300 hover:text-black"
+                  className="rounded-full border border-emerald-300/60 px-5 py-2 text-sm font-medium text-emerald-200 transition hover:bg-emerald-300 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
                 >
                   {action.label}
                 </Link>
