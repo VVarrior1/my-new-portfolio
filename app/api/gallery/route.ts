@@ -1,14 +1,20 @@
-import { appendGalleryItem, getGalleryItems, inferObjectPath } from "@/lib/gallery";
+import { appendGalleryItem, getGalleryItemsPaginated, inferObjectPath } from "@/lib/gallery";
 import { NextResponse, type NextRequest } from "next/server";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
-export async function GET() {
-  const items = await getGalleryItems();
-  const response = NextResponse.json(items);
-  response.headers.set("Cache-Control", "no-store");
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const limit = parseInt(searchParams.get('limit') || '12', 10);
+
+  const result = await getGalleryItemsPaginated(page, limit);
+  const response = NextResponse.json(result);
+  response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
+  response.headers.set("Pragma", "no-cache");
+  response.headers.set("Expires", "0");
   return response;
 }
 

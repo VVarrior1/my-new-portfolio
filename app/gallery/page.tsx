@@ -1,6 +1,6 @@
-import { getGalleryItems } from "@/lib/gallery";
+import { getGalleryItemsPaginated } from "@/lib/gallery";
 import { Navbar } from "@/components/navbar";
-import { GalleryPageClient } from "@/components/gallery-page-client";
+import { GalleryWithPagination } from "@/components/gallery-with-pagination";
 
 const sections = [
   { id: "home", label: "Home", href: "/" },
@@ -11,7 +11,7 @@ const sections = [
 ];
 
 export default async function GalleryPage() {
-  const items = await getGalleryItems();
+  const { items, hasMore, total } = await getGalleryItemsPaginated(1, 12);
 
   return (
     <div className="relative text-white">
@@ -29,7 +29,11 @@ export default async function GalleryPage() {
           </p>
         </header>
 
-        <GalleryPageClient items={items} />
+        <GalleryWithPagination
+          initialItems={items}
+          initialHasMore={hasMore}
+          initialTotal={total}
+        />
       </main>
     </div>
   );

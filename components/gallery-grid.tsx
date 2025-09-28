@@ -1,7 +1,7 @@
-import { getGalleryItems } from "@/lib/gallery";
+import { getFeaturedGalleryItems } from "@/lib/gallery";
 
 export async function GalleryGrid() {
-  const items = await getGalleryItems();
+  const items = await getFeaturedGalleryItems(6); // Get only 6 featured items for home page
 
   if (!items.length) {
     return (
@@ -13,7 +13,7 @@ export async function GalleryGrid() {
 
   return (
     <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
-      {items.map((item) => (
+      {items.map((item, index) => (
         <figure
           key={item.id}
           tabIndex={0}
@@ -23,7 +23,9 @@ export async function GalleryGrid() {
           <img
             src={item.imageUrl}
             alt={item.title}
-            loading="lazy"
+            loading={index < 3 ? "eager" : "lazy"} // Load first 3 immediately
+            fetchPriority={index < 3 ? "high" : "low"}
+            decoding="async"
             className="block w-full object-contain transition duration-700 ease-out group-hover:scale-[1.03] group-hover:saturate-125"
           />
           <figcaption className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/10 to-transparent p-5 opacity-0 translate-y-6 transform-gpu transition duration-300 ease-out group-focus-visible:opacity-100 group-focus-visible:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0">
