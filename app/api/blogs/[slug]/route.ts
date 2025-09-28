@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
-import { getBlogBySlug, deleteBlog, type BlogPost } from "@/lib/blogs";
+import { getBlogBySlug, deleteBlog } from "@/lib/blogs";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
