@@ -26,14 +26,13 @@ export default async function BlogsPage() {
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-16 px-6 pb-24 pt-16 sm:px-8">
         <header id="top" className="space-y-4">
           <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
-            Essays & Logs
+            Thoughts
           </p>
           <h1 className="text-4xl font-semibold">
-            Building in public, reflecting on practice
+            Random thoughts and discoveries
           </h1>
           <p className="max-w-2xl text-white/80">
-            Long-form notes on AI agents, systems thinking, and the habits that
-            keep creativity sharp while shipping production software.
+            Quick notes on cool stuff I'm learning while building things.
           </p>
         </header>
         <section className="grid gap-6 md:grid-cols-2">
