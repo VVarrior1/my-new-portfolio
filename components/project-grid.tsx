@@ -23,7 +23,7 @@ export function ProjectGrid() {
                   rel="noreferrer"
                   className="text-sm text-emerald-300 transition hover:text-emerald-200"
                 >
-                  Visit ↗
+                  {project.link.includes("github.com") ? "GitHub ↗" : "Visit ↗"}
                 </Link>
               )}
             </div>
