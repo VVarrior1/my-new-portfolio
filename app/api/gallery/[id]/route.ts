@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function DELETE(request: NextRequest, context: any) {
-  const { params } = context ?? {};
-  const idParam = Array.isArray(params?.id) ? params.id[0] : params?.id;
+type DeleteContext = {
+  params: Promise<{ id: string }>;
+};
+
+export async function DELETE(request: NextRequest, context: DeleteContext) {
+  const { id: idParam } = await context.params;
   if (!idParam) {
     return NextResponse.json({ error: "Missing gallery id" }, { status: 400 });
   }

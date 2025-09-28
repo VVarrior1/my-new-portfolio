@@ -4,10 +4,12 @@ import { getBlogBySlug, deleteBlog } from "@/lib/blogs";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function DELETE(request: NextRequest, context: any) {
-  const { params } = context ?? {};
-  const slugParam = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+type DeleteContext = {
+  params: Promise<{ slug: string }>;
+};
+
+export async function DELETE(request: NextRequest, context: DeleteContext) {
+  const { slug: slugParam } = await context.params;
   if (!slugParam) {
     return NextResponse.json({ error: "Missing blog slug" }, { status: 400 });
   }
