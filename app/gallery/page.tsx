@@ -22,11 +22,10 @@ export default async function GalleryPage() {
             <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
               Gallery
             </p>
-            <h1 className="text-4xl font-semibold">Life lately & work highlights</h1>
+            <h1 className="text-4xl font-semibold">Life lately</h1>
           </div>
           <p className="max-w-3xl text-white/75">
-            Mostly everyday life—travel, family, late-night cityscapes—with the occasional
-            launch when something ships. A peek into what I’m living and making right now.
+            Random pics I thought were cool haha!
           </p>
         </header>
 

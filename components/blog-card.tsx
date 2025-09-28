@@ -1,8 +1,8 @@
 import Link from "next/link";
-import type { BlogPost } from "@/lib/blogs";
+import type { BlogMetadata } from "@/lib/blogs";
 import { formatDate } from "@/lib/date-utils";
 
-export function BlogCard({ blog }: { blog: BlogPost }) {
+export function BlogCard({ blog }: { blog: BlogMetadata }) {
   const date = formatDate(blog.date);
 
   return (
