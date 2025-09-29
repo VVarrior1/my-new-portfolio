@@ -1,4 +1,5 @@
 import { generateSignedUrl, ensureGcsConfig, gcsBucketName } from "@/lib/gcs";
+import localBlogsData from "@/data/blogs.json";
 
 export type BlogContentBlock = {
   heading?: string;
@@ -26,9 +27,25 @@ const BLOGS_POSTS_PREFIX = "blogs/posts";
 
 type FetchMode = "static" | "dynamic";
 
-// Cache busting utility for immediate propagation when dynamic behaviour is required
+const LOCAL_BLOG_POSTS: BlogPost[] = (localBlogsData as BlogPost[]).map((post) => ({
+  ...post,
+  excerpt: post.excerpt.trim(),
+}));
+
+function getLocalBlogMetadata(): BlogMetadata[] {
+  return LOCAL_BLOG_POSTS.map(({ slug, title, date, excerpt }) => ({ slug, title, date, excerpt }));
+}
+
+function getLocalBlogBySlug(slug: string): BlogPost | null {
+  return LOCAL_BLOG_POSTS.find((post) => post.slug === slug) ?? null;
+}
+
+function shouldUseLocalContent(): boolean {
+  return process.env.CONTENT_SOURCE === "local";
+}
+
 function getCacheBustingUrl(baseUrl: string): string {
-  const separator = baseUrl.includes('?') ? '&' : '?';
+  const separator = baseUrl.includes("?") ? "&" : "?";
   return `${baseUrl}${separator}_t=${Date.now()}&_r=${Math.random().toString(36).substring(7)}`;
 }
 
@@ -44,8 +61,12 @@ function buildFetchOptions(mode: FetchMode): RequestInit & { next?: { revalidate
 }
 
 async function fetchBlogsIndex(mode: FetchMode = "static"): Promise<BlogMetadata[]> {
+  if (shouldUseLocalContent()) {
+    return getLocalBlogMetadata();
+  }
+
   if (!gcsBucketName) {
-    return [];
+    return getLocalBlogMetadata();
   }
 
   const baseUrl = `https://storage.googleapis.com/${gcsBucketName}/${BLOGS_INDEX_OBJECT}`;
@@ -55,28 +76,36 @@ async function fetchBlogsIndex(mode: FetchMode = "static"): Promise<BlogMetadata
   try {
     const response = await fetch(url, fetchOptions);
     if (response.status === 404) {
-      return [];
+      return getLocalBlogMetadata();
     }
 
     if (!response.ok) {
-      console.error("Failed to fetch blogs index", response.status);
-      return [];
+      console.warn("Failed to fetch blogs index", response.status);
+      return getLocalBlogMetadata();
     }
 
     const data = (await response.json()) as BlogMetadata[];
-    return Array.isArray(data) ? data.map((blog) => ({
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.map((blog) => ({
       ...blog,
       excerpt: blog.excerpt.trim(),
-    })) : [];
+    }));
   } catch (error) {
-    console.error("Error fetching blogs index", error);
-    return [];
+    console.warn("Error fetching blogs index", error);
+    return getLocalBlogMetadata();
   }
 }
 
 async function fetchBlogPost(slug: string, mode: FetchMode = "static"): Promise<BlogPost | null> {
+  if (shouldUseLocalContent()) {
+    return getLocalBlogBySlug(slug);
+  }
+
   if (!gcsBucketName) {
-    return null;
+    return getLocalBlogBySlug(slug);
   }
 
   const objectName = `${BLOGS_POSTS_PREFIX}/${slug}.json`;
@@ -87,12 +116,12 @@ async function fetchBlogPost(slug: string, mode: FetchMode = "static"): Promise<
   try {
     const response = await fetch(url, fetchOptions);
     if (response.status === 404) {
-      return null;
+      return getLocalBlogBySlug(slug);
     }
 
     if (!response.ok) {
-      console.error(`Failed to fetch blog post ${slug}`, response.status);
-      return null;
+      console.warn(`Failed to fetch blog post ${slug}`, response.status);
+      return getLocalBlogBySlug(slug);
     }
 
     const data = (await response.json()) as BlogPost;
@@ -101,8 +130,8 @@ async function fetchBlogPost(slug: string, mode: FetchMode = "static"): Promise<
       excerpt: data.excerpt.trim(),
     };
   } catch (error) {
-    console.error(`Error fetching blog post ${slug}`, error);
-    return null;
+    console.warn(`Error fetching blog post ${slug}`, error);
+    return getLocalBlogBySlug(slug);
   }
 }
 
@@ -183,7 +212,7 @@ async function deleteBlogPost(slug: string) {
 
 export async function getAllBlogs(): Promise<BlogMetadata[]> {
   const metadata = await fetchBlogsIndex("static");
-  return metadata.sort((a, b) => (a.date > b.date ? -1 : 1));
+  return [...metadata].sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
 export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
@@ -217,13 +246,10 @@ export async function deleteBlog(slug: string) {
 }
 
 export async function rebuildBlogsIndex(): Promise<void> {
-  // This function can rebuild the index from individual post files
-  // Useful for recovery if the index gets corrupted
+  // Placeholder for future recovery logic if the index ever needs to be rebuilt
   if (!gcsBucketName) {
     throw new Error("GCS bucket not configured");
   }
 
-  // In a real implementation, you'd list all files in blogs/posts/
-  // and rebuild the index. For now, this is a placeholder for future enhancement.
   console.log("Index rebuild functionality - to be implemented when needed");
 }

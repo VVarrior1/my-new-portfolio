@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
 
 type AudioContextType = {
   isPlaying: boolean;

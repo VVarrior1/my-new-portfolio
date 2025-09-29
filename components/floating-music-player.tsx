@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useAudio } from "@/contexts/audio-context";
 
 export function FloatingMusicPlayer() {
