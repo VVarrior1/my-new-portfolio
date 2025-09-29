@@ -238,7 +238,18 @@ function MultiImageUpload({ token, onUploadComplete }: { token: string; onUpload
       const { uploads } = await urlResponse.json();
 
       // Step 2: Upload files
-      const uploadPromises = uploads.map(async (upload: { uploadUrl: string; publicUrl: string; objectName: string; id: string; metadata: any }, index: number) => {
+      const uploadPromises = uploads.map(async (upload: {
+        uploadUrl: string;
+        publicUrl: string;
+        objectName: string;
+        id: string;
+        metadata: {
+          title: string;
+          description?: string;
+          tags?: string;
+          featured?: boolean;
+        }
+      }, index: number) => {
         const item = items[index];
 
         setItems(prev => prev.map(i =>
