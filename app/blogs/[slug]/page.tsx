@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
 
   return {
     title: blog.title,
-    description: blog.excerpt,
+    description: `Read "${blog.title}" - A blog post by Abdelrahman Mohamed covering AI, data science, and software engineering topics.`,
   };
 }
 
@@ -52,7 +52,6 @@ export default async function BlogPage({ params }: BlogPageProps) {
             Essay
           </p>
           <h1 className="text-4xl font-semibold">{blog.title}</h1>
-          <p className="max-w-2xl text-white/70">{blog.excerpt}</p>
         </header>
         <div id="article">
           <BlogDetail blog={blog} />
