@@ -104,6 +104,12 @@ export async function appendGalleryItem(item: GalleryItem) {
   await saveGalleryIndex(next);
 }
 
+export async function appendGalleryItems(items: GalleryItem[]) {
+  const current = await fetchGalleryIndex();
+  const next = [...items, ...current];
+  await saveGalleryIndex(next);
+}
+
 export async function deleteGalleryItem(id: string) {
   const current = await fetchGalleryIndex();
   const next = current.filter((item) => item.id !== id);

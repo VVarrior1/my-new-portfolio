@@ -12,12 +12,12 @@ export async function GalleryGrid() {
   }
 
   return (
-    <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
+    <div className="columns-2 gap-2 sm:gap-3 lg:columns-3">
       {items.map((item, index) => (
         <figure
           key={item.id}
           tabIndex={0}
-          className="group relative mb-6 break-inside-avoid rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_-45px_rgba(16,185,129,0.8)] transition duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 hover:-translate-y-1 hover:rotate-1 hover:border-emerald-300/60 hover:shadow-[0_45px_120px_-60px_rgba(52,211,153,0.9)]"
+          className="group relative mb-2 sm:mb-3 break-inside-avoid rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_-45px_rgba(16,185,129,0.8)] transition duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 hover:-translate-y-1 hover:rotate-1 hover:border-emerald-300/60 hover:shadow-[0_45px_120px_-60px_rgba(52,211,153,0.9)]"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

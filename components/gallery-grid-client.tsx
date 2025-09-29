@@ -44,12 +44,12 @@ export function GalleryGridClient({ items }: GalleryGridClientProps) {
   }
 
   return (
-    <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
+    <div className="columns-2 gap-2 sm:gap-3 lg:columns-3">
       {sortedItems.map((item, index) => (
         <figure
           key={item.id}
           tabIndex={0}
-          className="group relative mb-6 break-inside-avoid rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_-45px_rgba(16,185,129,0.8)] transition duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 hover:-translate-y-1 hover:rotate-1 hover:border-emerald-300/60 hover:shadow-[0_45px_120px_-60px_rgba(52,211,153,0.9)]"
+          className="group relative mb-2 sm:mb-3 break-inside-avoid rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_-45px_rgba(16,185,129,0.8)] transition duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 hover:-translate-y-1 hover:rotate-1 hover:border-emerald-300/60 hover:shadow-[0_45px_120px_-60px_rgba(52,211,153,0.9)]"
         >
           <GalleryImage
             src={item.imageUrl}
@@ -59,7 +59,7 @@ export function GalleryGridClient({ items }: GalleryGridClientProps) {
             className="block h-auto w-full object-contain transition duration-700 ease-out group-hover:scale-[1.03] group-hover:saturate-125"
             onError={() => handleImageError(item.id)}
             priority={index < 3} // Prioritize first 3 images on home page
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
           />
           <figcaption className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/10 to-transparent p-5 opacity-0 translate-y-6 transform-gpu transition duration-300 ease-out group-focus-visible:opacity-100 group-focus-visible:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0">
             <div className="space-y-3 text-white">

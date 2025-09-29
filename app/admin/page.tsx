@@ -34,6 +34,19 @@ type GalleryItem = {
   featured?: boolean;
 };
 
+type MultiUploadItem = {
+  id: string;
+  file: File;
+  title: string;
+  description: string;
+  tags: string;
+  featured: boolean;
+  previewUrl: string;
+  uploading?: boolean;
+  uploaded?: boolean;
+  error?: string;
+};
+
 function formatPreview(body: string): PreviewPost["content"] {
   const lines = body.split(/\r?\n/);
   const blocks: PreviewPost["content"] = [];
@@ -77,9 +90,373 @@ function formatPreview(body: string): PreviewPost["content"] {
   return blocks;
 }
 
-export default function AdminPage() {
+// Login Component
+function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
   const [token, setToken] = useState("");
-  const [mode, setMode] = useState<"blog" | "gallery">("blog");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setIsVerifying(true);
+
+    try {
+      const response = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Invalid token");
+      }
+
+      onLogin(token);
+    } catch (error) {
+      setError((error as Error).message);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  return (
+    <div className="relative text-white">
+      <Navbar sections={sections} />
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-24">
+        <div className="space-y-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-semibold">Admin Access</h1>
+            <p className="text-white/75">
+              Enter your admin token to access the dashboard
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/80">
+                Admin Token
+              </label>
+              <input
+                type="password"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/40 focus:border-emerald-300 focus:outline-none"
+                placeholder="Enter your admin token"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isVerifying}
+              className="w-full rounded-full border border-emerald-400/60 bg-emerald-400/10 px-6 py-3 font-semibold text-emerald-100 transition hover:bg-emerald-300 hover:text-black disabled:cursor-wait disabled:opacity-70"
+            >
+              {isVerifying ? "Verifying..." : "Access Dashboard"}
+            </button>
+
+            {error && (
+              <p className="text-sm text-rose-300 text-center">{error}</p>
+            )}
+          </form>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Multi-Upload Component
+function MultiImageUpload({ token, onUploadComplete }: { token: string; onUploadComplete?: () => void }) {
+  const [items, setItems] = useState<MultiUploadItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [status, setStatus] = useState<Status>(null);
+
+  const handleFilesSelected = (files: FileList | null) => {
+    if (!files) return;
+
+    const newItems: MultiUploadItem[] = Array.from(files).map((file) => ({
+      id: crypto.randomUUID(),
+      file,
+      title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
+      description: "",
+      tags: "",
+      featured: false,
+      previewUrl: URL.createObjectURL(file),
+    }));
+
+    setItems(prev => [...prev, ...newItems]);
+  };
+
+  const updateItem = (id: string, updates: Partial<MultiUploadItem>) => {
+    setItems(prev => prev.map(item =>
+      item.id === id ? { ...item, ...updates } : item
+    ));
+  };
+
+  const removeItem = (id: string) => {
+    setItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+      return prev.filter(i => i.id !== id);
+    });
+  };
+
+  const handleUpload = async () => {
+    if (items.length === 0) return;
+
+    setIsUploading(true);
+    setStatus(null);
+
+    try {
+      // Step 1: Get upload URLs
+      const uploadRequest = items.map(item => ({
+        filename: item.file.name,
+        contentType: item.file.type,
+        title: item.title,
+        description: item.description,
+        tags: item.tags,
+        featured: item.featured,
+      }));
+
+      const urlResponse = await fetch("/api/gallery/multi-upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": token,
+        },
+        body: JSON.stringify({ images: uploadRequest }),
+      });
+
+      if (!urlResponse.ok) {
+        const error = await urlResponse.json();
+        throw new Error(error.error || "Failed to get upload URLs");
+      }
+
+      const { uploads } = await urlResponse.json();
+
+      // Step 2: Upload files
+      const uploadPromises = uploads.map(async (upload: { uploadUrl: string; publicUrl: string; objectName: string; id: string; metadata: any }, index: number) => {
+        const item = items[index];
+
+        setItems(prev => prev.map(i =>
+          i.id === item.id ? { ...i, uploading: true } : i
+        ));
+
+        try {
+          const uploadResponse = await fetch(upload.uploadUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": item.file.type,
+              "x-goog-content-sha256": "UNSIGNED-PAYLOAD",
+            },
+            body: item.file,
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error(`Failed to upload ${item.title}`);
+          }
+
+          setItems(prev => prev.map(i =>
+            i.id === item.id ? { ...i, uploading: false, uploaded: true } : i
+          ));
+
+          return upload;
+        } catch (error) {
+          setItems(prev => prev.map(i =>
+            i.id === item.id ? {
+              ...i,
+              uploading: false,
+              error: (error as Error).message
+            } : i
+          ));
+          throw error;
+        }
+      });
+
+      const completedUploads = await Promise.all(uploadPromises);
+
+      // Step 3: Save metadata
+      const saveResponse = await fetch("/api/gallery/multi-upload", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-token": token,
+        },
+        body: JSON.stringify({ completedUploads }),
+      });
+
+      if (!saveResponse.ok) {
+        const error = await saveResponse.json();
+        throw new Error(error.error || "Failed to save metadata");
+      }
+
+      setStatus({
+        ok: true,
+        message: `Successfully uploaded ${completedUploads.length} images`
+      });
+
+      // Clear items after successful upload
+      items.forEach(item => URL.revokeObjectURL(item.previewUrl));
+      setItems([]);
+
+      // Refresh gallery to show new items
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+
+    } catch (error) {
+      setStatus({ ok: false, message: (error as Error).message });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur">
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">Multi-Image Upload</h3>
+
+          <div className="space-y-2">
+            <label className="text-xs uppercase tracking-[0.3em] text-white/60">
+              Select Images
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => handleFilesSelected(e.target.files)}
+              className="w-full rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-3 text-sm text-white/70 focus:border-emerald-300 focus:outline-none"
+            />
+          </div>
+
+          {items.length > 0 && (
+            <div className="space-y-4">
+              <div className="grid gap-4">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`rounded-2xl border p-4 ${
+                      item.uploaded
+                        ? "border-emerald-400/40 bg-emerald-400/10"
+                        : item.error
+                        ? "border-rose-400/40 bg-rose-400/10"
+                        : "border-white/10 bg-white/5"
+                    }`}
+                  >
+                    <div className="grid gap-4 sm:grid-cols-[auto_1fr_auto]">
+                      <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10">
+                        <Image
+                          src={item.previewUrl}
+                          alt="Preview"
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <input
+                          type="text"
+                          value={item.title}
+                          onChange={(e) => updateItem(item.id, { title: e.target.value })}
+                          placeholder="Image title"
+                          className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                          disabled={item.uploading || item.uploaded}
+                        />
+
+                        <input
+                          type="text"
+                          value={item.tags}
+                          onChange={(e) => updateItem(item.id, { tags: e.target.value })}
+                          placeholder="Tags (comma separated)"
+                          className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none"
+                          disabled={item.uploading || item.uploaded}
+                        />
+
+                        <textarea
+                          value={item.description}
+                          onChange={(e) => updateItem(item.id, { description: e.target.value })}
+                          placeholder="Description (optional)"
+                          className="sm:col-span-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-emerald-300 focus:outline-none resize-none"
+                          rows={2}
+                          disabled={item.uploading || item.uploaded}
+                        />
+
+                        <label className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-white/60">
+                          <input
+                            type="checkbox"
+                            checked={item.featured}
+                            onChange={(e) => updateItem(item.id, { featured: e.target.checked })}
+                            className="h-4 w-4 rounded border-white/30 bg-white/10 text-emerald-300"
+                            disabled={item.uploading || item.uploaded}
+                          />
+                          Featured
+                        </label>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-2">
+                        {item.uploading && (
+                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-300/30 border-t-emerald-300" />
+                        )}
+                        {item.uploaded && (
+                          <div className="h-5 w-5 rounded-full bg-emerald-400 flex items-center justify-center">
+                            <svg className="h-3 w-3 text-black" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                        {item.error && (
+                          <div className="text-xs text-rose-300 text-center">
+                            {item.error}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          className="text-xs text-white/40 hover:text-rose-300 transition"
+                          disabled={item.uploading}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleUpload}
+                disabled={isUploading || items.some(i => !i.title)}
+                className="w-full rounded-full border border-emerald-400/60 bg-emerald-400/10 px-6 py-3 font-semibold text-emerald-100 transition hover:bg-emerald-300 hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isUploading
+                  ? `Uploading ${items.filter(i => i.uploading).length}/${items.length}...`
+                  : `Upload ${items.length} Image${items.length !== 1 ? 's' : ''}`
+                }
+              </button>
+            </div>
+          )}
+
+          {status && (
+            <p className={`text-sm ${status.ok ? "text-emerald-300" : "text-rose-300"}`}>
+              {status.message}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main Admin Dashboard
+function AdminDashboard({ token }: { token: string }) {
+  const [mode, setMode] = useState<"blog" | "gallery" | "multi-upload">("blog");
   const [status, setStatus] = useState<Status>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -102,17 +479,27 @@ export default function AdminPage() {
   const [galleryStatus, setGalleryStatus] = useState<Status>(null);
   const [isGallerySubmitting, setIsGallerySubmitting] = useState(false);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [isFixingInvalid, setIsFixingInvalid] = useState(false);
 
-  useEffect(() => {
-    const loadGallery = async () => {
-      const response = await fetch("/api/gallery");
+  const loadGallery = async () => {
+    try {
+      const response = await fetch("/api/gallery?admin=true");
       if (!response.ok) {
+        console.error("Failed to fetch gallery items:", response.status);
         return;
       }
-      const data = (await response.json()) as GalleryItem[];
-      setGalleryItems(data);
-    };
+      const items = await response.json();
+      const validItems = Array.isArray(items)
+        ? items.filter(item => item && item.id && typeof item.id === 'string')
+        : [];
+      setGalleryItems(validItems);
+    } catch (error) {
+      console.error("Error loading gallery:", error);
+      setGalleryItems([]);
+    }
+  };
 
+  useEffect(() => {
     loadGallery();
   }, []);
 
@@ -263,15 +650,19 @@ export default function AdminPage() {
       >
         Gallery
       </button>
+      <button
+        type="button"
+        onClick={() => setMode("multi-upload")}
+        className={`rounded-full px-4 py-1 transition ${
+          mode === "multi-upload" ? "bg-emerald-400/20 text-white" : "hover:text-white"
+        }`}
+      >
+        Multi Upload
+      </button>
     </div>
   );
 
   const handleGalleryDelete = async (id: string) => {
-    if (!token) {
-      setGalleryStatus({ ok: false, message: "Enter admin token first." });
-      return;
-    }
-
     if (!window.confirm("Remove this gallery item?")) {
       return;
     }
@@ -325,11 +716,7 @@ export default function AdminPage() {
       });
 
       // Refresh the gallery list
-      const galleryResponse = await fetch("/api/gallery");
-      if (galleryResponse.ok) {
-        const updatedItems = await galleryResponse.json();
-        setGalleryItems(updatedItems);
-      }
+      await loadGallery();
     } catch (error) {
       setGalleryStatus({
         ok: false,
@@ -337,6 +724,43 @@ export default function AdminPage() {
       });
     } finally {
       setIsCleaningUp(false);
+    }
+  };
+
+  const handleFixInvalidItems = async () => {
+    if (!confirm("This will remove gallery items with invalid dates or missing required fields. Continue?")) {
+      return;
+    }
+
+    setIsFixingInvalid(true);
+    try {
+      const response = await fetch("/api/gallery/fix-invalid", {
+        method: "POST",
+        headers: {
+          "x-admin-token": token,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error ?? "Failed to fix invalid items");
+      }
+
+      const result = await response.json();
+      setGalleryStatus({
+        ok: true,
+        message: result.message || `Fixed ${result.removed} invalid items`
+      });
+
+      // Refresh the gallery list
+      await loadGallery();
+    } catch (error) {
+      setGalleryStatus({
+        ok: false,
+        message: (error as Error).message
+      });
+    } finally {
+      setIsFixingInvalid(false);
     }
   };
 
@@ -353,34 +777,19 @@ export default function AdminPage() {
               <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
                 Admin Console
               </p>
-              <h1 className="text-4xl font-semibold">Publish content</h1>
+              <h1 className="text-4xl font-semibold">Content Management</h1>
             </div>
             {renderModeToggle}
           </div>
           <p className="max-w-3xl text-white/75">
-            Enter your admin token (stored locally in your browser only) to
-            publish updates. Blog posts support Markdown (`## Heading`, blank
-            lines for paragraph breaks, `![alt](url)` for images). The gallery
-            uploader pushes assets to your Google Cloud Storage bucket and keeps
-            metadata in the repo.
+            Manage your content with enhanced security and bulk upload capabilities.
+            {mode === "multi-upload" && " Upload multiple images with individual metadata."}
           </p>
         </header>
 
-        <div className="grid gap-4 rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur">
-          <label className="text-xs uppercase tracking-[0.3em] text-white/60">
-            Admin token
-          </label>
-          <input
-            type="password"
-            value={token}
-            onChange={(event) => setToken(event.target.value)}
-            className="max-w-md rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-white focus:border-emerald-300 focus:outline-none"
-            placeholder="Enter ADMIN_TOKEN"
-            required
-          />
-        </div>
-
-        {mode === "blog" ? (
+        {mode === "multi-upload" ? (
+          <MultiImageUpload token={token} onUploadComplete={loadGallery} />
+        ) : mode === "blog" ? (
           <>
             <form
               onSubmit={handleBlogSubmit}
@@ -584,16 +993,26 @@ export default function AdminPage() {
             </form>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <h2 className="text-2xl font-semibold">Recent uploads</h2>
-                <button
-                  type="button"
-                  onClick={handleCleanupGallery}
-                  disabled={isCleaningUp}
-                  className="rounded-full border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-400/20 disabled:opacity-50"
-                >
-                  {isCleaningUp ? "Cleaning..." : "Clean Up Broken Images"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleFixInvalidItems}
+                    disabled={isFixingInvalid}
+                    className="rounded-full border border-rose-400/60 bg-rose-400/10 px-4 py-2 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20 disabled:opacity-50"
+                  >
+                    {isFixingInvalid ? "Fixing..." : "Fix Invalid Items"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCleanupGallery}
+                    disabled={isCleaningUp}
+                    className="rounded-full border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-sm font-medium text-amber-100 transition hover:bg-amber-400/20 disabled:opacity-50"
+                  >
+                    {isCleaningUp ? "Cleaning..." : "Clean Up Broken Images"}
+                  </button>
+                </div>
               </div>
               {galleryItems.length === 0 ? (
                 <p className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-6 text-sm text-white/60">
@@ -655,6 +1074,16 @@ export default function AdminPage() {
       </main>
     </div>
   );
+}
+
+export default function AdminPage() {
+  const [token, setToken] = useState<string | null>(null);
+
+  if (!token) {
+    return <AdminLogin onLogin={setToken} />;
+  }
+
+  return <AdminDashboard token={token} />;
 }
 
 type BlogPost = {

@@ -9,9 +9,14 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1', 10);
   const limit = parseInt(searchParams.get('limit') || '12', 10);
+  const adminView = searchParams.get('admin') === 'true';
 
   const result = await getGalleryItemsPaginated(page, limit);
-  const response = NextResponse.json(result);
+
+  // For admin requests, return just the items array for easier handling
+  const responseData = adminView ? result.items : result;
+
+  const response = NextResponse.json(responseData);
   response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0");
   response.headers.set("Pragma", "no-cache");
   response.headers.set("Expires", "0");
