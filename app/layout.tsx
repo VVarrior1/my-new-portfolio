@@ -27,7 +27,11 @@ export const metadata: Metadata = {
       "AI, data science, and software engineer focused on Vertex AI, analytics pipelines, and product velocity.",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/icon", sizes: "32x32", type: "image/png" },
+      { url: "/icon.svg", sizes: "any", type: "image/svg+xml" }
+    ],
+    apple: "/apple-icon",
   },
 };
 
