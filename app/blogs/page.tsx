@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar";
 export const metadata: Metadata = {
   title: "Writing & Notes",
   description:
-    "Thinking in public about AI, product velocity, and the business of software.",
+    "Thinking in public about AI, data science, product velocity, and the business of software.",
 };
 
 const sections = [

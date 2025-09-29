@@ -6,7 +6,7 @@ export function ContactCard() {
     <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-400/10 via-transparent to-white/5 p-6 text-white shadow-[0_25px_80px_-50px_rgba(16,185,129,0.8)] transition duration-200 hover:-translate-y-1 hover:border-emerald-300/60">
       <h3 className="text-2xl font-semibold">Let’s build something impactful</h3>
       <p className="mt-3 text-white/75">
-        I’m focused on AI-driven products, full-stack platforms, and teams shipping tangible value.
+        I’m focused on AI-driven products, data science insights, and full-stack platforms that ship tangible value.
         {" "}
         {hero.availability}.
       </p>

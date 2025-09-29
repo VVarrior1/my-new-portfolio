@@ -18,20 +18,20 @@ export const hero: {
   actions: HeroAction[];
 } = {
   name: "Abdelrahman Mohamed",
-  title: "AI Engineer & Full-Stack Developer",
+  title: "AI & Data Science Engineer · Software Developer",
   summary:
-    "Co-founder shipping AI automation at GenLabs, building data-driven products that blend modern frontend craft with production-grade ML systems.",
+    "Co-founder shipping AI automation at GenLabs, building analytics pipelines, data science models, and modern web platforms that turn insight into shipped product.",
   location: "Calgary, AB",
-  availability: "Open to full-time Software Engineer and AI/ML roles for 2025",
+  availability: "Open to full-time Software, Data Science, and AI/ML roles for 2025",
   spotlight: {
-    label: "Currently launching Vertex AI agents at GenLabs",
+    label: "Currently shipping Vertex AI + analytics workflows at GenLabs",
     href: "https://genlabs.ca",
   },
   typewriterLines: [
     "> deploying Vertex AI agents to production",
-    "> analysing 100k+ row datasets with Python",
+    "> analysing 100k+ row datasets with Python & SQL",
     "> leading co-founder sprints at GenLabs",
-    "> building full-stack platforms with Next.js",
+    "> building full-stack and data apps with Next.js",
   ],
   actions: [
     {
@@ -236,11 +236,11 @@ export const education = {
 
 export const stats = [
   {
-    label: "AI code reviews delivered",
+    label: "AI & data science reviews delivered",
     value: "1k+",
   },
   {
-    label: "Production ML launches",
+    label: "Production ML & analytics launches",
     value: "10",
   },
   {

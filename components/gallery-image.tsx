@@ -70,6 +70,7 @@ export function GalleryImage({ src, alt, width, height, className, onError, prio
     <div
       className={`relative w-full ${onClick ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
       onClick={onClick}
+      aria-label={description || title || alt}
     >
       {isLoading && (
         <div className="absolute inset-0 animate-pulse bg-white/10 rounded" />
@@ -77,6 +78,7 @@ export function GalleryImage({ src, alt, width, height, className, onError, prio
       <Image
         src={currentSrc}
         alt={alt}
+        title={title}
         width={width}
         height={height}
         className={className}
@@ -94,6 +96,9 @@ export function GalleryImage({ src, alt, width, height, className, onError, prio
           objectFit: "cover"
         }}
       />
+      {description && (
+        <span className="sr-only">{description}</span>
+      )}
       {onClick && (
         <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/20">
           <div className="rounded-full bg-white/20 p-2 backdrop-blur-sm">

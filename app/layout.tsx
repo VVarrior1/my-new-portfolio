@@ -7,15 +7,15 @@ import { FloatingMusicPlayer } from "@/components/floating-music-player";
 export const metadata: Metadata = {
   metadataBase: new URL("https://abdelrahmanmohamed1.netlify.app"),
   title: {
-    default: "Abdelrahman Mohamed | AI Engineer & Full-Stack Developer",
+    default: "Abdelrahman Mohamed | AI, Data Science & Software Engineer",
     template: "%s | Abdelrahman Mohamed",
   },
   description:
-    "AI engineer and full-stack developer building Vertex AI agents, scalable web apps, and ML-powered products.",
+    "AI, data science, and software engineer building Vertex AI agents, analytics pipelines, and production web platforms.",
   openGraph: {
-    title: "Abdelrahman Mohamed | AI Engineer & Full-Stack Developer",
+    title: "Abdelrahman Mohamed | AI, Data Science & Software Engineer",
     description:
-      "Co-founder at GenLabs accelerating AI automation and full-stack product delivery.",
+      "Co-founder at GenLabs delivering AI automation, data science insights, and full-stack product delivery.",
     url: "https://abdelrahmanmohamed1.netlify.app",
     type: "website",
     locale: "en_CA",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Abdelrahman Mohamed",
     description:
-      "AI engineer & full-stack developer focused on Vertex AI, ML systems, and product velocity.",
+      "AI, data science, and software engineer focused on Vertex AI, analytics pipelines, and product velocity.",
   },
   icons: {
     icon: "/favicon.ico",

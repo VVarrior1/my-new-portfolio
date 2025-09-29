@@ -25,7 +25,7 @@ export default async function GalleryPage() {
             <h1 className="text-4xl font-semibold">Life lately</h1>
           </div>
           <p className="max-w-3xl text-white/75">
-            Random pics I thought were cool haha!
+            Random pics I thought were cool
           </p>
         </header>
 

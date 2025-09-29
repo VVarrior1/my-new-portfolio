@@ -61,7 +61,7 @@ export default async function Home() {
             title="Projects with measurable impact"
             kicker={
               <span className="rounded-full border border-emerald-300/60 bg-emerald-300/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-100/80">
-                AI + full-stack builds
+                AI · data science · software builds
               </span>
             }
           />
@@ -108,7 +108,7 @@ export default async function Home() {
               <div className="relative space-y-3">
                 <h3 className="text-2xl font-semibold text-white">Writing</h3>
                 <p className="text-sm text-white/70">
-                  Essays on AI, product velocity, and building in public
+                  Essays on AI, data science, product velocity, and building in public
                 </p>
                 <div className="inline-flex items-center gap-2 text-sm font-medium text-emerald-300 transition group-hover:gap-3">
                   Read Posts
@@ -126,7 +126,7 @@ export default async function Home() {
           <div className="space-y-8">
             <SectionHeading
               eyebrow="Let’s talk"
-              title="Ready for AI-first product teams"
+              title="Ready for AI, data science, and software teams"
               kicker={
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.3em] text-white/70">
                   Calgary · Remote friendly
@@ -134,8 +134,8 @@ export default async function Home() {
               }
             />
             <p className="text-white/75">
-              Whether it’s launching AI agents, scaling full-stack platforms, or
-              improving model performance, I love partnering with teams that
+              Whether it’s launching AI agents, building production analytics, or
+              scaling full-stack platforms, I love partnering with teams that
               move fast and ship thoughtfully. Let’s explore how I can help.
             </p>
             <div className="grid gap-5 sm:grid-cols-2">
