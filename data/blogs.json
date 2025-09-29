@@ -77,7 +77,7 @@
     "slug": "ai-with-api-function-calls",
     "title": "AI with API Function Calls",
     "date": "2024-10-30",
-    "excerpt": "API function calls are a way to interact with a server or service to get data or perform actions. APIs (Application Programming Interfaces) allow developers to connect to various platforms and use their features in their own applications. Through API calls, one can request information, submit data, or perform updates in a system by sending structured requests to the service endpoints. This is especially useful when integrating AI models with external data sources, enabling them to interact dynamically with real-time data. AI systems often rely on API function calls to extend their capabilities. For instance, a machine learning model can use APIs to fetch the latest financial data or weather information, enhancing decision-making and predictions. API calls can also allow AI to control IoT devices, send notifications, or even interact with other web services like Google Maps or social media platforms.",
+    "excerpt": "Discover how AI systems leverage API function calls to extend their capabilities and interact with external data sources. Learn about implementing API integrations that allow AI to fetch real-time data, control IoT devices, and connect with platforms like Google Maps and social media.",
     "content": [
       {
         "heading": "API Function Calls",
