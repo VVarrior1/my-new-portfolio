@@ -29,50 +29,69 @@ export function AudioProvider({ children, trackUrl }: AudioProviderProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(0.3); // Start at 30% volume
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const latestVolume = useRef(volume);
+  const [isClient, setIsClient] = useState(false);
 
-  // Initialize audio element
+  // Keep volume in sync with the audio element
   useEffect(() => {
-    if (!audioRef.current && typeof window !== 'undefined') {
-      const audio = new Audio(trackUrl);
-      audio.loop = true;
-      audio.volume = volume;
-      audio.preload = 'metadata';
-
-      // Handle audio events
-      const handleCanPlay = () => setIsInitialized(true);
-      const handleError = (e: Event) => {
-        console.error('Audio loading error:', e);
-        setIsPlaying(false);
-      };
-      const handleEnded = () => setIsPlaying(false);
-
-      audio.addEventListener('canplay', handleCanPlay);
-      audio.addEventListener('error', handleError);
-      audio.addEventListener('ended', handleEnded);
-
-      audioRef.current = audio;
-
-      return () => {
-        audio.removeEventListener('canplay', handleCanPlay);
-        audio.removeEventListener('error', handleError);
-        audio.removeEventListener('ended', handleEnded);
-        audio.pause();
-        audio.src = '';
-      };
+    latestVolume.current = volume;
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
     }
-  }, [trackUrl, volume]);
+  }, [volume]);
+
+  // Track when we're on the client to avoid hydration mismatches
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Wire up media events once the audio element exists or the track changes
+  useEffect(() => {
+    if (!isClient) {
+      return;
+    }
+
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+
+    const handleError = (event: Event) => {
+      console.error('Audio loading error:', event);
+      setIsPlaying(false);
+    };
+    const handleEnded = () => setIsPlaying(false);
+
+    const codecSupport = audio.canPlayType('audio/mp4; codecs="mp4a.40.2"') || audio.canPlayType('audio/aac');
+    if (!codecSupport) {
+      console.warn('Background audio format not supported in this browser. Consider providing an MP3 fallback.');
+    }
+
+    audio.loop = true;
+    audio.volume = latestVolume.current;
+    audio.preload = 'metadata';
+
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('ended', handleEnded);
+
+    // Ensure metadata is loaded so the first user interaction can start playback everywhere
+    audio.load();
+
+    return () => {
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [trackUrl, isClient]);
 
   // Load user preferences
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedVolume = localStorage.getItem('music-volume');
-      const savedMuted = localStorage.getItem('music-muted');
 
       if (savedVolume) {
         const vol = parseFloat(savedVolume);
-        setVolumeState(vol);
-        if (audioRef.current) {
+        setVolumeState(Number.isNaN(vol) ? 0.3 : vol);
+        if (audioRef.current && !Number.isNaN(vol)) {
           audioRef.current.volume = vol;
         }
       }
@@ -82,7 +101,7 @@ export function AudioProvider({ children, trackUrl }: AudioProviderProps) {
   }, []);
 
   const togglePlay = async () => {
-    if (!audioRef.current || !isInitialized) return;
+    if (!audioRef.current) return;
 
     try {
       if (isPlaying) {
@@ -122,6 +141,11 @@ export function AudioProvider({ children, trackUrl }: AudioProviderProps) {
 
   return (
     <AudioContext.Provider value={value}>
+      {isClient ? (
+        <audio ref={audioRef} className="hidden" preload="metadata" loop>
+          <source src={trackUrl} type="audio/mp4" />
+        </audio>
+      ) : null}
       {children}
     </AudioContext.Provider>
   );

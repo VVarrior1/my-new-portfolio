@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-950 font-sans text-white antialiased">
-        <AudioProvider trackUrl="/background-music.mp3">
+        <AudioProvider trackUrl="/background-music.m4a">
           <Background />
           <div className="relative z-10 min-h-screen">
             {children}

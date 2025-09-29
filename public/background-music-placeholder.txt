@@ -3,20 +3,20 @@ BACKGROUND MUSIC SETUP
 
 To add background music to your portfolio:
 
-1. Add your .mp3 file to this public/ directory
-2. Rename it to "background-music.mp3"
+1. Add your .m4a or .mp3 file to this public/ directory
+2. Rename it to "background-music.m4a" (or update the code if you prefer a different name)
 3. The music player will automatically detect and use it
 
 Recommended specs:
-- Format: MP3
+- Format: M4A (AAC) or MP3
 - Bitrate: 128kbps or higher
 - Duration: 2-5 minutes (it will loop)
 - Style: Ambient, lo-fi, or instrumental
 - Volume: Already optimized to start at 30%
 
 The music player features:
-- Floating toggle in bottom-right corner
-- Volume control on hover
+- Minimal floating control in the bottom-right corner
+- Icon-only play/pause with subtle activity indicator
+- Compact volume slider that stays visible
 - Persists across page navigation
 - Respects browser autoplay policies
-- Elegant vinyl record animation when playing
