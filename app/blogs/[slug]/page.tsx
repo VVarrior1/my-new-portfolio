@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BlogDetail } from "@/components/blog-detail";
 import { Navbar } from "@/components/navbar";
 import { getAllBlogs, getBlogBySlug } from "@/lib/blogs";
+import { formatDateLong } from "@/lib/date-utils";
 
 type BlogPageProps = {
   params: Promise<{ slug: string }>;
@@ -48,10 +49,10 @@ export default async function BlogPage({ params }: BlogPageProps) {
       <Navbar sections={sections} />
       <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-16 px-6 pb-24 pt-16 sm:px-8">
         <header className="space-y-4" id="top">
-          <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
-            Essay
-          </p>
           <h1 className="text-4xl font-semibold">{blog.title}</h1>
+          <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
+            {formatDateLong(blog.date)}
+          </p>
         </header>
         <div id="article">
           <BlogDetail blog={blog} />

@@ -1,15 +1,8 @@
 import type { BlogPost } from "@/lib/blogs";
-import { formatDateLong } from "@/lib/date-utils";
 
 export function BlogDetail({ blog }: { blog: BlogPost }) {
   return (
     <article className="mx-auto max-w-3xl space-y-10">
-      <header className="space-y-4">
-        <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
-          {formatDateLong(blog.date)}
-        </p>
-        <h1 className="text-4xl font-semibold text-white">{blog.title}</h1>
-      </header>
       <div className="space-y-10 text-white/80">
         {blog.content.map((block, index) => {
           if (block.image) {
