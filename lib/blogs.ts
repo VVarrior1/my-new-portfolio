@@ -24,21 +24,36 @@ export type BlogMetadata = {
 const BLOGS_INDEX_OBJECT = "blogs/index.json";
 const BLOGS_POSTS_PREFIX = "blogs/posts";
 
-// Cache busting utility for immediate propagation
+type FetchMode = "static" | "dynamic";
+
+// Cache busting utility for immediate propagation when dynamic behaviour is required
 function getCacheBustingUrl(baseUrl: string): string {
   const separator = baseUrl.includes('?') ? '&' : '?';
   return `${baseUrl}${separator}_t=${Date.now()}&_r=${Math.random().toString(36).substring(7)}`;
 }
 
-async function fetchBlogsIndex(): Promise<BlogMetadata[]> {
+function buildFetchOptions(mode: FetchMode): RequestInit & { next?: { revalidate: number } } {
+  if (mode === "dynamic") {
+    return { cache: "no-store" };
+  }
+
+  return {
+    cache: "force-cache",
+    next: { revalidate: 300 },
+  };
+}
+
+async function fetchBlogsIndex(mode: FetchMode = "static"): Promise<BlogMetadata[]> {
   if (!gcsBucketName) {
     return [];
   }
 
-  const url = getCacheBustingUrl(`https://storage.googleapis.com/${gcsBucketName}/${BLOGS_INDEX_OBJECT}`);
+  const baseUrl = `https://storage.googleapis.com/${gcsBucketName}/${BLOGS_INDEX_OBJECT}`;
+  const url = mode === "dynamic" ? getCacheBustingUrl(baseUrl) : baseUrl;
+  const fetchOptions = buildFetchOptions(mode);
 
   try {
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(url, fetchOptions);
     if (response.status === 404) {
       return [];
     }
@@ -59,16 +74,18 @@ async function fetchBlogsIndex(): Promise<BlogMetadata[]> {
   }
 }
 
-async function fetchBlogPost(slug: string): Promise<BlogPost | null> {
+async function fetchBlogPost(slug: string, mode: FetchMode = "static"): Promise<BlogPost | null> {
   if (!gcsBucketName) {
     return null;
   }
 
   const objectName = `${BLOGS_POSTS_PREFIX}/${slug}.json`;
-  const url = getCacheBustingUrl(`https://storage.googleapis.com/${gcsBucketName}/${objectName}`);
+  const baseUrl = `https://storage.googleapis.com/${gcsBucketName}/${objectName}`;
+  const url = mode === "dynamic" ? getCacheBustingUrl(baseUrl) : baseUrl;
+  const fetchOptions = buildFetchOptions(mode);
 
   try {
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(url, fetchOptions);
     if (response.status === 404) {
       return null;
     }
@@ -165,12 +182,12 @@ async function deleteBlogPost(slug: string) {
 }
 
 export async function getAllBlogs(): Promise<BlogMetadata[]> {
-  const metadata = await fetchBlogsIndex();
+  const metadata = await fetchBlogsIndex("static");
   return metadata.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
 export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
-  return await fetchBlogPost(slug);
+  return await fetchBlogPost(slug, "static");
 }
 
 export async function appendBlog(blog: BlogPost) {
@@ -178,7 +195,7 @@ export async function appendBlog(blog: BlogPost) {
   await saveBlogPost(blog);
 
   // Update the metadata index
-  const currentMetadata = await fetchBlogsIndex();
+  const currentMetadata = await fetchBlogsIndex("dynamic");
   const blogMetadata: BlogMetadata = {
     slug: blog.slug,
     title: blog.title,
@@ -194,7 +211,7 @@ export async function deleteBlog(slug: string) {
   await deleteBlogPost(slug);
 
   // Update the metadata index
-  const currentMetadata = await fetchBlogsIndex();
+  const currentMetadata = await fetchBlogsIndex("dynamic");
   const nextMetadata = currentMetadata.filter((blog) => blog.slug !== slug);
   await saveBlogsIndex(nextMetadata);
 }

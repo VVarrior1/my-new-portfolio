@@ -13,21 +13,36 @@ export type GalleryItem = {
 
 const INDEX_OBJECT = "gallery/metadata/index.json";
 
-// Cache busting utility for immediate propagation
+type FetchMode = "static" | "dynamic";
+
+// Cache busting utility for immediate propagation when dynamic behaviour is required
 function getCacheBustingUrl(baseUrl: string): string {
   const separator = baseUrl.includes('?') ? '&' : '?';
   return `${baseUrl}${separator}_t=${Date.now()}&_r=${Math.random().toString(36).substring(7)}`;
 }
 
-async function fetchGalleryIndex(): Promise<GalleryItem[]> {
+function buildFetchOptions(mode: FetchMode): RequestInit & { next?: { revalidate: number } } {
+  if (mode === "dynamic") {
+    return { cache: "no-store" };
+  }
+
+  return {
+    cache: "force-cache",
+    next: { revalidate: 300 },
+  };
+}
+
+async function fetchGalleryIndex(mode: FetchMode = "static"): Promise<GalleryItem[]> {
   if (!gcsBucketName) {
     return [];
   }
 
-  const url = getCacheBustingUrl(`https://storage.googleapis.com/${gcsBucketName}/${INDEX_OBJECT}`);
+  const baseUrl = `https://storage.googleapis.com/${gcsBucketName}/${INDEX_OBJECT}`;
+  const url = mode === "dynamic" ? getCacheBustingUrl(baseUrl) : baseUrl;
+  const fetchOptions = buildFetchOptions(mode);
 
   try {
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(url, fetchOptions);
     if (response.status === 404) {
       return [];
     }
@@ -71,12 +86,12 @@ async function saveGalleryIndex(items: GalleryItem[]) {
 }
 
 export async function getGalleryItems(): Promise<GalleryItem[]> {
-  const items = await fetchGalleryIndex();
+  const items = await fetchGalleryIndex("static");
   return items.sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1));
 }
 
 export async function getFeaturedGalleryItems(limit: number = 6): Promise<GalleryItem[]> {
-  const items = await fetchGalleryIndex();
+  const items = await fetchGalleryIndex("static");
   return items
     .filter(item => item.featured)
     .sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
@@ -84,7 +99,7 @@ export async function getFeaturedGalleryItems(limit: number = 6): Promise<Galler
 }
 
 export async function getGalleryItemsPaginated(page: number = 1, limit: number = 12): Promise<{items: GalleryItem[], hasMore: boolean, total: number}> {
-  const allItems = await fetchGalleryIndex();
+  const allItems = await fetchGalleryIndex("static");
   const sorted = allItems.sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1));
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
@@ -99,19 +114,19 @@ export async function getGalleryItemsPaginated(page: number = 1, limit: number =
 }
 
 export async function appendGalleryItem(item: GalleryItem) {
-  const current = await fetchGalleryIndex();
+  const current = await fetchGalleryIndex("dynamic");
   const next = [item, ...current];
   await saveGalleryIndex(next);
 }
 
 export async function appendGalleryItems(items: GalleryItem[]) {
-  const current = await fetchGalleryIndex();
+  const current = await fetchGalleryIndex("dynamic");
   const next = [...items, ...current];
   await saveGalleryIndex(next);
 }
 
 export async function deleteGalleryItem(id: string) {
-  const current = await fetchGalleryIndex();
+  const current = await fetchGalleryIndex("dynamic");
   const next = current.filter((item) => item.id !== id);
   if (next.length === current.length) {
     return false;
