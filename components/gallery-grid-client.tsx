@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { formatDate } from "@/lib/date-utils";
 import { GalleryImage } from "./gallery-image";
+import { ImageModal } from "./image-modal";
 
 type GalleryItem = {
   id: string;
@@ -21,6 +22,7 @@ type GalleryGridClientProps = {
 
 export function GalleryGridClient({ items }: GalleryGridClientProps) {
   const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
+  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
 
   const handleImageError = (itemId: string) => {
     setHiddenItems(prev => new Set([...prev, itemId]));
@@ -60,6 +62,9 @@ export function GalleryGridClient({ items }: GalleryGridClientProps) {
             onError={() => handleImageError(item.id)}
             priority={index < 3} // Prioritize first 3 images on home page
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+            onClick={() => setSelectedImage(item)}
+            title={item.title}
+            description={item.description}
           />
           <figcaption className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/10 to-transparent p-5 opacity-0 translate-y-6 transform-gpu transition duration-300 ease-out group-focus-visible:opacity-100 group-focus-visible:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0">
             <div className="space-y-3 text-white">
@@ -99,6 +104,16 @@ export function GalleryGridClient({ items }: GalleryGridClientProps) {
           </figcaption>
         </figure>
       ))}
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={!!selectedImage}
+        src={selectedImage?.imageUrl || ""}
+        alt={selectedImage?.title || ""}
+        title={selectedImage?.title}
+        description={selectedImage?.description}
+        onClose={() => setSelectedImage(null)}
+      />
     </div>
   );
 }
