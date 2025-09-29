@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Background } from "@/components/background";
+import { AudioProvider } from "@/contexts/audio-context";
+import { FloatingMusicPlayer } from "@/components/floating-music-player";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://abdelrahmanmohamed1.netlify.app"),
@@ -37,10 +39,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-slate-950 font-sans text-white antialiased">
-        <Background />
-        <div className="relative z-10 min-h-screen">
-          {children}
-        </div>
+        <AudioProvider trackUrl="/background-music.mp3">
+          <Background />
+          <div className="relative z-10 min-h-screen">
+            {children}
+          </div>
+          <FloatingMusicPlayer />
+        </AudioProvider>
       </body>
     </html>
   );

@@ -1,0 +1,22 @@
+BACKGROUND MUSIC SETUP
+======================
+
+To add background music to your portfolio:
+
+1. Add your .mp3 file to this public/ directory
+2. Rename it to "background-music.mp3"
+3. The music player will automatically detect and use it
+
+Recommended specs:
+- Format: MP3
+- Bitrate: 128kbps or higher
+- Duration: 2-5 minutes (it will loop)
+- Style: Ambient, lo-fi, or instrumental
+- Volume: Already optimized to start at 30%
+
+The music player features:
+- Floating toggle in bottom-right corner
+- Volume control on hover
+- Persists across page navigation
+- Respects browser autoplay policies
+- Elegant vinyl record animation when playing
