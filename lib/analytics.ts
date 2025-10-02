@@ -61,7 +61,21 @@ async function fetchAnalytics(bustCache = false): Promise<AnalyticsData> {
     }
 
     const data = (await response.json()) as AnalyticsData;
-    return data;
+
+    // Ensure backward compatibility with old data format
+    return {
+      pages: (data.pages || []).map(p => ({
+        ...p,
+        uniqueViews: p.uniqueViews ?? 0
+      })),
+      blogs: (data.blogs || []).map(b => ({
+        ...b,
+        uniqueViews: b.uniqueViews ?? 0
+      })),
+      totalViews: data.totalViews ?? 0,
+      totalUniqueViews: data.totalUniqueViews ?? 0,
+      lastUpdated: data.lastUpdated ?? new Date().toISOString(),
+    };
   } catch (error) {
     console.warn("Error fetching analytics", error);
     return INITIAL_ANALYTICS;

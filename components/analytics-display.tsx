@@ -43,11 +43,22 @@ export function AnalyticsDisplay() {
     return null;
   }
 
-  const topPages = [...analytics.pages]
+  // Safe fallbacks for new fields
+  const totalUniqueViews = analytics.totalUniqueViews ?? 0;
+  const safePages = analytics.pages.map(p => ({
+    ...p,
+    uniqueViews: p.uniqueViews ?? 0
+  }));
+  const safeBlogs = analytics.blogs.map(b => ({
+    ...b,
+    uniqueViews: b.uniqueViews ?? 0
+  }));
+
+  const topPages = [...safePages]
     .sort((a, b) => b.views - a.views)
     .slice(0, 5);
 
-  const topBlogs = [...analytics.blogs]
+  const topBlogs = [...safeBlogs]
     .sort((a, b) => b.views - a.views)
     .slice(0, 5);
 
@@ -74,7 +85,7 @@ export function AnalyticsDisplay() {
             <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-emerald-200/70">Unique Viewers</p>
               <p className="mt-2 text-3xl font-semibold text-emerald-100">
-                {analytics.totalUniqueViews.toLocaleString()}
+                {totalUniqueViews.toLocaleString()}
               </p>
             </div>
 
