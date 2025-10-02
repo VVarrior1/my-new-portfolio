@@ -3,10 +3,29 @@
 import { useEffect, useRef } from "react";
 
 const STORAGE_KEY = "portfolio_analytics_tracked";
+const VERSION_KEY = "portfolio_analytics_version";
+const CURRENT_VERSION = "2"; // Increment when analytics schema changes
 const EXPIRY_HOURS = 24; // Track unique views per 24 hours
+
+function checkAndClearOldVersion() {
+  if (typeof window === "undefined") return;
+
+  try {
+    const storedVersion = localStorage.getItem(VERSION_KEY);
+    if (storedVersion !== CURRENT_VERSION) {
+      // Clear old tracking data when version changes
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+    }
+  } catch {
+    // Ignore errors
+  }
+}
 
 function getTrackedViews(): Record<string, number> {
   if (typeof window === "undefined") return {};
+
+  checkAndClearOldVersion();
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
