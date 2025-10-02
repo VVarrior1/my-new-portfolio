@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogDetail } from "@/components/blog-detail";
 import { Navbar } from "@/components/navbar";
+import { BlogTracker } from "@/components/blog-tracker";
+import { AnalyticsBadge } from "@/components/analytics-badge";
 import { getAllBlogs, getBlogBySlug } from "@/lib/blogs";
 import { formatDateLong } from "@/lib/date-utils";
 
@@ -46,13 +48,17 @@ export default async function BlogPage({ params }: BlogPageProps) {
 
   return (
     <div className="relative bg-slate-950 text-white">
+      <BlogTracker slug={slug} />
       <Navbar sections={sections} />
       <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-16 px-6 pb-24 pt-16 sm:px-8">
         <header className="space-y-4" id="top">
           <h1 className="text-4xl font-semibold">{blog.title}</h1>
-          <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
-            {formatDateLong(blog.date)}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
+              {formatDateLong(blog.date)}
+            </p>
+            <AnalyticsBadge type="blog" identifier={slug} />
+          </div>
         </header>
         <div id="article">
           <BlogDetail blog={blog} />

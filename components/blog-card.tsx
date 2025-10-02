@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { BlogMetadata } from "@/lib/blogs";
 import { formatDate } from "@/lib/date-utils";
+import { AnalyticsBadge } from "@/components/analytics-badge";
 
 export function BlogCard({ blog }: { blog: BlogMetadata }) {
   const date = formatDate(blog.date);
@@ -12,7 +13,10 @@ export function BlogCard({ blog }: { blog: BlogMetadata }) {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.25),transparent_65%)]" />
           <div className="pattern-grid opacity-10" />
         </div>
-        <p className="text-xs uppercase tracking-[0.3em] text-emerald-200/80">{date}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs uppercase tracking-[0.3em] text-emerald-200/80">{date}</p>
+          <AnalyticsBadge type="blog" identifier={blog.slug} />
+        </div>
         <h3 className="mt-4 text-2xl font-semibold text-white">{blog.title}</h3>
         <p className="mt-3 line-clamp-3 text-sm text-white/75">{blog.excerpt}</p>
         <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-emerald-300 transition group-hover:gap-3">

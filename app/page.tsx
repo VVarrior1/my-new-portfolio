@@ -7,6 +7,8 @@ import { ProjectGrid } from "@/components/project-grid";
 import { SectionHeading } from "@/components/section-heading";
 import { SkillMarquee } from "@/components/skill-marquee";
 import { SkillsGrid } from "@/components/skills-grid";
+import { PageTracker } from "@/components/page-tracker";
+import { AnalyticsDisplay } from "@/components/analytics-display";
 import Link from "next/link";
 
 const sections = [
@@ -24,6 +26,7 @@ export default async function Home() {
 
   return (
     <div className="relative text-white">
+      <PageTracker path="/" />
       <Navbar sections={sections} />
       <main className="relative mx-auto flex min-h-screen max-w-5xl flex-col gap-24 px-6 pb-24 pt-12 sm:px-8">
         <Hero />
@@ -117,6 +120,20 @@ export default async function Home() {
               </div>
             </Link>
           </div>
+        </section>
+
+        <section className="space-y-8 scroll-mt-32">
+          <SectionHeading
+            eyebrow="Portfolio Analytics"
+            title="Live visitor stats"
+            kicker={
+              <span className="flex items-center gap-2 rounded-full border border-emerald-300/60 bg-emerald-300/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-emerald-100/80">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                Live
+              </span>
+            }
+          />
+          <AnalyticsDisplay />
         </section>
 
         <section

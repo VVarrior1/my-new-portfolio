@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BlogCard } from "@/components/blog-card";
 import { getAllBlogs } from "@/lib/blogs";
 import { Navbar } from "@/components/navbar";
+import { PageTracker } from "@/components/page-tracker";
 
 export const metadata: Metadata = {
   title: "Writing & Notes",
@@ -22,6 +23,7 @@ export default async function BlogsPage() {
 
   return (
     <div className="relative text-white">
+      <PageTracker path="/blogs" />
       <Navbar sections={sections} />
       <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-16 px-6 pb-24 pt-16 sm:px-8">
         <header id="top" className="space-y-4">

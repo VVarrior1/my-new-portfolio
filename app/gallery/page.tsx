@@ -1,6 +1,7 @@
 import { getGalleryItemsPaginated } from "@/lib/gallery";
 import { Navbar } from "@/components/navbar";
 import { GalleryWithPagination } from "@/components/gallery-with-pagination";
+import { PageTracker } from "@/components/page-tracker";
 
 const sections = [
   { id: "home", label: "Home", href: "/" },
@@ -15,6 +16,7 @@ export default async function GalleryPage() {
 
   return (
     <div className="relative text-white">
+      <PageTracker path="/gallery" />
       <Navbar sections={sections} />
       <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-12 px-6 pb-24 pt-16 sm:px-8">
         <header className="space-y-4">
