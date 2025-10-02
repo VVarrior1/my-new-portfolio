@@ -75,16 +75,17 @@ function hasViewed(key: string): boolean {
 }
 
 export function useTrackPageView(path: string) {
-  const tracked = useRef(false);
+  const tracked = useRef<string | null>(null);
 
   useEffect(() => {
-    if (tracked.current) return;
+    // Reset tracking if path changed
+    if (tracked.current === path) return;
 
     const viewKey = `page:${path}`;
     const isUniqueView = !hasViewed(viewKey);
 
-    // Always track the view, but mark as unique only if first time
-    tracked.current = true;
+    // Mark this path as tracked
+    tracked.current = path;
 
     // Track page view
     fetch("/api/analytics/track", {
@@ -102,16 +103,17 @@ export function useTrackPageView(path: string) {
 }
 
 export function useTrackBlogView(slug: string) {
-  const tracked = useRef(false);
+  const tracked = useRef<string | null>(null);
 
   useEffect(() => {
-    if (tracked.current) return;
+    // Reset tracking if slug changed
+    if (tracked.current === slug) return;
 
     const viewKey = `blog:${slug}`;
     const isUniqueView = !hasViewed(viewKey);
 
-    // Always track the view, but mark as unique only if first time
-    tracked.current = true;
+    // Mark this slug as tracked
+    tracked.current = slug;
 
     // Track blog view
     fetch("/api/analytics/track", {
