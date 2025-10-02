@@ -14,7 +14,35 @@ export function FloatingMusicPlayer() {
 
   return (
     <div className="fixed bottom-6 right-6 z-40">
-      <div className="flex items-center gap-2.5 rounded-full border border-emerald-500/15 bg-slate-950/80 px-4 py-2.5 shadow-lg backdrop-blur">
+      {/* Mobile: clickable play/pause only */}
+      <button
+        type="button"
+        onClick={togglePlay}
+        aria-pressed={isPlaying}
+        aria-label={isPlaying ? "Pause background music" : "Play background music"}
+        className="flex md:hidden items-center gap-2.5 rounded-full border border-emerald-500/15 bg-slate-950/80 px-4 py-2.5 shadow-lg backdrop-blur transition hover:bg-slate-900/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950/80"
+      >
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/90 text-slate-950 shadow transition hover:bg-emerald-400">
+          {isPlaying ? (
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M8 6.75a.75.75 0 00-1.5 0v6.5a.75.75 0 001.5 0v-6.5zM13.5 6.75a.75.75 0 00-1.5 0v6.5a.75.75 0 001.5 0v-6.5z" />
+            </svg>
+          ) : (
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M7 5.41a.75.75 0 011.14-.63l5.5 3.59a.75.75 0 010 1.26l-5.5 3.59A.75.75 0 017 12.59v-7.18z" />
+            </svg>
+          )}
+        </div>
+        <span
+          aria-hidden
+          className={`h-2 w-2 rounded-full transition ${
+            isPlaying ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.55)]" : "bg-emerald-500/30"
+          }`}
+        />
+      </button>
+
+      {/* Desktop: play/pause with volume control */}
+      <div className="hidden md:flex items-center gap-2.5 rounded-full border border-emerald-500/15 bg-slate-950/80 px-4 py-2.5 shadow-lg backdrop-blur">
         <button
           type="button"
           onClick={togglePlay}
