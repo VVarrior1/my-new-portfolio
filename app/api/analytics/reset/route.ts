@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
       pages: [],
       blogs: [],
       totalViews: 0,
+      totalUniqueViews: 0,
       lastUpdated: new Date().toISOString(),
     };
 

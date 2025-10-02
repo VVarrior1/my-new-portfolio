@@ -62,23 +62,21 @@ export function useTrackPageView(path: string) {
     if (tracked.current) return;
 
     const viewKey = `page:${path}`;
+    const isUniqueView = !hasViewed(viewKey);
 
-    // Check if already viewed in the last 24 hours
-    if (hasViewed(viewKey)) {
-      tracked.current = true;
-      return;
-    }
-
+    // Always track the view, but mark as unique only if first time
     tracked.current = true;
 
     // Track page view
     fetch("/api/analytics/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "page", path }),
+      body: JSON.stringify({ type: "page", path, isUnique: isUniqueView }),
     })
       .then(() => {
-        setTrackedView(viewKey);
+        if (isUniqueView) {
+          setTrackedView(viewKey);
+        }
       })
       .catch((err) => console.error("Failed to track page view:", err));
   }, [path]);
@@ -91,23 +89,21 @@ export function useTrackBlogView(slug: string) {
     if (tracked.current) return;
 
     const viewKey = `blog:${slug}`;
+    const isUniqueView = !hasViewed(viewKey);
 
-    // Check if already viewed in the last 24 hours
-    if (hasViewed(viewKey)) {
-      tracked.current = true;
-      return;
-    }
-
+    // Always track the view, but mark as unique only if first time
     tracked.current = true;
 
     // Track blog view
     fetch("/api/analytics/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "blog", slug }),
+      body: JSON.stringify({ type: "blog", slug, isUnique: isUniqueView }),
     })
       .then(() => {
-        setTrackedView(viewKey);
+        if (isUniqueView) {
+          setTrackedView(viewKey);
+        }
       })
       .catch((err) => console.error("Failed to track blog view:", err));
   }, [slug]);

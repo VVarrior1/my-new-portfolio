@@ -3,12 +3,14 @@ import { generateSignedUrl, ensureGcsConfig, gcsBucketName } from "@/lib/gcs";
 export type PageAnalytics = {
   path: string;
   views: number;
+  uniqueViews: number;
   lastUpdated: string;
 };
 
 export type BlogAnalytics = {
   slug: string;
   views: number;
+  uniqueViews: number;
   lastUpdated: string;
 };
 
@@ -16,6 +18,7 @@ export type AnalyticsData = {
   pages: PageAnalytics[];
   blogs: BlogAnalytics[];
   totalViews: number;
+  totalUniqueViews: number;
   lastUpdated: string;
 };
 
@@ -25,6 +28,7 @@ const INITIAL_ANALYTICS: AnalyticsData = {
   pages: [],
   blogs: [],
   totalViews: 0,
+  totalUniqueViews: 0,
   lastUpdated: new Date().toISOString(),
 };
 
@@ -91,7 +95,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
   return await fetchAnalytics(false);
 }
 
-export async function incrementPageView(path: string) {
+export async function incrementPageView(path: string, isUnique: boolean = false) {
   const current = await fetchAnalytics(true);
   const now = new Date().toISOString();
 
@@ -99,23 +103,30 @@ export async function incrementPageView(path: string) {
 
   if (pageIndex >= 0) {
     current.pages[pageIndex].views += 1;
+    if (isUnique) {
+      current.pages[pageIndex].uniqueViews += 1;
+    }
     current.pages[pageIndex].lastUpdated = now;
   } else {
     current.pages.push({
       path,
       views: 1,
+      uniqueViews: isUnique ? 1 : 0,
       lastUpdated: now,
     });
   }
 
   current.totalViews += 1;
+  if (isUnique) {
+    current.totalUniqueViews += 1;
+  }
   current.lastUpdated = now;
 
   await saveAnalytics(current);
   return current;
 }
 
-export async function incrementBlogView(slug: string) {
+export async function incrementBlogView(slug: string, isUnique: boolean = false) {
   const current = await fetchAnalytics(true);
   const now = new Date().toISOString();
 
@@ -123,16 +134,23 @@ export async function incrementBlogView(slug: string) {
 
   if (blogIndex >= 0) {
     current.blogs[blogIndex].views += 1;
+    if (isUnique) {
+      current.blogs[blogIndex].uniqueViews += 1;
+    }
     current.blogs[blogIndex].lastUpdated = now;
   } else {
     current.blogs.push({
       slug,
       views: 1,
+      uniqueViews: isUnique ? 1 : 0,
       lastUpdated: now,
     });
   }
 
   current.totalViews += 1;
+  if (isUnique) {
+    current.totalUniqueViews += 1;
+  }
   current.lastUpdated = now;
 
   await saveAnalytics(current);

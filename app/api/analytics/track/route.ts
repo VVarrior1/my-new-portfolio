@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { type, path, slug } = body;
+    const { type, path, slug, isUnique = false } = body;
 
     if (!type || (type !== "page" && type !== "blog")) {
       return NextResponse.json(
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      await incrementPageView(path);
+      await incrementPageView(path, isUnique);
     } else if (type === "blog") {
       if (!slug) {
         return NextResponse.json(
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      await incrementBlogView(slug);
+      await incrementBlogView(slug, isUnique);
     }
 
     return NextResponse.json({ success: true });

@@ -63,11 +63,18 @@ export function AnalyticsDisplay() {
             </span>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs uppercase tracking-[0.3em] text-white/50">Total Views</p>
               <p className="mt-2 text-3xl font-semibold text-white">
                 {analytics.totalViews.toLocaleString()}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-200/70">Unique Viewers</p>
+              <p className="mt-2 text-3xl font-semibold text-emerald-100">
+                {analytics.totalUniqueViews.toLocaleString()}
               </p>
             </div>
 
@@ -98,9 +105,15 @@ export function AnalyticsDisplay() {
                 className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
               >
                 <span className="text-sm text-white/80">{page.path}</span>
-                <span className="text-sm font-medium text-emerald-300">
-                  {page.views.toLocaleString()} views
-                </span>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-emerald-300">
+                    {page.uniqueViews.toLocaleString()} <span className="text-white/50">unique</span>
+                  </span>
+                  <span className="text-white/50">|</span>
+                  <span className="text-white/70">
+                    {page.views.toLocaleString()} <span className="text-white/50">total</span>
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -117,9 +130,15 @@ export function AnalyticsDisplay() {
                 className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
               >
                 <span className="text-sm text-white/80">{blog.slug}</span>
-                <span className="text-sm font-medium text-emerald-300">
-                  {blog.views.toLocaleString()} views
-                </span>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-emerald-300">
+                    {blog.uniqueViews.toLocaleString()} <span className="text-white/50">unique</span>
+                  </span>
+                  <span className="text-white/50">|</span>
+                  <span className="text-white/70">
+                    {blog.views.toLocaleString()} <span className="text-white/50">total</span>
+                  </span>
+                </div>
               </div>
             ))}
           </div>
