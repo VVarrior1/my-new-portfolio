@@ -18,20 +18,20 @@ export const hero: {
   actions: HeroAction[];
 } = {
   name: "Abdelrahman Mohamed",
-  title: "AI & Data Science Engineer · Software Developer",
+  title: "Software Developer",
   summary:
-    "Co-founder shipping AI automation at GenLabs, building analytics pipelines, data science models, and modern web platforms that turn insight into shipped product.",
+    "Co-founder at GenLabs. I build web apps, work with data, and solve problems with code.",
   location: "Calgary, AB",
-  availability: "Open to full-time Software, Data Science, and AI/ML roles for 2025",
+  availability: "Open to full-time software roles for 2025",
   spotlight: {
-    label: "Currently shipping Vertex AI + analytics workflows at GenLabs",
+    label: "Working on AI tools at GenLabs",
     href: "https://genlabs.ca",
   },
   typewriterLines: [
-    "> deploying Vertex AI agents to production",
-    "> analysing 100k+ row datasets with Python & SQL",
-    "> leading co-founder sprints at GenLabs",
-    "> building full-stack and data apps with Next.js",
+    "> building web applications",
+    "> working with databases and APIs",
+    "> writing Python and TypeScript",
+    "> solving real problems with code",
   ],
   actions: [
     {
@@ -126,21 +126,21 @@ export const experiences: Experience[] = [
     location: "Calgary, AB",
     link: "https://genlabs.ca",
     bullets: [
-      "Co-founded an AI agents startup delivering Google Cloud automation across industries.",
-      "Led product vision and Vertex AI implementations powering end-to-end automation workflows.",
-      "Coordinated roadmap, discovery, and technical execution for a four-person product team.",
+      "Co-founded a startup building AI tools for businesses.",
+      "Lead product development and technical implementation.",
+      "Manage a team of 4 people.",
     ],
   },
   {
     company: "Google Innovate Program – Customer Maps",
-    role: "AI/ML Intern",
+    role: "Software Intern",
     start: "Mar 2025",
     end: "Jun 2025",
     location: "Calgary, AB",
     bullets: [
-      "Built retail-focused AI agents with Vertex AI & ADK, cutting reporting time by 60%.",
-      "Designed secure data pipelines across BigQuery + GCS for 100K+ records.",
-      "Delivered React dashboards surfacing agent insights to non-technical stakeholders.",
+      "Built AI tools that reduced reporting time by 60%.",
+      "Built data systems handling 100K+ records.",
+      "Created dashboards to display insights.",
     ],
   },
   {
@@ -150,9 +150,9 @@ export const experiences: Experience[] = [
     end: "Jun 2025",
     location: "Remote (New York, NY)",
     bullets: [
-      "Evaluated 1,000+ AI-generated code samples to improve LLM accuracy by 20%+.",
-      "Enhanced RLHF pipelines through structured analysis of model behavior and prompts.",
-      "Authored prompt/playbook updates that lifted consistency across global annotation teams.",
+      "Reviewed 1,000+ AI code samples to improve model accuracy by 20%.",
+      "Improved AI training through systematic testing and feedback.",
+      "Wrote documentation that improved team consistency.",
     ],
   },
 ];
@@ -171,10 +171,10 @@ export const projects: Project[] = [
     tech: ["Next.js", "TypeScript", "Supabase", "Tailwind"],
     link: "https://cydsoccer.com",
     description:
-      "Customer-facing site for CYD Soccer Academy that showcases training programs, handles plan purchases with Stripe, and syncs signups into Google Sheets via GCP automations.",
+      "Website for a soccer academy with program listings, Stripe payments, and automated enrollment tracking.",
     highlights: [
-      "Crafted responsive program catalog, testimonials, and FAQ so families can explore plans and enroll from any device.",
-      "Integrated Stripe checkout with GCP automations that log enrollments to Google Sheets—processing $15K+ while maintaining a 100% performance score for 3K monthly visitors.",
+      "Built a responsive site where families can browse programs and sign up.",
+      "Set up Stripe payments that sync to Google Sheets. Processed $15K+ with 3K monthly visitors.",
     ],
   },
   {
@@ -182,43 +182,43 @@ export const projects: Project[] = [
     tech: ["Next.js", "Firebase", "Tailwind", "TypeScript"],
     link: "https://ascendr.quest",
     description:
-      "Gamified productivity platform that blends behavioral design with real-time sync.",
+      "Productivity app with game-like rewards and real-time syncing.",
     highlights: [
-      "Architected auth, Firestore, and hosting, delivering real-time multiplayer state via Firebase services.",
-      "Created modular quests, XP rewards, and progression engine powering stickiness and retention.",
+      "Built authentication and real-time features using Firebase.",
+      "Created a quest system with rewards to keep users engaged.",
     ],
   },
   {
-    name: "GenLabs – AI Agents",
+    name: "GenLabs – AI Tools",
     tech: ["Python", "Vertex AI", "Cloud Run", "BigQuery"],
     link: "https://genlabs.ca",
     description:
-      "Production AI agents with voice + text orchestration, embedding search, and automated reporting for GenLabs clients.",
+      "AI tools that handle voice and text requests, with search and automated reports.",
     highlights: [
-      "Built multi-modal agents that handle voice or chat requests, route tools, and trigger automations over Vertex AI.",
-      "Shipped an AI search that blends embeddings, similarity search, and structured data so teams find answers instantly.",
+      "Built AI that handles voice and chat, routing requests to the right tools.",
+      "Built search that helps teams find answers quickly.",
     ],
   },
   {
-    name: "KanDoIt – KanBan Suite",
+    name: "KanDoIt – Project Management",
     tech: ["Next.js", "Prisma", "PostgreSQL", "Docker"],
     link: "https://github.com/VVarrior1/KanDoIt",
     description:
-      "Team KanBan tool with RBAC, collaborative workflows, and production-ready DevOps.",
+      "Team project management tool with user permissions and Docker deployment.",
     highlights: [
-      "Designed REST APIs backed by Prisma ORM and PostgreSQL for reliable project operations.",
-      "Containerized stack with Docker for a frictionless onboarding flow across contributors.",
+      "Built APIs with Prisma and PostgreSQL.",
+      "Set up Docker for easy local development.",
     ],
   },
   {
-    name: "AI Fashion Recommendation Engine",
-    tech: ["Python", "Faiss", "Vertex AI", "RAG"],
+    name: "AI Fashion Recommendations",
+    tech: ["Python", "Faiss", "Vertex AI"],
     link: "https://github.com/VVarrior1/Vectorized-fashion-ai",
     description:
-      "Vector search system surfacing hyper-personalized apparel recommendations.",
+      "AI-powered fashion recommendation system.",
     highlights: [
-      "Generated dense embeddings and tuned ANN search for millisecond retrieval across catalog data.",
-      "Layered RAG workflows with LLMs to deliver contextual, conversational styling suggestions.",
+      "Built fast search across clothing catalogs using AI.",
+      "Added conversational AI for personalized style advice.",
     ],
   },
 ];
@@ -234,20 +234,7 @@ export const education = {
   ],
 };
 
-export const stats = [
-  {
-    label: "AI & data science reviews delivered",
-    value: "1k+",
-  },
-  {
-    label: "Production ML & analytics launches",
-    value: "10",
-  },
-  {
-    label: "Years shipping software",
-    value: "4",
-  },
-];
+export const stats: Array<{ label: string; value: string }> = [];
 
 export const contact = {
   email: "abdel.mohamed.engineer@gmail.com",

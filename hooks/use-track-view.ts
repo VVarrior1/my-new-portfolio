@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 const STORAGE_KEY = "portfolio_analytics_tracked";
 const VERSION_KEY = "portfolio_analytics_version";
-const CURRENT_VERSION = "2"; // Increment when analytics schema changes
+const CURRENT_VERSION = "3"; // Increment when analytics schema changes
 const EXPIRY_HOURS = 24; // Track unique views per 24 hours
 
 function checkAndClearOldVersion() {
@@ -76,16 +76,18 @@ function hasViewed(key: string): boolean {
 
 export function useTrackPageView(path: string) {
   const tracked = useRef<string | null>(null);
+  const tracking = useRef<boolean>(false);
 
   useEffect(() => {
-    // Reset tracking if path changed
-    if (tracked.current === path) return;
+    // Prevent duplicate tracking for the same path
+    if (tracked.current === path || tracking.current) return;
 
     const viewKey = `page:${path}`;
     const isUniqueView = !hasViewed(viewKey);
 
-    // Mark this path as tracked
+    // Mark this path as tracked and set tracking flag
     tracked.current = path;
+    tracking.current = true;
 
     // Track page view
     fetch("/api/analytics/track", {
@@ -94,26 +96,36 @@ export function useTrackPageView(path: string) {
       body: JSON.stringify({ type: "page", path, isUnique: isUniqueView }),
     })
       .then(() => {
+        // Only mark as tracked in localStorage after successful request
         if (isUniqueView) {
           setTrackedView(viewKey);
         }
       })
-      .catch((err) => console.error("Failed to track page view:", err));
+      .catch((err) => {
+        console.error("Failed to track page view:", err);
+        // On error, reset tracking flags to allow retry
+        tracked.current = null;
+      })
+      .finally(() => {
+        tracking.current = false;
+      });
   }, [path]);
 }
 
 export function useTrackBlogView(slug: string) {
   const tracked = useRef<string | null>(null);
+  const tracking = useRef<boolean>(false);
 
   useEffect(() => {
-    // Reset tracking if slug changed
-    if (tracked.current === slug) return;
+    // Prevent duplicate tracking for the same slug
+    if (tracked.current === slug || tracking.current) return;
 
     const viewKey = `blog:${slug}`;
     const isUniqueView = !hasViewed(viewKey);
 
-    // Mark this slug as tracked
+    // Mark this slug as tracked and set tracking flag
     tracked.current = slug;
+    tracking.current = true;
 
     // Track blog view
     fetch("/api/analytics/track", {
@@ -122,10 +134,18 @@ export function useTrackBlogView(slug: string) {
       body: JSON.stringify({ type: "blog", slug, isUnique: isUniqueView }),
     })
       .then(() => {
+        // Only mark as tracked in localStorage after successful request
         if (isUniqueView) {
           setTrackedView(viewKey);
         }
       })
-      .catch((err) => console.error("Failed to track blog view:", err));
+      .catch((err) => {
+        console.error("Failed to track blog view:", err);
+        // On error, reset tracking flags to allow retry
+        tracked.current = null;
+      })
+      .finally(() => {
+        tracking.current = false;
+      });
   }, [slug]);
 }

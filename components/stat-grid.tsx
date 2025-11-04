@@ -1,6 +1,10 @@
 import { stats } from "@/lib/content";
 
 export function StatGrid() {
+  if (stats.length === 0) {
+    return null;
+  }
+
   return (
     <dl className="grid gap-4 sm:grid-cols-3">
       {stats.map((item) => (

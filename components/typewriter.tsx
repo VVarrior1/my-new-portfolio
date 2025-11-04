@@ -48,14 +48,28 @@ export function Typewriter({
     pause,
   ]);
 
+  // Find the longest line to reserve space and prevent layout shifts
+  const longestLine = useMemo(
+    () => sanitizedLines.reduce((a, b) => (a.length > b.length ? a : b), ""),
+    [sanitizedLines]
+  );
+
   if (sanitizedLines.length === 0) {
     return null;
   }
 
   return (
-    <span className="relative inline-flex items-center font-mono text-emerald-200/90">
-      {displayed}
-      <span className="ml-1 h-5 w-[2px] animate-pulse bg-emerald-400" aria-hidden />
+    <span className="relative inline-block font-mono text-emerald-200/90">
+      {/* Hidden placeholder to reserve space for the longest line */}
+      <span className="invisible" aria-hidden>
+        {longestLine}
+        <span className="ml-1 inline-block h-5 w-[2px]" />
+      </span>
+      {/* Actual typewriter text overlaid on top */}
+      <span className="absolute inset-0 inline-flex items-center">
+        {displayed}
+        <span className="ml-1 h-5 w-[2px] animate-pulse bg-emerald-400" aria-hidden />
+      </span>
     </span>
   );
 }
