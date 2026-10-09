@@ -1,7 +1,7 @@
 [
   {
     "origin": [
-      "https://abdelrahmanmohamed1.netlify.app/",
+      "https://abdelrahmanmohamed1.netlify.app",
       "http://localhost:3000"
     ],
     "method": ["GET", "PUT", "POST", "HEAD"],
