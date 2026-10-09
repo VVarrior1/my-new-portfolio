@@ -6,4 +6,5 @@
   package = "@netlify/plugin-nextjs"
 
 [build.environment]
+  NODE_VERSION = "22"
   NEXT_ALLOW_MIDDLEWARE_RESPONSE_BODY = "true"
