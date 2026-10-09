@@ -7,6 +7,8 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:3000",
     headless: true,
     trace: "retain-on-failure",
+    // Locally, PW_CHROME can point at an installed Chrome instead of downloading Playwright's.
+    launchOptions: process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME } : undefined,
   },
   webServer: {
     command: "npm run dev -- --hostname 127.0.0.1 --port 3000",

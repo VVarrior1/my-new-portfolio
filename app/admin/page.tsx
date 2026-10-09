@@ -2,12 +2,22 @@
 
 import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Navbar } from "@/components/navbar";
+import Link from "next/link";
 import { formatDate } from "@/lib/date-utils";
 
-const sections = [
-  { id: "home", label: "← Back to Site", href: "/" }
-];
+function AdminBar() {
+  return (
+    <header className="border-b border-white/10">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
+        <span className="font-semibold">Site admin</span>
+        <span className="flex gap-5 text-sm text-white/70">
+          <Link href="/stats" className="hover:text-white">Stats</Link>
+          <Link href="/" className="hover:text-white">Back to the site</Link>
+        </span>
+      </div>
+    </header>
+  );
+}
 
 type Status = { ok: boolean; message: string } | null;
 
@@ -122,8 +132,8 @@ function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
   };
 
   return (
-    <div className="relative text-white">
-      <Navbar sections={sections} />
+    <div className="relative min-h-screen bg-[#0f1215] text-white">
+      <AdminBar />
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-24">
         <div className="space-y-8">
           <div className="text-center space-y-4">
@@ -776,8 +786,8 @@ function AdminDashboard({ token }: { token: string }) {
   };
 
   return (
-    <div className="relative text-white">
-      <Navbar sections={sections} />
+    <div className="relative min-h-screen bg-[#0f1215] text-white">
+      <AdminBar />
       <main
         id="admin"
         className="mx-auto flex min-h-screen max-w-5xl flex-col gap-12 px-6 pb-24 pt-16 sm:px-8"
