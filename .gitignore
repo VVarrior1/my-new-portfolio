@@ -48,3 +48,7 @@ gallery-uploader-key.json
 
 # Local Netlify folder
 .netlify
+
+# Playwright output
+/test-results/
+/playwright-report/

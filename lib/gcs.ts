@@ -4,7 +4,6 @@ const GCS_BUCKET = process.env.GCS_BUCKET_NAME;
 const SERVICE_ACCOUNT_EMAIL = process.env.GCS_SERVICE_ACCOUNT_EMAIL;
 const PRIVATE_KEY = (process.env.GCS_PRIVATE_KEY || "").replace(/\\n/g, "\n");
 const HOST = "storage.googleapis.com";
-const SIGNED_HEADERS = "content-type;host";
 const ALGORITHM = "GOOG4-RSA-SHA256";
 const EXPIRY_SECONDS = 15 * 60;
 
@@ -28,10 +27,19 @@ export function generateSignedUrl(options: {
   method: "PUT" | "DELETE";
   contentType?: string;
   expiresInSeconds?: number;
+  /** Extra x-goog-* request headers to sign (the request must send them verbatim). */
+  extraHeaders?: Record<string, string>;
 }) {
   ensureGcsConfig();
 
-  const { objectName, method, contentType = "application/octet-stream", expiresInSeconds = EXPIRY_SECONDS } = options;
+  const { objectName, method, contentType = "application/octet-stream", expiresInSeconds = EXPIRY_SECONDS, extraHeaders = {} } = options;
+
+  const headers: Record<string, string> = { "content-type": contentType, host: HOST };
+  for (const [name, value] of Object.entries(extraHeaders)) {
+    headers[name.toLowerCase()] = value.trim();
+  }
+  const headerNames = Object.keys(headers).sort();
+  const signedHeaders = headerNames.join(";");
 
   const now = new Date();
   const datestamp = `${now.getUTCFullYear()}${`${now.getUTCMonth() + 1}`.padStart(2, "0")}${`${now.getUTCDate()}`.padStart(2, "0")}`;
@@ -50,7 +58,7 @@ export function generateSignedUrl(options: {
     "X-Goog-Credential": credential,
     "X-Goog-Date": timestamp,
     "X-Goog-Expires": String(expiresInSeconds),
-    "X-Goog-SignedHeaders": SIGNED_HEADERS,
+    "X-Goog-SignedHeaders": signedHeaders,
     "X-Goog-Content-SHA256": "UNSIGNED-PAYLOAD",
   };
 
@@ -59,14 +67,14 @@ export function generateSignedUrl(options: {
     .map((key) => `${encodeRfc3986(key)}=${encodeRfc3986(queryParams[key])}`)
     .join("&");
 
-  const canonicalHeaders = `content-type:${contentType}\nhost:${HOST}\n`;
+  const canonicalHeaders = headerNames.map((name) => `${name}:${headers[name]}\n`).join("");
 
   const canonicalRequest = [
     method,
     canonicalUri,
     canonicalQueryString,
     canonicalHeaders,
-    SIGNED_HEADERS,
+    signedHeaders,
     "UNSIGNED-PAYLOAD",
   ].join("\n");
 

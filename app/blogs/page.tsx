@@ -1,48 +1,69 @@
 import type { Metadata } from "next";
-import { BlogCard } from "@/components/blog-card";
+import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { getAnalytics } from "@/lib/analytics";
 import { getAllBlogs } from "@/lib/blogs";
-import { Navbar } from "@/components/navbar";
-import { PageTracker } from "@/components/page-tracker";
+import { formatDate } from "@/lib/date-utils";
+import { plainText } from "@/lib/text";
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "Writing & Notes",
-  description:
-    "Thinking in public about AI, data science, product velocity, and the business of software.",
+  title: "Writing",
+  description: "Notes from building things: shells in C, hackathons, data analysis, prompt engineering and risk.",
+  alternates: { canonical: "/blogs" },
 };
 
-const sections = [
-  { id: "home", label: "Home", href: "/" },
-  { id: "gallery", label: "Gallery", href: "/gallery" },
-  { id: "about", label: "About", href: "/#about" },
-  { id: "projects", label: "Projects", href: "/#projects" },
-  { id: "contact", label: "Contact", href: "/#contact" },
-];
-
 export default async function BlogsPage() {
-  const blogs = await getAllBlogs();
+  const [blogs, analytics] = await Promise.all([getAllBlogs(), getAnalytics()]);
+  const views = new Map(analytics.blogs.map((blog) => [blog.slug, blog.views]));
 
   return (
-    <div className="relative text-white">
-      <PageTracker path="/blogs" />
-      <Navbar sections={sections} />
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-16 px-6 pb-24 pt-16 sm:px-8">
-        <header id="top" className="space-y-4">
-          <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
-            Thoughts
-          </p>
-          <h1 className="text-4xl font-semibold">
-            Random thoughts and discoveries
-          </h1>
-          <p className="max-w-2xl text-white/80">
-            Quick notes on cool stuff I&apos;m learning while building things.
+    <>
+      <SiteHeader />
+      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
+        <header className="max-w-3xl">
+          <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.05em]">Writing</h1>
+          <p className="measure mt-6 text-[1.2rem] leading-relaxed text-graphite">
+            Notes on things I&apos;ve learned while building: some technical, some not.
           </p>
         </header>
-        <section className="grid gap-6 md:grid-cols-2">
-          {blogs.map((blog) => (
-            <BlogCard key={blog.slug} blog={blog} />
-          ))}
-        </section>
+
+        {blogs.length === 0 ? (
+          <p className="mt-16 text-graphite">No posts yet. The first one is on its way.</p>
+        ) : (
+          <ul className="mt-14">
+            {blogs.map((blog) => {
+              const count = views.get(blog.slug) ?? 0;
+              return (
+                <li key={blog.slug} className="border-b border-rule first:border-t">
+                  <Link
+                    href={`/blogs/${blog.slug}`}
+                    className="group grid gap-x-10 gap-y-2 py-8 md:grid-cols-[10rem_minmax(0,1fr)]"
+                  >
+                    <span className="text-[0.95rem] tabular-nums text-graphite">
+                      {formatDate(blog.date)}
+                      {count > 0 && (
+                        <span className="block text-[0.85rem]">
+                          {count.toLocaleString("en-US")} {count === 1 ? "read" : "reads"}
+                        </span>
+                      )}
+                    </span>
+                    <span>
+                      <span className="block text-[1.5rem] font-bold leading-tight tracking-[-0.025em] group-hover:underline group-hover:decoration-2 group-hover:underline-offset-4">
+                        {blog.title}
+                      </span>
+                      <span className="measure mt-2 line-clamp-3 leading-relaxed text-graphite">{plainText(blog.excerpt)}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </main>
-    </div>
+      <SiteFooter />
+    </>
   );
 }

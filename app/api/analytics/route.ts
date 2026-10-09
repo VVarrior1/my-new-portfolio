@@ -1,18 +1,11 @@
-import { getAnalytics } from "@/lib/analytics";
 import { NextResponse } from "next/server";
+import { compactIfDue, getAnalytics } from "@/lib/analytics";
 
 export async function GET() {
-  try {
-    const analytics = await getAnalytics();
+  await compactIfDue();
+  const analytics = await getAnalytics();
 
-    const response = NextResponse.json(analytics);
-    response.headers.set("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
-    return response;
-  } catch (error) {
-    console.error("Failed to fetch analytics:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch analytics" },
-      { status: 500 }
-    );
-  }
+  const response = NextResponse.json(analytics);
+  response.headers.set("Cache-Control", "public, max-age=60, stale-while-revalidate=30");
+  return response;
 }

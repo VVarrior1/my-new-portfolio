@@ -1,42 +1,35 @@
-import { getGalleryItemsPaginated } from "@/lib/gallery";
-import { Navbar } from "@/components/navbar";
+import type { Metadata } from "next";
 import { GalleryWithPagination } from "@/components/gallery-with-pagination";
-import { PageTracker } from "@/components/page-tracker";
+import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
+import { getGalleryItemsPaginated } from "@/lib/gallery";
 
-const sections = [
-  { id: "home", label: "Home", href: "/" },
-  { id: "blogs", label: "Blog", href: "/blogs" },
-  { id: "about", label: "About", href: "/#about" },
-  { id: "projects", label: "Projects", href: "/#projects" },
-  { id: "contact", label: "Contact", href: "/#contact" },
-];
+export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: "Gallery",
+  description: "Pictures worth keeping: notes, screenshots and the odd photo.",
+  alternates: { canonical: "/gallery" },
+};
 
 export default async function GalleryPage() {
   const { items, hasMore, total } = await getGalleryItemsPaginated(1, 12);
 
   return (
-    <div className="relative text-white">
-      <PageTracker path="/gallery" />
-      <Navbar sections={sections} />
-      <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-12 px-6 pb-24 pt-16 sm:px-8">
-        <header className="space-y-4">
-          <div className="space-y-2">
-            <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/80">
-              Gallery
-            </p>
-            <h1 className="text-4xl font-semibold">Life lately</h1>
-          </div>
-          <p className="max-w-3xl text-white/75">
-            Random pics I thought were cool
+    <>
+      <SiteHeader />
+      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
+        <header className="max-w-3xl">
+          <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.05em]">Gallery</h1>
+          <p className="measure mt-6 text-[1.2rem] leading-relaxed text-graphite">
+            Pictures worth keeping: notes I liked, screenshots, and the odd photo. Select one to see it full size.
           </p>
         </header>
-
-        <GalleryWithPagination
-          initialItems={items}
-          initialHasMore={hasMore}
-          initialTotal={total}
-        />
+        <div className="mt-14">
+          <GalleryWithPagination initialItems={items} initialHasMore={hasMore} initialTotal={total} />
+        </div>
       </main>
-    </div>
+      <SiteFooter />
+    </>
   );
 }

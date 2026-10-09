@@ -80,102 +80,53 @@ export function GalleryWithPagination({
   const visibleItems = items.filter(item => !hiddenItems.has(item.id));
 
   if (!visibleItems.length && !loading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <p className="rounded-3xl border border-dashed border-white/10 bg-white/5 p-8 text-center text-sm text-white/60">
-          Gallery is warming up. Check back soon for project snapshots and build logs.
-        </p>
-      </div>
-    );
+    return <p className="text-graphite">Nothing here yet.</p>;
   }
 
   return (
-    <div className="space-y-8">
-      <div className="columns-2 gap-2 sm:gap-3 lg:columns-3">
+    <div className="space-y-10">
+      <ul className="columns-2 gap-3 sm:gap-4 lg:columns-3">
         {visibleItems.map((item, index) => (
-          <figure
-            key={item.id}
-            tabIndex={0}
-            className="group relative mb-2 sm:mb-3 break-inside-avoid rounded-3xl border border-white/10 bg-white/5 shadow-[0_25px_80px_-45px_rgba(16,185,129,0.8)] transition duration-500 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 hover:-translate-y-1 hover:rotate-1 hover:border-emerald-300/60 hover:shadow-[0_45px_120px_-60px_rgba(52,211,153,0.9)]"
-          >
-            <GalleryImage
-              src={item.imageUrl}
-              alt={item.title}
-              width={800}
-              height={600}
-              className="block h-auto w-full object-contain transition duration-700 ease-out group-hover:scale-[1.03] group-hover:saturate-125"
-              onError={() => handleImageError(item.id)}
-              priority={index < 6} // Prioritize first 6 images
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
-              onClick={() => setSelectedImage(item)}
-              title={item.title}
-              description={item.description}
-            />
-            <figcaption className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/10 to-transparent p-6 opacity-0 translate-y-6 transform-gpu transition duration-300 ease-out group-focus-visible:opacity-100 group-focus-visible:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0">
-              <div className="space-y-3 text-white">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold tracking-tight">
-                      {item.title}
-                    </h3>
-                    {item.description && (
-                      <p className="text-sm text-white/80">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                  <span className="text-xs uppercase tracking-[0.3em] text-emerald-200/90">
-                    {formatDate(item.createdAt)}
-                  </span>
-                </div>
-                {item.tags.length > 0 && (
-                  <ul className="flex flex-wrap gap-2 text-[0.65rem] uppercase tracking-[0.35em] text-white/70">
-                    {item.tags.slice(0, 4).map((tag) => (
-                      <li
-                        key={`${item.id}-${tag}`}
-                        className="rounded-full border border-white/20 bg-white/10 px-3 py-1"
-                      >
-                        {tag}
-                      </li>
-                    ))}
-                    {item.tags.length > 4 && (
-                      <li className="rounded-full border border-white/20 bg-white/10 px-3 py-1">
-                        +{item.tags.length - 4}
-                      </li>
-                    )}
-                  </ul>
-                )}
-              </div>
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-
-      {/* Infinite scroll trigger */}
-      {hasMore && (
-        <div id="load-more-trigger" className="flex justify-center py-8">
-          {loading ? (
-            <div className="flex items-center gap-3 text-white/60">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-300/30 border-t-emerald-300" />
-              <span>Loading more...</span>
-            </div>
-          ) : (
+          <li key={item.id} className="mb-3 break-inside-avoid sm:mb-4">
             <button
-              onClick={loadMore}
-              className="rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/20"
+              type="button"
+              onClick={() => setSelectedImage(item)}
+              className="group block w-full overflow-hidden rounded-md text-left"
+              aria-label={`View ${item.title} full size`}
             >
-              Load More
+              <GalleryImage
+                src={item.imageUrl}
+                alt={item.title}
+                width={800}
+                height={600}
+                className="block h-auto w-full transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                onError={() => handleImageError(item.id)}
+                priority={index < 4}
+                sizes="(max-width: 1024px) 50vw, 33vw"
+              />
             </button>
-          )}
+            {(item.title || item.createdAt) && (
+              <p className="mt-2 flex items-baseline justify-between gap-3 text-[0.9rem]">
+                <span className="font-medium">{item.title}</span>
+                <span className="shrink-0 tabular-nums text-graphite">{formatDate(item.createdAt)}</span>
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {hasMore && (
+        <div id="load-more-trigger" className="flex justify-center">
+          <button type="button" onClick={loadMore} disabled={loading} className="btn btn-quiet disabled:opacity-60">
+            {loading ? "Loading" : "Show more"}
+          </button>
         </div>
       )}
 
-      {/* Stats */}
-      <div className="text-center text-sm text-white/60">
-        Showing {visibleItems.length} of {initialTotal} items
-      </div>
+      <p className="text-center text-[0.9rem] text-graphite">
+        Showing {visibleItems.length} of {initialTotal}
+      </p>
 
-      {/* Image Modal */}
       <ImageModal
         isOpen={!!selectedImage}
         src={selectedImage?.imageUrl || ""}
