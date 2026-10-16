@@ -60,8 +60,12 @@ export const viewport: Viewport = {
   ],
 };
 
-// Applies a saved theme before first paint so there's no flash.
-const themeScript = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+// Runs first in <head>, before React hydrates:
+// 1. Netlify injects a promotional HTML comment (plus a newline) after <meta charset> on the
+//    production domain. React then can't match <head> and re-renders the whole page on the
+//    client (error #418). Remove comments and whitespace-only text nodes that precede this script.
+// 2. Applies a saved theme before first paint so there's no flash.
+const headScript = `(function(){var n=document.head&&document.head.firstChild;while(n){var x=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!/\\S/.test(n.nodeValue)))n.parentNode.removeChild(n);n=x}})();try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 const personJsonLd = {
   "@context": "https://schema.org",
@@ -79,7 +83,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={cn(sans.variable, mono.variable)} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: headScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
