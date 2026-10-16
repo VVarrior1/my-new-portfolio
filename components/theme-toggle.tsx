@@ -1,37 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type Theme = "light" | "dark";
-
-function currentTheme(): Theme {
-  const set = document.documentElement.dataset.theme;
-  if (set === "light" || set === "dark") return set;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
+import { currentTheme, toggleTheme, type Theme } from "@/lib/theme";
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null);
 
-  useEffect(() => setTheme(currentTheme()), []);
-
-  const toggle = () => {
-    const next: Theme = currentTheme() === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("theme", next);
-    } catch {
-      // Private mode: the choice just won't persist.
-    }
-    setTheme(next);
-  };
+  useEffect(() => {
+    setTheme(currentTheme());
+    const observer = new MutationObserver(() => setTheme(currentTheme()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
 
   const label = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={(event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        setTheme(toggleTheme({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }));
+      }}
       aria-label={label}
       title={label}
       className="inline-flex h-10 w-10 items-center justify-center rounded-md text-graphite transition-colors hover:text-ink"

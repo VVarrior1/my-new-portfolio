@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 type ImageModalProps = {
   isOpen: boolean;
@@ -12,72 +13,28 @@ type ImageModalProps = {
 };
 
 export function ImageModal({ isOpen, src, alt, title, description, onClose }: ImageModalProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    setIsLoaded(false);
-    const previousFocus = document.activeElement as HTMLElement | null;
-    document.body.style.overflow = "hidden";
-    closeRef.current?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-      if (event.key === "Tab") {
-        // Only one focusable control: keep focus on it.
-        event.preventDefault();
-        closeRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", onKeyDown);
-      previousFocus?.focus();
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+  useEffect(() => setLoaded(false), [src]);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={title || alt}
-      className="fixed inset-0 z-[60] flex flex-col bg-[#0b0d10]/95 text-[#eceee8]"
-      onClick={onClose}
-    >
-      <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <p className="truncate font-semibold">{title}</p>
-        <button
-          ref={closeRef}
-          type="button"
-          onClick={onClose}
-          className="rounded-md border border-white/25 px-3 py-1.5 text-sm font-medium hover:border-white"
-        >
-          Close
-        </button>
-      </div>
-
-      <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 pb-4 sm:px-6">
-        {!isLoaded && <p className="absolute text-sm text-white/60">Loading photo</p>}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={alt}
-          onLoad={() => setIsLoaded(true)}
-          onClick={(event) => event.stopPropagation()}
-          className={`max-h-full max-w-full rounded-md object-contain transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-0"}`}
-        />
-      </div>
-
-      {description && (
-        <p className="mx-auto max-w-2xl px-4 pb-6 text-center text-sm leading-relaxed text-white/75" onClick={(event) => event.stopPropagation()}>
-          {description}
-        </p>
-      )}
-    </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[94vh] w-auto max-w-[min(94vw,1200px)] gap-3 bg-paper p-3 sm:max-w-[min(94vw,1200px)] sm:p-4">
+        <DialogTitle className="pr-10 text-base font-semibold">{title || alt}</DialogTitle>
+        <DialogDescription className={description ? "text-[0.95rem] text-graphite" : "sr-only"}>
+          {description || `Full-size view of ${title || alt}`}
+        </DialogDescription>
+        <div className="relative flex min-h-40 items-center justify-center">
+          {!loaded && <p className="absolute text-sm text-graphite">Loading</p>}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={alt}
+            onLoad={() => setLoaded(true)}
+            className={`max-h-[78vh] w-auto max-w-full rounded-md object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

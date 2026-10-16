@@ -1,25 +1,24 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CopyEmail } from "@/components/copy-email";
+import { LiveSystem } from "@/components/live-system";
+import { ProjectShot } from "@/components/project-shot";
 import { Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { SystemTrace } from "@/components/system-trace";
 import { getAllBlogs } from "@/lib/blogs";
 import {
   RESUME_PATH,
   education,
   experience,
-  flagship,
+  featured,
+  otherProjects,
   profile,
-  projects,
-  signupTrace,
   skills,
-  smallerProjects,
   type Link as ContentLink,
 } from "@/lib/content";
 import { formatDate } from "@/lib/date-utils";
 import { plainText } from "@/lib/text";
-import { getGalleryItems } from "@/lib/gallery";
 
 export const revalidate = 300;
 
@@ -39,13 +38,8 @@ function ExternalLinks({ links }: { links: ContentLink[] }) {
   );
 }
 
-function Stack({ items }: { items: string[] }) {
-  return <p className="text-[0.95rem] text-graphite">{items.join(", ")}</p>;
-}
-
 export default async function Home() {
-  const [posts, gallery] = await Promise.all([getAllBlogs(), getGalleryItems().catch(() => [])]);
-  const photos = gallery.slice(0, 4);
+  const posts = await getAllBlogs();
 
   return (
     <>
@@ -59,119 +53,99 @@ export default async function Home() {
             {profile.lastName}
           </h1>
 
-          <div className="mt-10 grid gap-12 lg:mt-14 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-6">
-              <p className="measure text-[1.4rem] font-medium leading-[1.4] tracking-[-0.012em] sm:text-[1.6rem]">
+          <div className="mt-10 grid gap-12 lg:mt-14 lg:grid-cols-12 lg:gap-14">
+            <div className="lg:col-span-5">
+              <p className="measure text-[1.35rem] font-medium leading-[1.4] tracking-[-0.012em] sm:text-[1.5rem]">
                 {profile.intro}
               </p>
               <p className="measure mt-5 text-graphite">
                 {profile.role} in {profile.location}. {profile.availability}
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-wrap items-center gap-3">
                 <a href={`mailto:${profile.email}`} className="btn btn-solid" data-track="email">
                   Email me
                 </a>
                 <a href={RESUME_PATH} className="btn btn-quiet" data-track="resume-download">
                   Résumé (PDF)
                 </a>
-                <a href={profile.github} className="btn btn-quiet" target="_blank" rel="noreferrer" data-track="github">
-                  GitHub
-                </a>
-                <a href={profile.linkedin} className="btn btn-quiet" target="_blank" rel="noreferrer" data-track="linkedin">
-                  LinkedIn
-                </a>
+                <span className="flex gap-4 sm:pl-2">
+                  <a href={profile.github} className="link font-medium" target="_blank" rel="noreferrer" data-track="github">
+                    GitHub
+                  </a>
+                  <a href={profile.linkedin} className="link font-medium" target="_blank" rel="noreferrer" data-track="linkedin">
+                    LinkedIn
+                  </a>
+                </span>
               </div>
             </div>
 
-            <div className="lg:col-span-6">
-              <SystemTrace steps={signupTrace} />
+            <div id="play" className="scroll-mt-24 lg:col-span-7">
+              <LiveSystem />
             </div>
           </div>
         </section>
 
         {/* Work */}
-        <Section id="work" title="Work" aside="Things I've built that people use, starting with the one I run.">
-          <article aria-labelledby="flagship-title">
-            <h3 id="flagship-title" className="text-[1.9rem] font-bold leading-tight tracking-[-0.03em] sm:text-[2.4rem]">
-              {flagship.name}
-            </h3>
-            <p className="mt-2 text-graphite">
-              {flagship.role}. {flagship.period}.
-            </p>
-            <p className="measure mt-5 text-[1.15rem] leading-relaxed">{flagship.summary}</p>
-
-            <dl className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-y border-rule py-8 lg:grid-cols-4">
-              {flagship.facts.map((fact) => (
-                <div key={fact.label}>
-                  <dt className="sr-only">{fact.label}</dt>
-                  <dd>
-                    <span className="block text-[2rem] font-bold leading-none tracking-[-0.04em] tabular-nums sm:text-[2.4rem]">
-                      {fact.value}
-                    </span>
-                    <span className="mt-2 block text-[0.95rem] leading-snug text-graphite">{fact.label}</span>
-                  </dd>
+        <Section id="work" title="Work" wide>
+          <div className="space-y-24">
+            {featured.map((project, index) => (
+              <article
+                key={project.slug}
+                aria-labelledby={`${project.slug}-title`}
+                className="grid items-center gap-x-14 gap-y-8 lg:grid-cols-12"
+              >
+                <div className={`lg:col-span-7 ${index % 2 === 1 ? "lg:order-2" : ""}`}>
+                  <ProjectShot name={project.name} shot={project.shot} phone={project.phone} />
                 </div>
-              ))}
-            </dl>
 
-            <div className="mt-10 grid gap-10 xl:grid-cols-2 xl:gap-14">
-              <div>
-                <h4 className="text-lg font-bold">What it does</h4>
-                <ul className="mt-4 space-y-3">
-                  {flagship.built.map((item) => (
-                    <li key={item} className="relative pl-5 leading-relaxed before:absolute before:left-0 before:top-[0.7em] before:h-[2px] before:w-2.5 before:bg-trace">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="text-lg font-bold">Problems worth telling you about</h4>
-                <div className="mt-4 space-y-6">
-                  {flagship.decisions.map((decision) => (
-                    <div key={decision.title}>
-                      <p className="font-semibold">{decision.title}</p>
-                      <p className="mt-1 leading-relaxed text-graphite">{decision.body}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                <div className={`lg:col-span-5 ${index % 2 === 1 ? "lg:order-1" : ""}`}>
+                  <h3 id={`${project.slug}-title`} className="text-[1.8rem] font-bold leading-tight tracking-[-0.03em] sm:text-[2.1rem]">
+                    {project.name}
+                  </h3>
+                  <p className="mt-1 text-graphite">{project.role}</p>
+                  <p className="mt-4 text-[1.08rem] leading-relaxed">{project.summary}</p>
 
-            <div className="mt-8 space-y-4">
-              <Stack items={flagship.stack} />
-              <ExternalLinks links={flagship.links} />
-            </div>
-          </article>
+                  <dl className="mt-6 grid grid-cols-3 gap-4 border-y border-rule py-5">
+                    {project.facts.map((fact) => (
+                      <div key={fact.label}>
+                        <dt className="sr-only">{fact.label}</dt>
+                        <dd>
+                          <span className="block text-[1.5rem] font-bold leading-none tracking-[-0.035em] tabular-nums">{fact.value}</span>
+                          <span className="mt-1.5 block text-[0.88rem] leading-snug text-graphite">{fact.label}</span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
 
-          <div className="mt-20 space-y-14">
-            {projects.map((project) => (
-              <article key={project.name} className="grid gap-x-10 gap-y-4 border-t border-rule pt-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-                <div>
-                  <h3 className="text-[1.6rem] font-bold leading-tight tracking-[-0.025em]">{project.name}</h3>
-                  <p className="mt-2 text-[1.1rem] leading-snug">{project.summary}</p>
+                  <div className="mt-6">
+                    <p className="font-semibold">{project.hardPart.title}</p>
+                    <p className="mt-1 leading-relaxed text-graphite">{project.hardPart.body}</p>
+                  </div>
+
+                  <p className="mt-5 text-[0.95rem] text-graphite">{project.stack.join(", ")}</p>
                   <div className="mt-4">
                     <ExternalLinks links={project.links} />
                   </div>
-                </div>
-                <div className="space-y-4">
-                  <p className="leading-relaxed text-graphite">{project.detail}</p>
-                  <Stack items={project.stack} />
                 </div>
               </article>
             ))}
           </div>
 
-          <div className="mt-20 border-t border-rule pt-10">
-            <h3 className="text-lg font-bold">Smaller things on GitHub</h3>
-            <ul className="mt-5 grid gap-x-10 gap-y-5 md:grid-cols-2">
-              {smallerProjects.map((project) => (
+          <div className="mt-24 border-t border-rule pt-10">
+            <h3 className="text-lg font-bold">More projects</h3>
+            <ul className="mt-6 grid gap-x-12 gap-y-7 md:grid-cols-2">
+              {otherProjects.map((project) => (
                 <li key={project.name}>
-                  <a href={project.href} target="_blank" rel="noreferrer" className="link font-semibold">
-                    {project.name}
-                  </a>
-                  <p className="mt-1 text-[0.95rem] leading-snug text-graphite">{project.summary}</p>
+                  {project.href ? (
+                    <a href={project.href} target="_blank" rel="noreferrer" className="link font-semibold">
+                      {project.name}
+                    </a>
+                  ) : (
+                    <span className="font-semibold">{project.name}</span>
+                  )}
+                  <p className="mt-1 leading-relaxed text-graphite">{project.summary}</p>
+                  <p className="mt-1 text-[0.88rem] text-graphite">{project.stack}</p>
                 </li>
               ))}
             </ul>
@@ -234,7 +208,7 @@ export default async function Home() {
           </div>
         </Section>
 
-        {/* Writing and photos */}
+        {/* Writing */}
         <Section id="writing" title="Writing">
           {posts.length > 0 ? (
             <ul>
@@ -260,58 +234,47 @@ export default async function Home() {
               All {posts.length} posts
             </Link>
           </p>
-
-          {photos.length > 0 && (
-            <div className="mt-16">
-              <h3 className="text-lg font-bold">From the gallery</h3>
-              <Link href="/gallery" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Open the photo gallery">
-                {photos.map((photo) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={photo.id}
-                    src={photo.imageUrl}
-                    alt={photo.title}
-                    loading="lazy"
-                    className="aspect-[4/5] w-full rounded-md object-cover transition-opacity hover:opacity-85"
-                  />
-                ))}
-              </Link>
-              <p className="mt-4">
-                <Link href="/gallery" className="link font-medium">
-                  See the gallery
-                </Link>
-              </p>
-            </div>
-          )}
         </Section>
 
         {/* Contact */}
         <section id="contact" aria-labelledby="contact-title" className="scroll-mt-20 border-t border-rule bg-paper-raised">
-          <div className="mx-auto max-w-[76rem] px-4 py-20 sm:px-8 sm:py-28">
-            <h2 id="contact-title" className="section-title">
-              Hiring for 2027?
-            </h2>
-            <p className="measure mt-5 text-[1.2rem] leading-relaxed">
-              I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or
-              somewhere I can move to. {profile.workAuth}
-            </p>
-            <a
-              href={`mailto:${profile.email}`}
-              data-track="email"
-              className="mt-10 block text-[clamp(1.3rem,4.8vw,3.6rem)] font-bold leading-[1.05] tracking-[-0.035em] underline decoration-trace decoration-[3px] underline-offset-[0.18em] transition-colors hover:text-signal sm:break-normal"
-            >
-              {profile.email.split("@")[0]}
-              <wbr />@{profile.email.split("@")[1]}
-            </a>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <CopyEmail email={profile.email} />
-              <a href={RESUME_PATH} className="btn btn-quiet" data-track="resume-download">
-                Résumé (PDF)
+          <div className="mx-auto grid max-w-[76rem] gap-12 px-4 py-20 sm:px-8 sm:py-28 lg:grid-cols-[minmax(0,1fr)_13.75rem] lg:items-end">
+            <div className="min-w-0">
+              <h2 id="contact-title" className="section-title">
+                Hiring for 2027?
+              </h2>
+              <p className="measure mt-5 text-[1.2rem] leading-relaxed">
+                I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or
+                somewhere I can move to. {profile.workAuth}
+              </p>
+              <a
+                href={`mailto:${profile.email}`}
+                data-track="email"
+                className="mt-10 block text-[clamp(1.3rem,4.4vw,2.85rem)] font-bold leading-[1.05] tracking-[-0.035em] underline decoration-trace decoration-[3px] underline-offset-[0.18em] transition-colors hover:text-signal"
+              >
+                {profile.email.split("@")[0]}
+                <wbr />@{profile.email.split("@")[1]}
               </a>
-              <a href={profile.linkedin} className="btn btn-quiet" target="_blank" rel="noreferrer" data-track="linkedin">
-                LinkedIn
-              </a>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <CopyEmail email={profile.email} />
+                <a href={RESUME_PATH} className="btn btn-quiet" data-track="resume-download">
+                  Résumé (PDF)
+                </a>
+                <a href={profile.linkedin} className="btn btn-quiet" target="_blank" rel="noreferrer" data-track="linkedin">
+                  LinkedIn
+                </a>
+              </div>
             </div>
+            <figure className="w-44 lg:w-full">
+              <Image
+                src="/abdelrahman.jpg"
+                width={460}
+                height={460}
+                alt="Abdelrahman Mohamed in a suit, standing outdoors by a river on a sunny day"
+                sizes="220px"
+                className="aspect-square w-full rounded-xl object-cover"
+              />
+            </figure>
           </div>
         </section>
       </main>

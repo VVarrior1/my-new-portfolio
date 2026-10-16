@@ -11,7 +11,7 @@ Run all of them before pushing; `npm run ci` chains them.
 
 ## Content
 
-- Profile content lives only in `lib/content.ts`. Facts there come from the résumés and the CYD
+- Profile content lives only in `lib/content.ts`. Keep CYD as one project among several, not the headline. Facts there come from the résumés and the CYD
   case study (github.com/VVarrior1/cyd-platform-case-study). Don't invent numbers; if two
   sources disagree, use the newer one and say so.
 - The résumé file name `public/Abdelrahman_Mohamed_Resume.pdf` is linked from outside the site
@@ -23,8 +23,14 @@ Run all of them before pushing; `npm run ci` chains them.
 - Colors only through the tokens in `app/globals.css` (`paper`, `ink`, `graphite`, `rule`,
   `signal`, `trace`, `chart`). Every token has a dark value; check both themes.
 - No all-caps eyebrow labels, chips or card grids. Hierarchy comes from type size, weight and rules.
-- The hero trace is the only motion that isn't triggered by the user. Keep it that way, and
-  respect `prefers-reduced-motion`.
+- The hero simulator is the only motion that isn't triggered by the user. Keep it that way,
+  keep it starting on idle (it blocked first paint when it started on hydration: Lighthouse 72 → 97),
+  and respect `prefers-reduced-motion`.
+- shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
+  `globals.css`, not per-component colors. cmdk separators inside the list break ARIA, so don't add them.
+- Don't feature ApplyOps anywhere (the owner doesn't want it shown; the repo is private).
+- Product screenshots: `node scripts/capture-work-shots.mjs`. Don't submit forms on cydsoccer.com
+  while capturing, because it triggers real lead SMS and email. Avoid pages showing children or staff names.
 
 ## Analytics
 

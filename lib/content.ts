@@ -14,147 +14,128 @@ export const profile = {
   github: "https://github.com/VVarrior1",
   linkedin: "https://www.linkedin.com/in/abdelrahman-mohamed-080488197/",
   intro:
-    "I build software that real businesses run on. Since May 2025 I've been the only engineer behind the booking, payments and messaging platform of a Calgary youth soccer academy.",
+    "I build software that has to keep working: a payments and messaging platform a business runs on every day, a simulation engine for learning system design, and vision models for roads most datasets ignore.",
   availability: "Graduating December 2026. Available full-time from January 2027.",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
 };
 
-export type TraceStep = {
-  service: string;
-  detail: string;
-};
-
-/** The hero animation: one paid registration on cydsoccer.com, end to end. */
-export const signupTrace: TraceStep[] = [
-  { service: "Next.js", detail: "Parent finishes the three-step registration form" },
-  { service: "Stripe", detail: "Checkout session for a one-time, instalment or monthly plan" },
-  { service: "Stripe", detail: "Payment confirmed, session id returned" },
-  { service: "Sheets", detail: "Registration row written to the primary sheet and its backup" },
-  { service: "Twilio", detail: "Confirmation SMS, kept in GSM-7 so it bills as fewer segments" },
-  { service: "Resend", detail: "Confirmation email with venue, schedule and plan" },
-  { service: "TeamSnap", detail: "Player added to the right team and sent an invite" },
-];
-
 export type Link = { label: string; href: string; track?: string };
+
+export type Shot = {
+  /** Path under /public. Width and height are the file's real pixels. */
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  /** Shown in the frame's address bar. */
+  url: string;
+};
 
 export type FeaturedProject = {
   slug: string;
   name: string;
   summary: string;
   role: string;
-  period: string;
-  stack: string[];
   facts: Array<{ value: string; label: string }>;
-  built: string[];
-  decisions: Array<{ title: string; body: string }>;
-  links: Link[];
-};
-
-export const flagship: FeaturedProject = {
-  slug: "cyd",
-  name: "CYD Soccer Academy platform",
-  summary:
-    "Registration, payments, roster sync and parent messaging for a youth soccer academy. The owner and staff run the business from it, and families register and pay without anyone entering data by hand.",
-  role: "Sole engineer: design, build, deploy, operate",
-  period: "May 2025 to now",
-  stack: ["Next.js 15", "TypeScript", "Vercel", "Stripe", "Twilio", "Resend", "Google Sheets API", "TeamSnap API", "Gemini"],
-  facts: [
-    { value: "~300", label: "active families across 5 Calgary venues" },
-    { value: "1,000+", label: "commits, about 90 API routes" },
-    { value: "up to 40%", label: "fewer SMS segments on longer notices" },
-    { value: "$0–15", label: "a month for messaging, against a $97 floor for the CRM I evaluated" },
-  ],
-  built: [
-    "A three-step registration flow that only offers venues, groups and payment plans that fit the child's age and the venue's schedule.",
-    "Stripe Checkout for pay-in-full, fixed instalments and open monthly subscriptions, plus payment links and a manual screen for families who pay in person.",
-    "Automatic TeamSnap roster sync, so coaches see a new player as soon as they've paid.",
-    "Email and SMS confirmations, reminders and abandoned-checkout sequences, with a broadcast composer that shows segment count and cost before sending.",
-    "Self-serve rescheduling with SMS verification, and an operations dashboard with registrations, rosters and marketing attribution carried through to Stripe.",
-  ],
-  decisions: [
-    {
-      title: "Pull, don't wait for a push",
-      body:
-        "Stripe can't stop a subscription after exactly N payments, and the webhook that did it failed silently, so some plans billed past their end date. I replaced it with a daily job that asks Stripe which plans are finished. It ran in report-only mode until its reports matched what I expected.",
-    },
-    {
-      title: "Smart quotes were doubling the SMS bill",
-      body:
-        "One curly apostrophe or emoji pushes a message out of GSM-7 into UCS-2, which halves the characters per billed segment. Sanitizing input and estimating segments before sending cut long notices by up to 40%.",
-    },
-    {
-      title: "Google Sheets as the database",
-      body:
-        "Staff already ran the business from a spreadsheet, so a Postgres copy only drifted out of sync. I removed it, kept a live backup sheet, and made anything that moves money read Stripe rather than a cell.",
-    },
-  ],
-  links: [
-    { label: "Read the case study", href: "https://github.com/VVarrior1/cyd-platform-case-study", track: "project:cyd-case-study" },
-    { label: "cydsoccer.com", href: "https://cydsoccer.com", track: "project:cyd-live" },
-  ],
-};
-
-export type Project = {
-  name: string;
-  summary: string;
-  detail: string;
+  hardPart: { title: string; body: string };
   stack: string[];
   links: Link[];
+  shot: Shot;
+  phone?: Shot;
 };
 
-export const projects: Project[] = [
+export const featured: FeaturedProject[] = [
   {
+    slug: "cyd",
+    name: "CYD Soccer Academy platform",
+    summary:
+      "Registration, Stripe billing, SMS and email, and roster sync for a youth soccer academy in Calgary. Families sign up and pay without anyone entering data by hand.",
+    role: "Sole engineer, May 2025 to now",
+    facts: [
+      { value: "~300", label: "active families" },
+      { value: "~90", label: "API routes" },
+      { value: "up to 40%", label: "fewer SMS segments on long notices" },
+    ],
+    hardPart: {
+      title: "Billing that stops on time",
+      body:
+        "Stripe can't end a subscription after exactly N payments, and the webhook that did it failed silently. I replaced it with a daily job that asks Stripe which plans are finished, and ran it in report-only mode until its reports matched.",
+    },
+    stack: ["Next.js", "TypeScript", "Stripe", "Twilio", "Resend", "Google Sheets API", "TeamSnap API"],
+    links: [
+      { label: "Case study", href: "https://github.com/VVarrior1/cyd-platform-case-study", track: "project:cyd-case-study" },
+      { label: "Live site", href: "https://cydsoccer.com", track: "project:cyd-live" },
+    ],
+    shot: {
+      src: "/work/cyd-cost-calculator.jpg",
+      width: 2880,
+      height: 1800,
+      alt: "The CYD cost calculator: pick training days and number of children, and it shows the monthly payment, season total and per-session price.",
+      url: "cydsoccer.com/tools/cost-calculator",
+    },
+    phone: {
+      src: "/work/cyd-register-phone.jpg",
+      width: 1170,
+      height: 2532,
+      alt: "Step one of the CYD registration flow on a phone: parent details and whether the child is new or returning.",
+      url: "cydsoccer.com/register",
+    },
+  },
+  {
+    slug: "systemlab",
     name: "Systemlab",
-    summary: "A system design trainer built on a discrete-event simulator I wrote.",
-    detail:
-      "70 lessons where you build an architecture, estimate its latency and cost, then run it against a seeded simulation of replication lag, quorums, sharding, retries, circuit breakers and region outages. It simulates 180,000 requests in under two seconds in a Web Worker, and every reference solution is checked by 948 tests. There's also a voice mock interview graded by Gemini.",
-    stack: ["TypeScript", "Next.js", "React Flow", "Web Workers", "Gemini", "Supabase", "Vitest"],
+    summary:
+      "A system design trainer built on a discrete-event simulator I wrote. You design an architecture, estimate its latency and cost, then run it and see where it breaks.",
+    role: "Solo project, open source",
+    facts: [
+      { value: "70", label: "lessons in 12 chapters" },
+      { value: "948", label: "tests" },
+      { value: "180K", label: "requests simulated in under 2 s" },
+    ],
+    hardPart: {
+      title: "Answers that hold across seeds",
+      body:
+        "Each lesson's reference solution has to pass at every seed, not just the lucky one, so the engine is fully deterministic and runs in a Web Worker. Replication lag, quorums, retries, circuit breakers and region outages are all modelled.",
+    },
+    stack: ["TypeScript", "Next.js", "React Flow", "Web Workers", "Gemini", "Vitest"],
     links: [
       { label: "Try it", href: "https://system-design-playground-pi.vercel.app", track: "project:systemlab-live" },
       { label: "Code", href: "https://github.com/VVarrior1/systemlab", track: "project:systemlab-code" },
     ],
-  },
-  {
-    name: "ApplyOps",
-    summary: "An LLM pipeline that isn't allowed to make things up.",
-    detail:
-      "It tailors résumés, and every generated line has to cite a fact from a verified store or it's stripped before the PDF renders. A 39-item golden set holds the hallucination rate at 0.28%, and a GitHub Actions gate re-runs it on every pull request, blocking changes that make the output worse. A public benchmark picks the cheapest model that isn't measurably worse.",
-    stack: ["TypeScript", "Next.js", "Postgres", "Drizzle", "Vercel AI SDK", "GitHub Actions"],
-    links: [
-      { label: "Try it", href: "https://applyops-two.vercel.app", track: "project:applyops-live" },
-      { label: "Code", href: "https://github.com/VVarrior1/applyops", track: "project:applyops-code" },
-    ],
-  },
-  {
-    name: "Road object detection",
-    summary: "YOLOv8 vs YOLOv11 on Egyptian street traffic.",
-    detail:
-      "A team of three fine-tuning detectors on a 12-class dataset with things Western driving benchmarks don't have, like tuk-tuks and street banners. I owned the YOLOv11 training and the accuracy-versus-cost comparison (parameters, FLOPs, latency) behind the model we recommended.",
-    stack: ["Python", "PyTorch", "Ultralytics YOLOv8/v11"],
-    links: [],
+    shot: {
+      src: "/work/systemlab-lesson.jpg",
+      width: 2400,
+      height: 1560,
+      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
+      url: "system-design-playground-pi.vercel.app/learn",
+    },
   },
 ];
 
-export const smallerProjects: Array<{ name: string; summary: string; href: string }> = [
+export const otherProjects: Array<{ name: string; summary: string; href?: string; stack: string }> = [
+  {
+    name: "Road object detection",
+    summary:
+      "Fine-tuned YOLOv8 and YOLOv11 on a 12-class Egyptian traffic dataset, with tuk-tuks and street banners that Western benchmarks don't have. I owned the v11 training and the accuracy-versus-cost comparison.",
+    stack: "Python, PyTorch, Ultralytics",
+  },
   {
     name: "Vectorized Fashion AI",
     summary: "Multimodal product search with CLIP embeddings in FAISS and RAG-written descriptions.",
     href: "https://github.com/VVarrior1/Vectorized-fashion-ai",
+    stack: "Python, FAISS, Streamlit",
   },
   {
     name: "KanDoIt",
-    summary: "Kanban board with admin, manager and user roles. Next.js, Prisma, PostgreSQL, Docker.",
+    summary: "Kanban board with admin, manager and user roles.",
     href: "https://github.com/VVarrior1/KanDoIt",
+    stack: "Next.js, Prisma, PostgreSQL, Docker",
   },
   {
     name: "Data bias detector",
     summary: "Upload a CSV and see class imbalance before you train on it.",
     href: "https://github.com/VVarrior1/Data_Bias_detector_and_Visualizer",
-  },
-  {
-    name: "Apple Health analyzer",
-    summary: "Explore steps, heart rate, workouts and sleep from an Apple Watch export.",
-    href: "https://github.com/VVarrior1/Health_Tracker_data",
+    stack: "Next.js, TypeScript",
   },
 ];
 
@@ -177,7 +158,7 @@ export const experience: Experience[] = [
     place: "Calgary",
     link: "https://cydsoccer.com",
     summary:
-      "Sole engineer on the platform described above: registration, Stripe billing, SMS and email, roster sync and the staff dashboard.",
+      "Sole engineer on the academy's booking and payments platform: registration, Stripe billing, SMS and email, roster sync and the staff dashboard.",
   },
   {
     company: "City of Calgary",

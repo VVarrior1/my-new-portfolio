@@ -3,7 +3,9 @@ import { JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { SiteAnalytics } from "@/components/site-analytics";
+import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
+import { cn } from "@/lib/utils";
 
 const sans = Schibsted_Grotesk({
   subsets: ["latin"],
@@ -19,7 +21,7 @@ const mono = JetBrains_Mono({
 });
 
 const description =
-  "Full-stack and AI engineer in Calgary. Sole engineer on a production booking and payments platform; builder of Systemlab and ApplyOps. Graduating December 2026.";
+  "Full-stack and AI engineer in Calgary. Builds production payments and messaging, a system design simulator, and computer vision models. Graduating December 2026.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -75,7 +77,7 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={cn(sans.variable, mono.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script
@@ -93,6 +95,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <AudioProvider trackUrl="/background-music.m4a">
           {children}
           <SiteAnalytics />
+          <Toaster position="bottom-center" />
         </AudioProvider>
       </body>
     </html>
