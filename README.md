@@ -52,12 +52,11 @@ command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--bac
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
 
-**Photography.** The hero sits on Calgary at night and the contact section on Calgary at sunset
-(`public/photos`, both under the Unsplash License, credited in the footer). On the home page the
-header floats transparent over the hero until you scroll (`data-overlay` in `site-header.tsx`).
-The simulator over the photo uses `.glass`, which re-declares the dark palette locally so it
-looks the same in both themes. Project screenshots sit on colored `.stage` panels in each
-product's own color.
+**Background elements.** The hero and the contact band sit on `.bg-field`: a fine grid that
+fades out from behind the simulator, and two or three large blurred glows (`--glow-a/b/c`, set
+per theme) that drift slowly and stop under reduced motion. The hero slides under the transparent
+sticky header (`-mt-16 pt-16`) so the glows reach the top edge. Project screenshots sit on colored
+`.stage` panels in each product's own color.
 
 **The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.

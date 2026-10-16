@@ -45,61 +45,57 @@ export default async function Home() {
     <>
       <SiteHeader />
       <main id="main">
-        {/* Hero: Calgary at night behind the name. The header floats over it (see SiteHeader). */}
-        <section className="relative isolate -mt-16 overflow-hidden bg-[#050b1c] pt-16 text-white">
-          <Image
-            src="/photos/calgary-night.jpg"
-            alt=""
-            fill
-            priority
-            // The hero is taller than 16:9, so object-cover draws the photo wider than the viewport.
-            sizes="(max-width: 640px) 300vw, 160vw"
-            className="-z-20 object-cover object-[50%_40%]"
-          />
-          <div aria-hidden="true" className="hero-photo-shade absolute inset-0 -z-10" />
+        {/* Hero, over a fine grid and slow color glows (.bg-field in globals.css). */}
+        {/* -mt-16/pt-16 slides the hero under the translucent sticky header, so the glows reach the top edge. */}
+        <section className="relative isolate -mt-16 overflow-hidden pt-16">
+          <div aria-hidden="true" className="bg-field">
+            <span className="glow glow-a" />
+            <span className="glow glow-b" />
+            <span className="glow glow-c" />
+          </div>
 
-          <div className="mx-auto max-w-[76rem] px-4 pb-16 pt-12 sm:px-8 sm:pb-24 sm:pt-20">
-            <h1 className="display-name drop-shadow-[0_2px_24px_rgb(0_0_0/0.35)]">
+          <div className="mx-auto max-w-[76rem] px-4 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16">
+            <h1 className="display-name">
               {profile.firstName}
               <br />
               {profile.lastName}
             </h1>
 
-            <div className="mt-10 grid gap-12 lg:mt-16 lg:grid-cols-12 lg:gap-14">
-              <div className="[text-shadow:0_1px_14px_rgb(0_0_0/0.55)] lg:col-span-5">
+            <div className="mt-10 grid gap-12 lg:mt-14 lg:grid-cols-12 lg:gap-14">
+              <div className="lg:col-span-5">
                 <p className="measure text-[1.35rem] font-medium leading-[1.4] tracking-[-0.012em] sm:text-[1.5rem]">
                   {profile.intro}
                 </p>
-                <p className="measure mt-5 text-[1.08rem] leading-relaxed text-white/90">{profile.personal}</p>
-                <p className="measure mt-4 text-white/70">
+                <p className="measure mt-5 text-[1.08rem] leading-relaxed">{profile.personal}</p>
+                <p className="measure mt-4 text-graphite">
                   {profile.role} in {profile.location}. {profile.graduation}
                 </p>
 
                 <div className="mt-8 flex flex-wrap items-center gap-3">
-                  <a href={`mailto:${profile.email}`} className="btn btn-band-solid !text-[#16191d]" data-track="email">
+                  <a href={`mailto:${profile.email}`} className="btn btn-solid" data-track="email">
                     Email me
                   </a>
-                  <a href={RESUME_PATH} className="btn btn-on-band" data-track="resume-download">
+                  <a href={RESUME_PATH} className="btn btn-quiet bg-paper/70 backdrop-blur-sm" data-track="resume-download">
                     Résumé (PDF)
                   </a>
                   <span className="flex gap-4 sm:pl-2">
-                    <a href={profile.github} className="font-medium underline decoration-white/50 underline-offset-[0.2em] hover:decoration-white" target="_blank" rel="noreferrer" data-track="github">
+                    <a href={profile.github} className="link font-medium" target="_blank" rel="noreferrer" data-track="github">
                       GitHub
                     </a>
-                    <a href={profile.linkedin} className="font-medium underline decoration-white/50 underline-offset-[0.2em] hover:decoration-white" target="_blank" rel="noreferrer" data-track="linkedin">
+                    <a href={profile.linkedin} className="link font-medium" target="_blank" rel="noreferrer" data-track="linkedin">
                       LinkedIn
                     </a>
                   </span>
                 </div>
 
-                <p className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-white/25 bg-white/10 py-1.5 pl-3 pr-4 text-[0.95rem] backdrop-blur-sm">
-                  <span className="size-2 rounded-full bg-[#4cc38a] shadow-[0_0_0_4px_rgb(76_195_138/0.25)]" aria-hidden="true" />
+                <p className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-rule bg-paper/70 py-1.5 pl-3 pr-4 text-[0.95rem] backdrop-blur-sm">
+                  <span className="size-2 rounded-full bg-go shadow-[0_0_0_4px_color-mix(in_srgb,var(--go)_22%,transparent)]" aria-hidden="true" />
                   {profile.availability}
                 </p>
               </div>
 
               <div id="play" className="scroll-mt-24 lg:col-span-7">
-                <LiveSystem glass />
+                <LiveSystem />
               </div>
             </div>
           </div>
@@ -267,19 +263,12 @@ export default async function Home() {
         </Section>
 
         {/* Contact */}
-        {/* Contact: Calgary at sunset, the page's closing bookend to the night skyline at the top. */}
-        <section id="contact" aria-labelledby="contact-title" className="relative isolate scroll-mt-20 overflow-hidden bg-[#0c1638] text-band-ink">
-          <Image
-            src="/photos/calgary-sunset.jpg"
-            alt=""
-            fill
-            sizes="100vw"
-            className="-z-20 object-cover object-[60%_45%]"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(9_17_48/0.94)_0%,rgb(9_17_48/0.82)_45%,rgb(9_17_48/0.35)_100%)] max-lg:bg-[linear-gradient(180deg,rgb(9_17_48/0.9)_0%,rgb(9_17_48/0.8)_100%)]"
-          />
+        {/* Contact: the blue band with its own dot grid and glows. */}
+        <section id="contact" aria-labelledby="contact-title" className="relative isolate scroll-mt-20 overflow-hidden bg-band text-band-ink">
+          <div aria-hidden="true" className="bg-field band-field">
+            <span className="glow glow-a" />
+            <span className="glow glow-b" />
+          </div>
           <div className="mx-auto grid max-w-[76rem] gap-12 px-4 py-20 sm:px-8 sm:py-28 lg:grid-cols-[minmax(0,1fr)_13.75rem] lg:items-end">
             <div className="min-w-0">
               <h2 id="contact-title" className="section-title">
