@@ -40,29 +40,32 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 ## Design
 
-Light by default, with a dark theme that follows the OS or the header toggle. The toggle reveals
-the new theme as a circle using the View Transitions API, and switches instantly where that API
-isn't available or the visitor prefers reduced motion. One typeface (Schibsted Grotesk), with
-JetBrains Mono only for code. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--graphite`,
-`--rule`, `--signal`, `--trace`, `--chart`) exposed to Tailwind as `bg-paper`, `text-graphite` and so on.
+"Workbench": a warm grey paper page where every decoration is an object with a job. The hero
+simulator is a small device (raised panel, dark screen, keycap controls), project screenshots sit
+on mats with label tabs, numbers live on dark screens, and the contact block is a nameplate.
+International orange (`--signal`) appears only on things you press. Light by default, with a dark
+theme at the same temperature that follows the OS or the header toggle. The toggle reveals the new
+theme as a circle using the View Transitions API, and switches instantly where that API isn't
+available or the visitor prefers reduced motion.
+
+Type is Archivo (variable; the width axis is the display voice) with JetBrains Mono for dates,
+stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--ink-2`,
+`--graphite`, `--rule`, `--signal`, `--screen`…) exposed to Tailwind as `bg-paper`, `text-graphite`
+and so on. The object classes (`.panel`, `.screen`, `.key`, `.key-signal`, `.spec`, `.plate`) are in
+`app/globals.css`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
-command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--background`,
+command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,
 `--primary`, `--border`…) are mapped onto ours in `app/globals.css`, and its `dark:` variant
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
-
-**Background elements.** The hero and the contact band sit on `.bg-field`: a fine grid that
-fades out from behind the simulator, and two or three large blurred glows (`--glow-a/b/c`, set
-per theme) that drift slowly and stop under reduced motion. The hero slides under the transparent
-sticky header (`-mt-16 pt-16`) so the glows reach the top edge. Project screenshots sit on colored
-`.stage` panels in each product's own color.
 
 **The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
-and in background tabs, and draws no request dots under reduced motion. `diagnose()` writes the
+and in background tabs, and draws no request dots under reduced motion. Status colours appear only
+on its screen; failed requests are drawn as × marks so they read without colour. `diagnose()` writes the
 hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`

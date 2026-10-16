@@ -42,11 +42,11 @@ export function DailyChart({ points }: { points: DayPoint[] }) {
 
   return (
     <div className="relative" ref={box}>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="group" aria-label="Page views per day for the last 30 days">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full font-mono" role="group" aria-label="Page views per day for the last 30 days">
         {ticks.map((tick) => (
           <g key={tick}>
-            <line x1={PAD.left} x2={W - PAD.right} y1={y(tick)} y2={y(tick)} stroke="var(--rule)" strokeWidth={1} />
-            <text x={PAD.left - 8} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={12} fill="var(--graphite)">
+            <line x1={PAD.left} x2={W - PAD.right} y1={y(tick)} y2={y(tick)} stroke="var(--screen-line)" strokeWidth={1} />
+            <text x={PAD.left - 8} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={12} fill="var(--screen-graphite)">
               {tick.toLocaleString("en-US")}
             </text>
           </g>
@@ -63,8 +63,8 @@ export function DailyChart({ points }: { points: DayPoint[] }) {
               {h > 0 && (
                 <path
                   d={`M${x},${base} V${top + r} Q${x},${top} ${x + r},${top} H${x + barW - r} Q${x + barW},${top} ${x + barW},${top + r} V${base} Z`}
-                  fill="var(--chart)"
-                  opacity={active === null || active === index ? 1 : 0.45}
+                  fill="var(--screen-ink)"
+                  opacity={active === null || active === index ? 0.92 : 0.35}
                 />
               )}
               <rect
@@ -93,14 +93,14 @@ export function DailyChart({ points }: { points: DayPoint[] }) {
             y={H - 8}
             textAnchor={index === 0 ? "start" : index === points.length - 1 ? "end" : "middle"}
             fontSize={12}
-            fill="var(--graphite)"
+            fill="var(--screen-graphite)"
           >
             {label(points[index].day)}
           </text>
         ))}
       </svg>
 
-      <p className="mt-2 min-h-[1.5em] text-[0.95rem] tabular-nums text-graphite" aria-live="polite">
+      <p className="t-mono mt-2 min-h-[1.5em] border-t border-screen-line pt-2.5 text-screen-graphite" aria-live="polite">
         {shown
           ? `${label(shown.day)}: ${shown.views.toLocaleString("en-US")} ${shown.views === 1 ? "view" : "views"}, ${shown.visitors.toLocaleString("en-US")} ${shown.visitors === 1 ? "visitor" : "visitors"}`
           : "Hover or tab to a day for its numbers."}

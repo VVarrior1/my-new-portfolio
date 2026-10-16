@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { DailyChart, type DayPoint } from "@/components/daily-chart";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { PageHeader } from "@/components/page-header";
 import { TrackingNotice } from "@/components/tracking-notice";
 import { compactIfDue, getFreshAnalytics } from "@/lib/analytics";
 import { getAllBlogs } from "@/lib/blogs";
@@ -51,15 +52,15 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 function Table({ caption, columns, rows }: { caption: string; columns: string[]; rows: Array<[string, ...number[]]> }) {
   return (
     <div>
-      <h2 className="text-lg font-bold">{caption}</h2>
+      <h2 className="t-item">{caption}</h2>
       {rows.length === 0 ? (
-        <p className="mt-3 text-graphite">Nothing recorded yet.</p>
+        <p className="mt-3 text-ink-2">Nothing recorded yet.</p>
       ) : (
-        <table className="mt-3 w-full table-fixed text-left text-[0.97rem]">
+        <table className="mt-3 w-full table-fixed text-left text-[0.9375rem]">
           <thead>
-            <tr className="border-b border-rule text-graphite">
+            <tr className="t-mono border-b border-rule text-graphite">
               {columns.map((column, i) => (
-                <th key={column} scope="col" className={`py-2 font-medium ${i > 0 ? "w-[5.5rem] text-right" : ""}`}>
+                <th key={column} scope="col" className={`py-2 font-normal ${i > 0 ? "w-[5.5rem] text-right" : ""}`}>
                   {column}
                 </th>
               ))}
@@ -72,7 +73,7 @@ function Table({ caption, columns, rows }: { caption: string; columns: string[];
                   {name}
                 </th>
                 {values.map((value, i) => (
-                  <td key={i} className="py-2.5 pl-4 text-right tabular-nums">
+                  <td key={i} className="py-2.5 pl-4 text-right font-mono text-[0.875rem] tabular-nums">
                     {fmt(value)}
                   </td>
                 ))}
@@ -111,46 +112,43 @@ export default async function StatsPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
-        <header className="max-w-3xl">
-          <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.05em]">Site stats</h1>
-          <p className="measure mt-6 text-[1.2rem] leading-relaxed text-graphite">
-            Counted by this site itself, with no third-party trackers. Crawlers and link previews are left out, and a
-            visitor is a browser, identified by a first-party cookie. Numbers update about once a minute.
-          </p>
+      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
+        <PageHeader
+          title="Site stats"
+          lead="Counted by this site itself, with no third-party trackers. Crawlers and link previews are left out, and a visitor is a browser, identified by a first-party cookie. Numbers update about once a minute."
+        >
           <Suspense fallback={null}>
             <TrackingNotice />
           </Suspense>
-        </header>
+        </PageHeader>
 
-        <dl className="mt-14 grid grid-cols-2 gap-x-6 gap-y-8 border-y border-rule py-8 lg:grid-cols-4">
-          {figures.map((figure) => (
-            <div key={figure.label}>
-              <dt className="sr-only">{figure.label}</dt>
-              <dd>
-                <span className="block text-[2.2rem] font-bold leading-none tracking-[-0.04em] tabular-nums sm:text-[2.8rem]">
-                  {fmt(figure.value)}
-                </span>
-                <span className="mt-2 block text-[0.95rem] text-graphite">{figure.label}</span>
-              </dd>
+        {/* The headline numbers, as a readout strip. */}
+        <dl className="screen mt-14 grid grid-cols-2 lg:grid-cols-4">
+          {figures.map((figure, i) => (
+            <div
+              key={figure.label}
+              className={`flex flex-col-reverse justify-end px-4 py-4 sm:px-5 sm:py-5 ${i % 2 === 1 ? "border-l border-screen-line" : ""} ${i >= 2 ? "border-t border-screen-line lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
+            >
+              <dt className="t-mono mt-2 text-[0.75rem] text-screen-graphite">{figure.label}</dt>
+              <dd className="font-mono text-[1.75rem] font-medium leading-none tracking-tight tabular-nums sm:text-[2.25rem]">{fmt(figure.value)}</dd>
             </div>
           ))}
         </dl>
 
         <section aria-labelledby="daily-title" className="mt-14">
-          <h2 id="daily-title" className="text-lg font-bold">
+          <h2 id="daily-title" className="t-item">
             Page views per day, last 30 days
           </h2>
-          <p className="mt-1 text-[0.95rem] text-graphite">
+          <p className="t-mono mt-1 text-graphite">
             {historyStart
               ? `Days are in UTC. Daily history starts ${formatDateLong(historyStart)}; totals above go back further.`
               : "Daily history starts with the next visit; totals above go back further."}
           </p>
-          <div className="mt-6">
+          <div className="screen mt-6 px-3 pb-3 pt-4 sm:px-5 sm:pt-5">
             <DailyChart points={days} />
           </div>
           <details className="mt-4">
-            <summary className="cursor-pointer text-[0.95rem] text-graphite hover:text-ink">Show these numbers as a table</summary>
+            <summary className="t-mono cursor-pointer text-graphite hover:text-ink">Show these numbers as a table</summary>
             <div className="mt-4 max-w-md">
               <Table
                 caption="Daily views"
@@ -184,7 +182,7 @@ export default async function StatsPage() {
           />
         </div>
 
-        <p className="measure mt-16 text-[0.95rem] leading-relaxed text-graphite">
+        <p className="measure mt-16 text-[0.9375rem] leading-relaxed text-ink-2">
           Don&apos;t want to be counted? Open{" "}
           <a href="/api/analytics/optout" className="link">
             this link

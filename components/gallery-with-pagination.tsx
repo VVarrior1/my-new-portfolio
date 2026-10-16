@@ -80,7 +80,7 @@ export function GalleryWithPagination({
   const visibleItems = items.filter(item => !hiddenItems.has(item.id));
 
   if (!visibleItems.length && !loading) {
-    return <p className="text-graphite">Nothing here yet.</p>;
+    return <p className="text-ink-2">Nothing here yet.</p>;
   }
 
   return (
@@ -91,7 +91,7 @@ export function GalleryWithPagination({
             <button
               type="button"
               onClick={() => setSelectedImage(item)}
-              className="group block w-full overflow-hidden rounded-md text-left"
+              className="group block w-full overflow-hidden rounded-xl border border-rule bg-paper-raised text-left"
               aria-label={`View ${item.title} full size`}
             >
               <GalleryImage
@@ -106,9 +106,9 @@ export function GalleryWithPagination({
               />
             </button>
             {(item.title || item.createdAt) && (
-              <p className="mt-2 flex items-baseline justify-between gap-3 text-[0.9rem]">
-                <span className="font-medium">{item.title}</span>
-                <span className="shrink-0 tabular-nums text-graphite">{formatDate(item.createdAt)}</span>
+              <p className="mt-2 flex items-baseline justify-between gap-3">
+                <span className="text-[0.9375rem] font-medium">{item.title}</span>
+                <span className="t-mono shrink-0 text-graphite">{formatDate(item.createdAt)}</span>
               </p>
             )}
           </li>
@@ -117,13 +117,13 @@ export function GalleryWithPagination({
 
       {hasMore && (
         <div id="load-more-trigger" className="flex justify-center">
-          <button type="button" onClick={loadMore} disabled={loading} className="btn btn-quiet disabled:opacity-60">
+          <button type="button" onClick={loadMore} disabled={loading} className="key">
             {loading ? "Loading" : "Show more"}
           </button>
         </div>
       )}
 
-      <p className="text-center text-[0.9rem] text-graphite">
+      <p className="t-mono text-center text-graphite">
         Showing {visibleItems.length} of {initialTotal}
       </p>
 

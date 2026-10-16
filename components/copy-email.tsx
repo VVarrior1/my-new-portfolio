@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "./site-analytics";
 
-export function CopyEmail({ email, className = "btn btn-quiet" }: { email: string; className?: string }) {
+export function CopyEmail({ email, className = "key" }: { email: string; className?: string }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {

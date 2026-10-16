@@ -19,19 +19,19 @@ export function ImageModal({ isOpen, src, alt, title, description, onClose }: Im
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[94vh] w-auto max-w-[min(94vw,1200px)] gap-3 bg-paper p-3 sm:max-w-[min(94vw,1200px)] sm:p-4">
+      <DialogContent className="max-h-[94vh] w-auto max-w-[min(94vw,1200px)] gap-3 rounded-[1.25rem] bg-paper p-3 sm:max-w-[min(94vw,1200px)] sm:p-4">
         <DialogTitle className="pr-10 text-base font-semibold">{title || alt}</DialogTitle>
-        <DialogDescription className={description ? "text-[0.95rem] text-graphite" : "sr-only"}>
+        <DialogDescription className={description ? "text-[0.9375rem] text-ink-2" : "sr-only"}>
           {description || `Full-size view of ${title || alt}`}
         </DialogDescription>
         <div className="relative flex min-h-40 items-center justify-center">
-          {!loaded && <p className="absolute text-sm text-graphite">Loading</p>}
+          {!loaded && <p className="t-mono absolute text-graphite">Loading</p>}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={src}
             alt={alt}
             onLoad={() => setLoaded(true)}
-            className={`max-h-[78vh] w-auto max-w-full rounded-md object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+            className={`max-h-[78vh] w-auto max-w-full rounded-xl object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
           />
         </div>
       </DialogContent>

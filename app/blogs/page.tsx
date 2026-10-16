@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getAnalytics } from "@/lib/analytics";
 import { getAllBlogs } from "@/lib/blogs";
 import { formatDate } from "@/lib/date-utils";
-import { plainText } from "@/lib/text";
+import { excerpt } from "@/lib/text";
 
 export const revalidate = 300;
+
+/** Read counts are shown only once they say something; small numbers undercut the post. */
+const SHOW_READS_FROM = 50;
 
 export const metadata: Metadata = {
   title: "Writing",
@@ -22,39 +26,32 @@ export default async function BlogsPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
-        <header className="max-w-3xl">
-          <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.05em]">Writing</h1>
-          <p className="measure mt-6 text-[1.2rem] leading-relaxed text-graphite">
-            Notes on things I&apos;ve learned while building: some technical, some not.
-          </p>
-        </header>
+      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-20">
+        <PageHeader
+          title="Writing"
+          lead={<>Notes on things I&apos;ve learned while building: some technical, some not.</>}
+          meta={blogs.length > 0 ? `${blogs.length} posts` : undefined}
+        />
 
         {blogs.length === 0 ? (
-          <p className="mt-16 text-graphite">No posts yet. The first one is on its way.</p>
+          <p className="mt-16 text-ink-2">No posts yet. The first one is on its way.</p>
         ) : (
-          <ul className="mt-14">
+          <ul className="mt-14 border-t border-rule">
             {blogs.map((blog) => {
               const count = views.get(blog.slug) ?? 0;
+              const summary = excerpt(blog.excerpt, blog.title, 120);
               return (
-                <li key={blog.slug} className="border-b border-rule first:border-t">
-                  <Link
-                    href={`/blogs/${blog.slug}`}
-                    className="group grid gap-x-10 gap-y-2 py-8 md:grid-cols-[10rem_minmax(0,1fr)]"
-                  >
-                    <span className="text-[0.95rem] tabular-nums text-graphite">
+                <li key={blog.slug} className="border-b border-rule">
+                  <Link href={`/blogs/${blog.slug}`} className="group grid gap-x-6 gap-y-2 py-8 lg:grid-cols-12 lg:items-start">
+                    <span className="t-mono text-graphite lg:col-span-3 lg:pt-[0.4rem]">
                       {formatDate(blog.date)}
-                      {count > 0 && (
-                        <span className="block text-[0.85rem]">
-                          {count.toLocaleString("en-US")} {count === 1 ? "read" : "reads"}
-                        </span>
-                      )}
+                      {count >= SHOW_READS_FROM && <span className="block">{count.toLocaleString("en-US")} reads</span>}
                     </span>
-                    <span>
-                      <span className="block text-[1.5rem] font-bold leading-tight tracking-[-0.025em] group-hover:underline group-hover:decoration-2 group-hover:underline-offset-4">
-                        {blog.title}
+                    <span className="min-w-0 lg:col-span-9">
+                      <span className="t-title block underline decoration-transparent decoration-1 underline-offset-[0.2em] transition-[text-decoration-color] duration-200 group-hover:decoration-signal-text">
+                        {blog.title.trim()}
                       </span>
-                      <span className="measure mt-2 line-clamp-3 leading-relaxed text-graphite">{plainText(blog.excerpt)}</span>
+                      {summary && <span className="measure mt-2 line-clamp-2 text-ink-2">{summary}</span>}
                     </span>
                   </Link>
                 </li>

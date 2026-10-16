@@ -1,30 +1,40 @@
 import Link from "next/link";
-import { getAnalytics } from "@/lib/analytics";
 import { RESUME_PATH, profile } from "@/lib/content";
 
-export async function SiteFooter() {
-  const analytics = await getAnalytics();
+export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-rule">
-      <div className="mx-auto flex max-w-[76rem] flex-col gap-6 px-4 py-10 text-[0.95rem] text-graphite sm:flex-row sm:items-center sm:justify-between sm:px-8">
+    <footer className="mt-auto border-t border-rule">
+      <div className="t-mono mx-auto flex max-w-[76rem] flex-col gap-5 px-4 py-10 text-graphite sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <p>
-          © {year} {profile.name}. Built with Next.js, hosted on Netlify.
+          <span className="text-ink-2">
+            © {year} {profile.name}
+          </span>
+          <span className="px-2" aria-hidden="true">
+            ·
+          </span>
+          Built with Next.js, hosted on Netlify
         </p>
         <ul className="flex flex-wrap gap-x-5 gap-y-2">
           <li>
-            <a href={profile.github} className="hover:text-ink">GitHub</a>
+            <a href={profile.github} target="_blank" rel="noreferrer" className="transition-colors hover:text-ink">
+              GitHub ↗<span className="sr-only"> (opens in a new tab)</span>
+            </a>
           </li>
           <li>
-            <a href={profile.linkedin} className="hover:text-ink">LinkedIn</a>
+            <a href={profile.linkedin} target="_blank" rel="noreferrer" className="transition-colors hover:text-ink">
+              LinkedIn ↗<span className="sr-only"> (opens in a new tab)</span>
+            </a>
           </li>
           <li>
-            <a href={RESUME_PATH} className="hover:text-ink">Résumé</a>
+            <a href={RESUME_PATH} className="transition-colors hover:text-ink">
+              Résumé (PDF)
+            </a>
           </li>
           <li>
-            <Link href="/stats" className="hover:text-ink">
-              {analytics.totalViews > 0 ? `${analytics.totalViews.toLocaleString("en-US")} visits` : "Site stats"}
+            <Link href="/stats" className="transition-colors hover:text-ink">
+              Site stats →
             </Link>
           </li>
         </ul>

@@ -19,6 +19,8 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // On the home page the name is already the h1, so the wordmark waits until the h1 scrolls away.
+  const [nameInView, setNameInView] = useState(pathname === "/");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -26,6 +28,17 @@ export function SiteHeader() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const name = pathname === "/" ? document.getElementById("hero-name") : null;
+    if (!name) {
+      setNameInView(false);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => setNameInView(entry.isIntersecting), { rootMargin: "-64px 0px 0px 0px" });
+    io.observe(name);
+    return () => io.disconnect();
+  }, [pathname]);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -37,16 +50,24 @@ export function SiteHeader() {
   }, [open]);
 
   const isCurrent = (href: string) => !href.includes("#") && pathname.startsWith(href);
+  const hideMark = nameInView && !open;
+
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-transparent"
+        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-paper"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
-        <Link href="/" className="font-bold tracking-tight">
-          <span className="sm:hidden">A. Mohamed</span>
-          <span className="hidden sm:inline">Abdelrahman Mohamed</span>
+        <Link
+          href="/"
+          aria-hidden={hideMark || undefined}
+          tabIndex={hideMark ? -1 : undefined}
+          className={`t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-opacity duration-200 ${
+            hideMark ? "pointer-events-none opacity-0" : "opacity-100"
+          }`}
+        >
+          A. Mohamed
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
@@ -55,7 +76,7 @@ export function SiteHeader() {
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              className="rounded-md px-3 py-2 text-[0.95rem] text-graphite transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-trace aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
+              className="rounded-lg px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-ink aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
             >
               {link.label}
             </Link>
@@ -74,7 +95,7 @@ export function SiteHeader() {
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            className="ml-1 inline-flex h-10 items-center rounded-md px-3 font-medium"
+            className="key key-sm ml-1.5 h-9 font-sans text-[0.9375rem] font-[550]"
           >
             {open ? "Close" : "Menu"}
           </button>
@@ -86,8 +107,11 @@ export function SiteHeader() {
           <ul>
             {links.map((link) => (
               <li key={link.href} className="border-b border-rule">
-                <Link href={link.href} onClick={() => setOpen(false)} className="block py-4 text-2xl font-bold tracking-tight">
-                  {link.label}
+                <Link href={link.href} onClick={() => setOpen(false)} className="flex items-baseline justify-between py-4">
+                  <span className="t-wide text-2xl font-semibold tracking-[-0.015em]">{link.label}</span>
+                  <span className="t-mono text-graphite" aria-hidden="true">
+                    {link.href.startsWith("/#") ? "↓" : "→"}
+                  </span>
                 </Link>
               </li>
             ))}

@@ -8,8 +8,8 @@ test.describe("home page", () => {
     await expect(page.getByRole("heading", { name: "CYD Soccer Academy platform" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Systemlab" })).toBeVisible();
     await expect(page.getByText("ApplyOps")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Email me" })).toHaveAttribute("href", /^mailto:/);
-    await expect(page.getByRole("link", { name: "Résumé (PDF)" }).first()).toHaveAttribute("href", "/Abdelrahman_Mohamed_Resume.pdf");
+    await expect(page.getByRole("link", { name: "Email me" }).first()).toHaveAttribute("href", /^mailto:/);
+    await expect(page.getByRole("link", { name: /^Résumé/ }).first()).toHaveAttribute("href", "/Abdelrahman_Mohamed_Resume.pdf");
   });
 
   test("the hero simulator reacts to traffic, servers and the cache", async ({ page }) => {

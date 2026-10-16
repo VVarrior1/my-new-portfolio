@@ -20,6 +20,22 @@ export const profile = {
   graduation: "Graduating December 2026.",
   availability: "Available full-time from January 2027",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
+  /** The hero's mono fact strip: the same facts as above, in recruiter order. */
+  facts: ["Software engineer", "Calgary, AB", "Grad Dec 2026", "Full-time Jan 2027", "Canadian \u00b7 TN"],
+  /** The personal line above, set as a small spec sheet. Same words, nothing added. */
+  offTheClock: [
+    { label: "Chess", value: "Bullet, rated\u00a02000" },
+    { label: "Training", value: "At the gym" },
+    { label: "Collecting", value: "Fragrances" },
+    { label: "Fuel", value: "Another Red Bull" },
+  ],
+  /** The contact nameplate's spec block, restating workAuth and availability. */
+  plate: [
+    { label: "Based", value: "Calgary, AB" },
+    { label: "Available", value: "Jan 2027" },
+    { label: "Works in", value: "Canada \u00b7 US (TN)" },
+    { label: "Relocation", value: "Open" },
+  ],
 };
 
 export type Link = { label: string; href: string; track?: string };
@@ -32,12 +48,15 @@ export type Shot = {
   alt: string;
   /** Shown in the frame's address bar. */
   url: string;
+  /** A light capture is dimmed slightly in the dark theme so it isn't a white slab. */
+  tone?: "light" | "dark";
 };
 
 export type FeaturedProject = {
-  /** Also picks the colored stage behind the screenshot (see .stage in globals.css). */
   slug: "cyd" | "systemlab";
   name: string;
+  /** Short name and view for the mono label tab on the screenshot's mat. */
+  tab: string;
   summary: string;
   role: string;
   facts: Array<{ value: string; label: string }>;
@@ -50,44 +69,9 @@ export type FeaturedProject = {
 
 export const featured: FeaturedProject[] = [
   {
-    slug: "cyd",
-    name: "CYD Soccer Academy platform",
-    summary:
-      "Registration, Stripe billing, SMS and email, and roster sync for a youth soccer academy in Calgary. Families sign up and pay without anyone entering data by hand.",
-    role: "Sole engineer, May 2025 to now",
-    facts: [
-      { value: "~300", label: "active families" },
-      { value: "5", label: "Calgary venues" },
-      { value: "~90", label: "API routes" },
-    ],
-    hardPart: {
-      title: "Text messages that cost what they should",
-      body:
-        "One curly apostrophe or emoji switches a whole SMS from GSM-7 to UCS-2, which cuts a billed segment from 160 characters to 70, so a 320-character notice went from 3 segments to 5 for every family. I added a sanitizer, a live segment and cost count in the broadcast composer, and the same check on the server.",
-    },
-    stack: ["Next.js", "TypeScript", "Stripe", "Twilio", "Resend", "Google Sheets API", "TeamSnap API"],
-    links: [
-      { label: "Case study", href: "https://github.com/VVarrior1/cyd-platform-case-study", track: "project:cyd-case-study" },
-      { label: "Live site", href: "https://cydsoccer.com", track: "project:cyd-live" },
-    ],
-    shot: {
-      src: "/work/cyd-venue-picker.jpg",
-      width: 1662,
-      height: 1110,
-      alt: "The CYD venue picker: venues are filtered by the child's age, so a full group and a venue with no group for that age are shown but can't be picked.",
-      url: "cydsoccer.com/register",
-    },
-    phone: {
-      src: "/work/cyd-register-phone.jpg",
-      width: 1170,
-      height: 2532,
-      alt: "Step one of the CYD registration flow on a phone: parent details and whether the child is new or returning.",
-      url: "cydsoccer.com/register",
-    },
-  },
-  {
     slug: "systemlab",
     name: "Systemlab",
+    tab: "Systemlab \u00b7 lesson view",
     summary:
       "A system design trainer built on a discrete-event simulator I wrote. You design an architecture, estimate its latency and cost, then run it and see where it breaks.",
     role: "Solo project, open source",
@@ -112,8 +96,47 @@ export const featured: FeaturedProject[] = [
       height: 1560,
       alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
       url: "system-design-playground-pi.vercel.app/learn",
+      tone: "light",
     },
   },
+  {
+    slug: "cyd",
+    name: "CYD Soccer Academy platform",
+    tab: "CYD \u00b7 venue picker",
+    summary:
+      "Registration, Stripe billing, SMS and email, and roster sync for a youth soccer academy in Calgary. Families sign up and pay without anyone entering data by hand.",
+    role: "Sole engineer, May 2025 to now",
+    facts: [
+      { value: "~300", label: "active families" },
+      { value: "5", label: "Calgary venues" },
+      { value: "~90", label: "API routes" },
+    ],
+    hardPart: {
+      title: "Text messages that cost what they should",
+      body:
+        "One curly apostrophe or emoji switches a whole SMS from GSM-7 to UCS-2, which cuts a billed segment from 160 characters to 70, so a 320-character notice went from 3 segments to 5 for every family. I added a sanitizer, a live segment and cost count in the broadcast composer, and the same check on the server.",
+    },
+    stack: ["Next.js", "TypeScript", "Stripe", "Twilio", "Resend", "Google Sheets API", "TeamSnap API"],
+    links: [
+      { label: "Case study", href: "https://github.com/VVarrior1/cyd-platform-case-study", track: "project:cyd-case-study" },
+      { label: "Live site", href: "https://cydsoccer.com", track: "project:cyd-live" },
+    ],
+    shot: {
+      src: "/work/cyd-venue-picker.jpg",
+      width: 1662,
+      height: 1110,
+      alt: "The CYD venue picker: venues are filtered by the child's age, so a full group and a venue with no group for that age are shown but can't be picked.",
+      url: "cydsoccer.com/register",
+      tone: "dark",
+    },
+    phone: {
+      src: "/work/cyd-register-phone.jpg",
+      width: 1170,
+      height: 2532,
+      alt: "Step one of the CYD registration flow on a phone: parent details and whether the child is new or returning.",
+      url: "cydsoccer.com/register",
+    },
+  }
 ];
 
 export const otherProjects: Array<{ name: string; summary: string; href?: string; stack: string }> = [

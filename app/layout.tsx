@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { SiteAnalytics } from "@/components/site-analytics";
@@ -7,9 +7,11 @@ import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-const sans = Schibsted_Grotesk({
+// Archivo is variable on weight and width; the width axis (wdth 62-125) carries the display voice.
+const sans = Archivo({
   subsets: ["latin"],
-  variable: "--font-schibsted",
+  axes: ["wdth"],
+  variable: "--font-archivo",
   display: "swap",
 });
 
@@ -55,8 +57,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f3ef" },
-    { media: "(prefers-color-scheme: dark)", color: "#121417" },
+    // Equal to --paper in each scheme (app/globals.css).
+    { media: "(prefers-color-scheme: light)", color: "#f3f2ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#151412" },
   ],
 };
 
@@ -89,10 +92,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-paper text-ink antialiased">
+      <body className="flex min-h-screen flex-col bg-paper text-ink antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
         >
           Skip to content
         </a>
