@@ -27,25 +27,43 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 | Path | Contents |
 |---|---|
-| `lib/content.ts` | All profile content: intro, projects, experience, education, skills. Edit this to update the site. |
+| `lib/content.ts` | All profile content: intro, featured projects and their screenshots, experience, education, skills. Edit this to update the site. |
 | `public/Abdelrahman_Mohamed_Resume.pdf` | The résumé every "Résumé" link points to. Replace the file, keep the name. |
 | `app/page.tsx` | Home page. Sections use `components/section.tsx`. |
 | `app/blogs`, `app/gallery`, `app/stats` | Writing, gallery, public stats |
 | `app/admin` | Token-protected panel for publishing posts and uploading gallery images |
-| `app/globals.css` | Design tokens (light and dark), the hero trace animation, post typography |
+| `app/globals.css` | Design tokens (light and dark), shadcn token mapping, post typography |
 | `lib/analytics-core.ts` | Pure analytics logic, unit tested |
 | `lib/analytics.ts` | Analytics storage on GCS |
+| `lib/live-sim.ts` | The hero's simulation engine, unit tested |
+| `components/ui` | shadcn/ui primitives (generated, then themed) |
 
 ## Design
 
-Light by default, with a dark theme that follows the OS or the toggle in the header. One typeface
-(Schibsted Grotesk), with JetBrains Mono only for service names in the hero trace and for code.
-Colors are CSS variables on `:root` (`--paper`, `--ink`, `--graphite`, `--rule`, `--signal`,
-`--trace`, `--chart`) exposed to Tailwind as `bg-paper`, `text-graphite` and so on.
+Light by default, with a dark theme that follows the OS or the header toggle. The toggle reveals
+the new theme as a circle using the View Transitions API, and switches instantly where that API
+isn't available or the visitor prefers reduced motion. One typeface (Schibsted Grotesk), with
+JetBrains Mono only for code. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--graphite`,
+`--rule`, `--signal`, `--trace`, `--chart`) exposed to Tailwind as `bg-paper`, `text-graphite` and so on.
 
-The hero shows one paid sign-up moving through the CYD platform (`signupTrace` in
-`lib/content.ts`). It plays once on load, replays on demand, and renders complete when the
-visitor prefers reduced motion.
+**shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
+command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--background`,
+`--primary`, `--border`…) are mapped onto ours in `app/globals.css`, and its `dark:` variant
+follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
+writes to `components/ui`. Check its colors in both themes.
+
+**The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
+discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
+Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
+the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
+and in background tabs, and draws no request dots under reduced motion. `diagnose()` writes the
+hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
+
+**Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`
+(installed Chrome, retina resolution), then update `width`/`height` in `lib/content.ts` if they changed.
+
+**⌘K / Ctrl+K** opens the command menu (`components/command-menu.tsx`). The palette itself
+(`command-palette.tsx`) loads on first use to keep cmdk out of the initial bundle.
 
 ## Analytics
 

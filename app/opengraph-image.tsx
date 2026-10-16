@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { flagship, profile } from "@/lib/content";
+import { profile } from "@/lib/content";
 
 export const alt = `${profile.name}, full-stack and AI engineer`;
 export const size = { width: 1200, height: 630 };
@@ -12,7 +12,7 @@ const loadFont = (weight: 400 | 800) => readFile(join(process.cwd(), `assets/fon
 
 export default async function OpenGraphImage() {
   const [bold, regular] = await Promise.all([loadFont(800), loadFont(400)]);
-  const steps = ["Next.js", "Stripe", "Sheets", "Twilio", "Resend", "TeamSnap"];
+  const nodes = ["Balancer", "App servers", "Cache", "Database"];
 
   return new ImageResponse(
     (
@@ -33,18 +33,31 @@ export default async function OpenGraphImage() {
           <span>{profile.firstName}</span>
           <span>{profile.lastName}</span>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            {steps.map((step, i) => (
-              <div key={step} style={{ display: "flex", alignItems: "center" }}>
-                <div style={{ width: 16, height: 16, borderRadius: 16, background: "#d48f00" }} />
-                <span style={{ marginLeft: 10, fontSize: 24, color: "#565d66" }}>{step}</span>
-                {i < steps.length - 1 && <div style={{ width: 34, height: 2, background: "#d2d5ce", margin: "0 14px" }} />}
+            {nodes.map((node, i) => (
+              <div key={node} style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 16px",
+                    borderRadius: 10,
+                    border: "2px solid #d2d5ce",
+                    background: "#e8eae4",
+                    fontSize: 24,
+                  }}
+                >
+                  <div style={{ width: 12, height: 12, borderRadius: 12, background: i === 1 ? "#d48f00" : "#1f48d4" }} />
+                  {node}
+                </div>
+                {i < nodes.length - 1 && <div style={{ width: 44, height: 2, background: "#b9bdb5" }} />}
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 34, fontWeight: 400, lineHeight: 1.3, maxWidth: 980 }}>
-            {`${profile.role}. Sole engineer on the ${flagship.name.replace(" platform", "")} booking and payments platform. Graduating December 2026.`}
+          <div style={{ fontSize: 34, fontWeight: 400, lineHeight: 1.3, maxWidth: 1000 }}>
+            {`${profile.role} in Calgary. Production payments and messaging, a system design simulator, and computer vision. Graduating December 2026.`}
           </div>
         </div>
       </div>

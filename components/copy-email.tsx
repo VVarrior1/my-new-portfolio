@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { trackEvent } from "./site-analytics";
 
 export function CopyEmail({ email }: { email: string }) {
@@ -11,6 +12,7 @@ export function CopyEmail({ email }: { email: string }) {
       await navigator.clipboard.writeText(email);
       setCopied(true);
       trackEvent("email-copy");
+      toast.success("Email address copied", { description: email });
       setTimeout(() => setCopied(false), 2000);
     } catch {
       window.location.href = `mailto:${email}`;
@@ -18,8 +20,8 @@ export function CopyEmail({ email }: { email: string }) {
   };
 
   return (
-    <button type="button" onClick={copy} className="btn btn-quiet" aria-live="polite">
-      {copied ? "Copied to clipboard" : "Copy address"}
+    <button type="button" onClick={copy} className="btn btn-quiet">
+      {copied ? "Copied" : "Copy address"}
     </button>
   );
 }

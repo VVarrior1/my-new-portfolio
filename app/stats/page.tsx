@@ -34,8 +34,8 @@ const EVENT_NAMES: Record<string, string> = {
   "project:cyd-live": "cydsoccer.com",
   "project:systemlab-live": "Systemlab demo",
   "project:systemlab-code": "Systemlab code",
-  "project:applyops-live": "ApplyOps demo",
-  "project:applyops-code": "ApplyOps code",
+  "sim:interact": "Played with the hero simulator",
+  "command-menu": "Opened the command menu",
 };
 
 function lastDays(daily: Record<string, { views: number; visitors: number }>, count: number): DayPoint[] {

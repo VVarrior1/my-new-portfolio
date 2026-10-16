@@ -1,4 +1,18 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* shadcn's dark: variant, following the same rules as our tokens (OS preference unless data-theme is set). */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
 
 /* ------------------------------------------------------------------
    Tokens. Light is the default; dark follows the OS unless the visitor
@@ -16,6 +30,27 @@
   --trace-soft: rgb(212 143 0 / 0.16);
   --chart: #1f48d4;
   color-scheme: light;
+
+  /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-raised);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --secondary: var(--paper-raised);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-raised);
+  --muted-foreground: var(--graphite);
+  --accent: var(--paper-raised);
+  --accent-foreground: var(--ink);
+  --destructive: #c2341b;
+  --border: var(--rule);
+  --input: var(--rule);
+  --ring: var(--signal);
+  --radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -60,6 +95,31 @@
   --color-chart: var(--chart);
   --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 /* ------------------------------------------------------------------
@@ -173,116 +233,6 @@ a {
 }
 
 /* ------------------------------------------------------------------
-   Hero trace: one paid sign-up travelling through the system.
-   Steps light up in sequence; the line fills behind them.
-   ------------------------------------------------------------------ */
-.trace {
-  --step: 480ms;
-  --dot: 0.75rem;
-  --dot-y: 1.1rem; /* dot centre, measured from the top of a step */
-  position: relative;
-}
-
-.trace-step {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1.5rem 4.6rem minmax(0, 1fr);
-  column-gap: 0.75rem;
-  align-items: start;
-  padding: 0.45rem 0;
-}
-
-/* Text stays readable throughout; only the service name brightens as its step runs. */
-.trace-service {
-  color: var(--graphite);
-  animation: step-on 200ms ease-out forwards;
-  animation-delay: calc(300ms + var(--i) * var(--step));
-}
-
-/* Each step draws the segment of rail down to the next dot: grey track, amber fill. */
-.trace-step:not(:last-child)::before,
-.trace-step:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  left: calc(0.75rem - 1px);
-  top: var(--dot-y);
-  height: 100%;
-  width: 2px;
-}
-.trace-step:not(:last-child)::before {
-  background: var(--rule);
-}
-.trace-step:not(:last-child)::after {
-  background: var(--trace);
-  transform: scaleY(0);
-  transform-origin: top;
-  animation: rail-fill var(--step) linear forwards;
-  animation-delay: calc(300ms + var(--i) * var(--step));
-}
-
-.trace-dot {
-  position: relative;
-  z-index: 1;
-  justify-self: center;
-  margin-top: calc(var(--dot-y) - 0.45rem - var(--dot) / 2);
-  width: var(--dot);
-  height: var(--dot);
-  border-radius: 999px;
-  background: var(--paper);
-  border: 2px solid var(--rule);
-  animation: dot-on 200ms ease-out forwards;
-  animation-delay: calc(300ms + var(--i) * var(--step));
-}
-
-.trace-step:last-child .trace-dot {
-  animation-name: dot-on, dot-done;
-  animation-duration: 200ms, 1.4s;
-  animation-delay: calc(300ms + var(--i) * var(--step)), calc(500ms + var(--i) * var(--step));
-  animation-fill-mode: forwards, forwards;
-}
-
-@keyframes rail-fill {
-  to {
-    transform: scaleY(1);
-  }
-}
-@keyframes step-on {
-  to {
-    color: var(--ink);
-  }
-}
-@keyframes dot-on {
-  to {
-    background: var(--trace);
-    border-color: var(--trace);
-  }
-}
-@keyframes dot-done {
-  0% {
-    box-shadow: 0 0 0 0 var(--trace-soft);
-  }
-  40% {
-    box-shadow: 0 0 0 9px var(--trace-soft);
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .trace-service {
-    color: var(--ink);
-  }
-  .trace-dot {
-    background: var(--trace);
-    border-color: var(--trace);
-  }
-  .trace-step::after {
-    transform: scaleY(1) !important;
-  }
-}
-
-/* ------------------------------------------------------------------
    Long-form reading (blog posts)
    ------------------------------------------------------------------ */
 .prose-post {
@@ -378,4 +328,27 @@ a {
   border-bottom: 1px solid var(--rule);
   padding: 0.5em 0.6em;
   text-align: left;
+}
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Theme switch: the new theme is revealed as a growing circle (see lib/theme.ts). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
