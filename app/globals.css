@@ -15,40 +15,58 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens. Light is the default; dark follows the OS unless the visitor
-   picks one with the toggle (stored as data-theme on <html>).
+   Tokens. "Night Ops": dark-first, almost colorless. Every neutral sits at
+   OKLCH hue 264-271 with chroma at or below 0.017, in both themes, so paper,
+   ink and rules share one temperature. Color is reserved for meaning:
+     --signal       the UI accent (ink itself): focus, slider fill, healthy packets
+     --trace        strained: slow requests, utilization above 70%
+     --destructive  failing: errors, a downed server
+     --go           up / available: status dots only, never a fill
+     --plate-*      the heat plate under the simulator, one per health state
+   Light is the default; dark follows the OS unless the visitor picks one
+   with the toggle (stored as data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
-  --paper: #fbfcfd;
-  --paper-raised: #f1f3f7;
-  --ink: #0e1217;
-  --graphite: #566070;
-  --rule: #e2e6ec;
-  --signal: #1f48d4;
-  --signal-ink: #ffffff;
-  --trace: #d48f00;
-  --trace-soft: rgb(212 143 0 / 0.16);
-  --chart: #1f48d4;
-  /* Status green ("available", the current job). */
-  --go: #13703f;
-  /* The contact block at the end of the home page. */
-  --band: #1f48d4;
-  --band-ink: #ffffff;
-  --band-muted: rgb(255 255 255 / 0.78);
-  /* Project stages: each screenshot sits on its product's own color. */
-  --stage-cyd-from: #22449e;
-  --stage-cyd-to: #0f1f52;
-  --stage-cyd-dot: rgb(255 255 255 / 0.13);
-  --stage-systemlab-from: #dbeee3;
-  --stage-systemlab-to: #bfe0cd;
-  --stage-systemlab-dot: rgb(22 101 70 / 0.2);
-  --canvas-dot: rgb(14 18 23 / 0.1);
-  /* Background design elements (hero grid and color glows). */
-  --grid-line: rgb(14 18 23 / 0.055);
-  --glow-strength: 0.2;
-  --glow-a: #1f48d4;
-  --glow-b: #13a567;
-  --glow-c: #8b6cff;
+  /* Type families (next/font sets --font-plex-* on <html>). */
+  --sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --paper: #f7f8fa;
+  --paper-raised: #eef0f3;
+  --surface-2: #ffffff;
+  --ink: #0c0d11;
+  --ink-2: #2c2f36;
+  --graphite: #5a5f69;
+  --rule: rgb(12 13 17 / 0.09);
+  --rule-strong: rgb(12 13 17 / 0.16);
+  --signal: #0c0d11;
+  --signal-ink: #f7f8fa;
+  --trace: #a85500;
+  --go: #137a45;
+  --chart: #2c2f36;
+  --canvas-dot: rgb(12 13 17 / 0.1);
+
+  /* The heat plate: slatted light under the simulator. */
+  --plate-cool: rgb(150 170 222 / 0.75);
+  --plate-hot: rgb(255 176 120 / 0.75);
+  --plate-crit: rgb(245 128 112 / 0.7);
+
+  /* Keycap primary button. */
+  --key-bg: #0c0d11;
+  --key-ink: #f7f8fa;
+  --key-edge: 0 0 0 1px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(0 0 0 / 0.35);
+  --key-hover: #262930;
+
+  /* The one elevation (the simulator device) and the edge light on frames. */
+  --elevation: 0 1px 0 rgb(255 255 255 / 0.9) inset, 0 0 0 1px rgb(12 13 17 / 0.03), 0 32px 64px -40px rgb(12 13 17 / 0.28);
+  --frame-light: linear-gradient(180deg, rgb(255 255 255 / 0.7), transparent 35%);
+  --grain-opacity: 0.2;
+  --grain-blend: multiply;
+  --header-bg: rgb(247 248 250 / 0.72);
+  --shot-filter: none;
+  --bezel: #0c0d11;
+  --overlay: rgb(12 13 17 / 0.32);
+
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -66,96 +84,99 @@
   --muted-foreground: var(--graphite);
   --accent: var(--paper-raised);
   --accent-foreground: var(--ink);
-  --destructive: #c2341b;
+  --destructive: #cf2f22;
   --border: var(--rule);
-  --input: var(--rule);
+  --input: var(--rule-strong);
   --ring: var(--signal);
   --radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #121417;
-    --paper-raised: #1b1e22;
-    --ink: #eceee8;
-    --graphite: #9aa2ab;
-    --rule: #2b3036;
-    --signal: #8ea5ff;
-    --signal-ink: #0d1020;
-    --trace: #f2b53a;
-    --trace-soft: rgb(242 181 58 / 0.16);
-    --chart: #6f8cf2;
-    --go: #4cc38a;
-    --band: #1c3383;
-    --band-ink: #ffffff;
-    --band-muted: rgb(255 255 255 / 0.76);
-    --stage-cyd-from: #1d3a8a;
-    --stage-cyd-to: #0b1638;
-    --stage-cyd-dot: rgb(255 255 255 / 0.1);
-    --stage-systemlab-from: #173d2d;
-    --stage-systemlab-to: #0e271d;
-    --stage-systemlab-dot: rgb(124 214 168 / 0.16);
-    --canvas-dot: rgb(236 238 232 / 0.09);
-  --grid-line: rgb(255 255 255 / 0.045);
-  --glow-strength: 0.34;
-  --glow-a: #2c50ff;
-  --glow-b: #12a565;
-  --glow-c: #7650ff;
-    --grid-line: rgb(255 255 255 / 0.045);
-    --glow-strength: 0.34;
-    --glow-a: #2c50ff;
-    --glow-b: #12a565;
-    --glow-c: #7650ff;
+    --paper: #0a0b0e;
+    --paper-raised: #121418;
+    --surface-2: #1a1d22;
+    --ink: #f1f2f4;
+    --ink-2: #c6c9d0;
+    --graphite: #8a8f99;
+    --rule: rgb(255 255 255 / 0.08);
+    --rule-strong: rgb(255 255 255 / 0.14);
+    --signal: #f1f2f4;
+    --signal-ink: #0a0b0e;
+    --trace: #ffa04a;
+    --go: #3fcf8e;
+    --chart: #c6c9d0;
+    --canvas-dot: rgb(255 255 255 / 0.07);
+    --plate-cool: rgb(136 160 226 / 0.85);
+    --plate-hot: rgb(255 150 80 / 0.8);
+    --plate-crit: rgb(255 84 70 / 0.8);
+    --key-bg: #e6e8ec;
+    --key-ink: #0a0b0e;
+    --key-edge: 0 0 0 1px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(0 0 0 / 0.2);
+    --key-hover: #ffffff;
+    --elevation: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 0 0 1px rgb(0 0 0 / 0.45), 0 40px 80px -40px rgb(0 0 0 / 0.75);
+    --frame-light: linear-gradient(180deg, rgb(255 255 255 / 0.04), transparent 35%);
+    --grain-opacity: 0.4;
+    --grain-blend: overlay;
+    --header-bg: rgb(10 11 14 / 0.72);
+    --shot-filter: brightness(0.88) contrast(1.06);
+  --bezel: #2a2d34;
+  --overlay: rgb(0 0 0 / 0.62);
+    --destructive: #ff5b4f;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --paper: #121417;
-  --paper-raised: #1b1e22;
-  --ink: #eceee8;
-  --graphite: #9aa2ab;
-  --rule: #2b3036;
-  --signal: #8ea5ff;
-  --signal-ink: #0d1020;
-  --trace: #f2b53a;
-  --trace-soft: rgb(242 181 58 / 0.16);
-  --chart: #6f8cf2;
-  --go: #4cc38a;
-  --band: #1c3383;
-  --band-ink: #ffffff;
-  --band-muted: rgb(255 255 255 / 0.76);
-  --stage-cyd-from: #1d3a8a;
-  --stage-cyd-to: #0b1638;
-  --stage-cyd-dot: rgb(255 255 255 / 0.1);
-  --stage-systemlab-from: #173d2d;
-  --stage-systemlab-to: #0e271d;
-  --stage-systemlab-dot: rgb(124 214 168 / 0.16);
-  --canvas-dot: rgb(236 238 232 / 0.09);
-  --grid-line: rgb(255 255 255 / 0.045);
-  --glow-strength: 0.34;
-  --glow-a: #2c50ff;
-  --glow-b: #12a565;
-  --glow-c: #7650ff;
+  --paper: #0a0b0e;
+  --paper-raised: #121418;
+  --surface-2: #1a1d22;
+  --ink: #f1f2f4;
+  --ink-2: #c6c9d0;
+  --graphite: #8a8f99;
+  --rule: rgb(255 255 255 / 0.08);
+  --rule-strong: rgb(255 255 255 / 0.14);
+  --signal: #f1f2f4;
+  --signal-ink: #0a0b0e;
+  --trace: #ffa04a;
+  --go: #3fcf8e;
+  --chart: #c6c9d0;
+  --canvas-dot: rgb(255 255 255 / 0.07);
+  --plate-cool: rgb(136 160 226 / 0.85);
+  --plate-hot: rgb(255 150 80 / 0.8);
+  --plate-crit: rgb(255 84 70 / 0.8);
+  --key-bg: #e6e8ec;
+  --key-ink: #0a0b0e;
+  --key-edge: 0 0 0 1px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -1px 0 rgb(0 0 0 / 0.2);
+  --key-hover: #ffffff;
+  --elevation: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 0 0 1px rgb(0 0 0 / 0.45), 0 40px 80px -40px rgb(0 0 0 / 0.75);
+  --frame-light: linear-gradient(180deg, rgb(255 255 255 / 0.04), transparent 35%);
+  --grain-opacity: 0.4;
+  --grain-blend: overlay;
+  --header-bg: rgb(10 11 14 / 0.72);
+  --shot-filter: brightness(0.88) contrast(1.06);
+  --bezel: #2a2d34;
+  --overlay: rgb(0 0 0 / 0.62);
+  --destructive: #ff5b4f;
   color-scheme: dark;
 }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-paper-raised: var(--paper-raised);
+  --color-surface-2: var(--surface-2);
   --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
   --color-graphite: var(--graphite);
   --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-signal: var(--signal);
   --color-signal-ink: var(--signal-ink);
   --color-trace: var(--trace);
   --color-chart: var(--chart);
   --color-go: var(--go);
-  --color-band: var(--band);
-  --color-band-ink: var(--band-ink);
-  --color-band-muted: var(--band-muted);
-  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans: var(--sans);
+  --font-mono: var(--mono);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -174,223 +195,487 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Three radii: 8 (controls, nodes), 10 (inner wells and frames), 16 (device, project frames). */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1rem;
+  --radius-4xl: 1rem;
 }
 
 /* ------------------------------------------------------------------
    Base
    ------------------------------------------------------------------ */
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  font-feature-settings: "ss01", "tnum" 0;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
-
-::selection {
-  background: var(--signal);
-  color: var(--signal-ink);
-}
-
-:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
-
-a {
-  color: inherit;
-}
-
-@media (prefers-reduced-motion: reduce) {
+@layer base {
   html {
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: var(--signal);
+    color: var(--signal-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-/* ------------------------------------------------------------------
-   Type helpers
-   ------------------------------------------------------------------ */
-.display-name {
-  font-weight: 800;
-  font-size: clamp(2.6rem, 13vw, 10.5rem);
-  line-height: 0.86;
-  letter-spacing: -0.055em;
-}
+/* Our component classes sit in the components layer, so Tailwind utilities can still override them. */
+@layer components {
+  /* ------------------------------------------------------------------
+     Layout: one 12-column grid, 1152px wide (74px columns, 24px gutters).
+     ------------------------------------------------------------------ */
+  .wrap {
+    width: 100%;
+    max-width: calc(72rem + 3rem);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .wrap {
+      padding-inline: 1.5rem;
+    }
+  }
 
-.section-title {
-  font-weight: 700;
-  font-size: clamp(1.9rem, 3.6vw, 2.75rem);
-  line-height: 1.05;
-  letter-spacing: -0.035em;
-}
+  /* ------------------------------------------------------------------
+     Type. Seven steps (13 mono, 14, 16, 20, 24, 40, 64), weights 400/500/600.
+     ------------------------------------------------------------------ */
+  .t-name {
+    font-weight: 500;
+    font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
 
-.measure {
-  max-width: 64ch;
-}
+  /* Two-tone section heading: the first clause in ink, the rest in graphite. */
+  .t-section {
+    font-weight: 500;
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .t-section .muted {
+    color: var(--graphite);
+  }
 
-/* Underlined text link in the signal colour. */
-.link {
-  color: var(--signal);
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-  transition: text-decoration-thickness 120ms ease;
-}
-.link:hover {
-  text-decoration-thickness: 2px;
-}
+  .t-title {
+    font-weight: 500;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
 
-/* Solid and quiet buttons. */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  padding: 0.55rem 1.1rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  font-size: 0.975rem;
-  text-decoration: none;
-  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
-}
-.btn-solid {
-  background: var(--ink);
-  color: var(--paper);
-}
-.btn-solid:hover {
-  background: var(--signal);
-  color: var(--signal-ink);
-}
-.btn-quiet {
-  border: 1px solid var(--rule);
-  color: var(--ink);
-}
-.btn-quiet:hover {
-  border-color: var(--ink);
-}
+  /* Small mono voice for dates, stacks, captions, numbers and URLs. */
+  .t-mono {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    letter-spacing: 0;
+  }
 
-/* ------------------------------------------------------------------
-   Long-form reading (blog posts)
-   ------------------------------------------------------------------ */
-.prose-post {
-  font-size: 1.125rem;
-  line-height: 1.72;
-}
-.prose-post > * + * {
-  margin-top: 1.15em;
-}
-.prose-post h2 {
-  margin-top: 2.2em;
-  font-size: 1.6rem;
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-.prose-post h3 {
-  margin-top: 1.8em;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
-.prose-post h4 {
-  margin-top: 1.5em;
-  font-weight: 700;
-}
-.prose-post a {
-  color: var(--signal);
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  text-decoration-thickness: 1px;
-}
-.prose-post ul,
-.prose-post ol {
-  padding-left: 1.3em;
-}
-.prose-post ul {
-  list-style: disc;
-}
-.prose-post ol {
-  list-style: decimal;
-}
-.prose-post li + li {
-  margin-top: 0.4em;
-}
-.prose-post li::marker {
-  color: var(--graphite);
-}
-.prose-post strong {
-  font-weight: 700;
-}
-.prose-post blockquote {
-  border-left: 3px solid var(--trace);
-  padding-left: 1em;
-  color: var(--graphite);
-}
-.prose-post code {
-  font-family: var(--font-mono);
-  font-size: 0.88em;
-  background: var(--paper-raised);
-  padding: 0.12em 0.35em;
-  border-radius: 0.25rem;
-}
-.prose-post pre {
-  overflow-x: auto;
-  background: var(--paper-raised);
-  border: 1px solid var(--rule);
-  border-radius: 0.5rem;
-  padding: 1rem 1.15rem;
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-.prose-post pre code {
-  background: none;
-  padding: 0;
-}
-.prose-post img {
-  border-radius: 0.5rem;
-  border: 1px solid var(--rule);
-}
-.prose-post hr {
-  border: 0;
-  border-top: 1px solid var(--rule);
-  margin: 2.5em 0;
-}
-.prose-post table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-.prose-post th,
-.prose-post td {
-  border-bottom: 1px solid var(--rule);
-  padding: 0.5em 0.6em;
-  text-align: left;
-}
+  .measure {
+    max-width: 64ch;
+  }
 
+  /* Ink link with a quiet underline that firms up on hover. */
+  .link {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, var(--ink) 28%, transparent);
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color 240ms ease;
+  }
+  .link:hover {
+    text-decoration-color: var(--ink);
+  }
+
+  /* ------------------------------------------------------------------
+     Buttons: the keycap (primary) and the ghost. Never more than two per row.
+     ------------------------------------------------------------------ */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    padding: 0 1.125rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .btn-key {
+    background: var(--key-bg);
+    color: var(--key-ink);
+    box-shadow: var(--key-edge);
+  }
+  .btn-key:hover {
+    background: var(--key-hover);
+  }
+  .btn-key:active {
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5), inset 0 1px 2px rgb(0 0 0 / 0.3);
+  }
+  .btn-ghost {
+    border: 1px solid var(--rule-strong);
+    color: var(--ink);
+  }
+  .btn-ghost:hover {
+    border-color: color-mix(in srgb, var(--ink) 45%, transparent);
+    background: color-mix(in srgb, var(--ink) 4%, transparent);
+  }
+  .btn-icon {
+    width: 2.75rem;
+    padding: 0;
+  }
+  .btn-sm {
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* " · "-separated items that wrap without a separator at the start of a line. */
+  .dot-list {
+    display: block;
+    overflow: hidden;
+  }
+  .dot-list > span {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -1.25em;
+  }
+  .dot-list > span > span {
+    white-space: nowrap;
+  }
+  .dot-list > span > span::before {
+    content: "·" / "";
+    display: inline-block;
+    width: 1.25em;
+    text-align: center;
+    color: var(--graphite);
+  }
+
+  /* ------------------------------------------------------------------
+     Hover-dim lists (experience, writing): hovering one row quiets its siblings.
+     ------------------------------------------------------------------ */
+  @media (hover: hover) {
+    .dim-list:has(> .dim-row:hover) > .dim-row:not(:hover) {
+      opacity: 0.45;
+    }
+  }
+  .dim-row {
+    transition: opacity 150ms ease, background-color 150ms ease;
+  }
+  .dim-row:hover {
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+  }
+
+  /* ------------------------------------------------------------------
+     Grain: one inline SVG of fractal noise, used as a mask on the plates
+     (so the light itself is dithered, like printed light) and as a texture
+     on the project frames.
+     ------------------------------------------------------------------ */
+  :root {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.5 .15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --grain-tone: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ------------------------------------------------------------------
+     The heat plate. Slatted, grained light under the simulator that reports the
+     system's health: steel when healthy, amber when strained, red when failing.
+     The simulator sets data-health on .sim-stage; only the matching layer is
+     visible, and switching is an opacity crossfade (instant under reduced motion).
+     ------------------------------------------------------------------ */
+  .sim-stage {
+    position: relative;
+    isolation: isolate;
+  }
+  .heat-plate {
+    position: absolute;
+    z-index: -1;
+    inset: -36px -24px -112px;
+    pointer-events: none;
+    /* Lit from below: a vertical falloff (dark at the top, brightest at the device's lower half,
+       fading out underneath), a soft horizontal falloff, and the grain dithering the light itself. */
+    --plate-v: linear-gradient(to bottom, transparent 0%, rgb(0 0 0 / 0.3) 45%, #000 82%, #000 88%, transparent 100%);
+    --plate-h: radial-gradient(75% 90% at 50% 70%, #000 45%, rgb(0 0 0 / 0.55) 75%, transparent 100%);
+    -webkit-mask-image: var(--plate-v), var(--plate-h), var(--grain);
+    mask-image: var(--plate-v), var(--plate-h), var(--grain);
+    -webkit-mask-composite: source-in, source-in;
+    mask-composite: intersect, intersect;
+    -webkit-mask-size: 100% 100%, 100% 100%, 180px 180px;
+    mask-size: 100% 100%, 100% 100%, 180px 180px;
+    -webkit-mask-repeat: no-repeat, no-repeat, repeat;
+    mask-repeat: no-repeat, no-repeat, repeat;
+  }
+  @media (min-width: 1024px) {
+    .heat-plate {
+      inset: -170px -260px -220px;
+      --plate-v: linear-gradient(to bottom, transparent 14%, rgb(0 0 0 / 0.3) 32%, #000 62%, rgb(0 0 0 / 0.75) 76%, transparent 100%);
+      /* Fade out over the outer 160px so wide screens never see the plate's edge. */
+      --plate-h: linear-gradient(to right, transparent 0, #000 160px, #000 calc(100% - 160px), transparent 100%);
+    }
+  }
+  .heat-plate > span {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 600ms ease;
+    /* Two slat periods layered, so the bars vary in width and strength like light through louvres. */
+    background:
+      repeating-linear-gradient(38deg, transparent 0 24px, var(--slat) 64px 118px, transparent 158px 236px),
+      repeating-linear-gradient(38deg, transparent 0 172px, var(--slat) 190px 200px, transparent 218px 472px);
+  }
+  .heat-plate > [data-layer="healthy"] {
+    --slat: var(--plate-cool);
+  }
+  .heat-plate > [data-layer="strained"] {
+    --slat: var(--plate-hot);
+  }
+  .heat-plate > [data-layer="failing"] {
+    --slat: var(--plate-crit);
+  }
+  .sim-stage[data-health="healthy"] .heat-plate > [data-layer="healthy"],
+  .sim-stage[data-health="strained"] .heat-plate > [data-layer="strained"],
+  .sim-stage[data-health="failing"] .heat-plate > [data-layer="failing"] {
+    opacity: 1;
+  }
+
+  /* A faint, stateless copy of the cool plate under the contact block, so the page ends lit the way it began. */
+  .end-plate {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      repeating-linear-gradient(38deg, transparent 0 24px, var(--plate-cool) 64px 118px, transparent 158px 236px),
+      repeating-linear-gradient(38deg, transparent 0 172px, var(--plate-cool) 190px 200px, transparent 218px 472px);
+    -webkit-mask-image: radial-gradient(42% 70% at 88% 100%, #000 10%, transparent 75%), var(--grain);
+    mask-image: radial-gradient(42% 70% at 88% 100%, #000 10%, transparent 75%), var(--grain);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+    -webkit-mask-size: 100% 100%, 180px 180px;
+    mask-size: 100% 100%, 180px 180px;
+    -webkit-mask-repeat: no-repeat, repeat;
+    mask-repeat: no-repeat, repeat;
+  }
+
+  /* ------------------------------------------------------------------
+     The device frame (the simulator) and its inner wells. Edge-lit: a 1px
+     border, an inset top highlight and a dark outer ring.
+     ------------------------------------------------------------------ */
+  .device {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule-strong);
+    border-radius: 1rem;
+    box-shadow: var(--elevation);
+  }
+  .well {
+    background: var(--surface-2);
+    border-radius: 0.625rem;
+  }
+  /* The simulator's diagram area: 16px dots, the only dots on the page. */
+  .sim-canvas {
+    background-color: var(--surface-2);
+    background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1.2px);
+    background-size: 16px 16px;
+    background-position: -8px -8px;
+  }
+
+  /* Project frames: the same edge-lit surface, with a top light and fine grain. */
+  .frame {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule-strong);
+    border-radius: 1rem;
+  }
+  .frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--frame-light);
+    pointer-events: none;
+  }
+  .frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--grain-tone);
+    background-size: 180px 180px;
+    mix-blend-mode: var(--grain-blend);
+    opacity: calc(var(--grain-opacity) * 0.6);
+    pointer-events: none;
+  }
+
+  /* Screenshots of light UIs are dimmed in dark mode, so they never glare. */
+  .shot-img {
+    filter: var(--shot-filter);
+  }
+
+  /* Readout values (metric cells, project numbers). */
+  .readout {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 1.625rem;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ------------------------------------------------------------------
+     Long-form reading (blog posts)
+     ------------------------------------------------------------------ */
+  .prose-post {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--ink-2);
+  }
+  .prose-post > * + * {
+    margin-top: 1.15em;
+  }
+  .prose-post h2 {
+    margin-top: 2.2em;
+    font-size: 1.5rem;
+    line-height: 1.25;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .prose-post h3 {
+    margin-top: 1.8em;
+    font-size: 1.25rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .prose-post h4 {
+    margin-top: 1.5em;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .prose-post a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, var(--ink) 30%, transparent);
+    transition: text-decoration-color 240ms ease;
+  }
+  .prose-post a:hover {
+    text-decoration-color: var(--ink);
+  }
+  .prose-post ul,
+  .prose-post ol {
+    padding-left: 1.3em;
+  }
+  .prose-post ul {
+    list-style: disc;
+  }
+  .prose-post ol {
+    list-style: decimal;
+  }
+  .prose-post li + li {
+    margin-top: 0.4em;
+  }
+  .prose-post li::marker {
+    color: var(--graphite);
+  }
+  .prose-post strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .prose-post blockquote {
+    border-left: 2px solid var(--rule-strong);
+    padding-left: 1em;
+    color: var(--graphite);
+  }
+  .prose-post code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    padding: 0.08em 0.35em;
+    border-radius: 0.375rem;
+  }
+  .prose-post pre {
+    overflow-x: auto;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule-strong);
+    border-radius: 0.625rem;
+    padding: 1rem 1.15rem;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+  .prose-post pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+  .prose-post img {
+    border-radius: 0.625rem;
+    border: 1px solid var(--rule-strong);
+  }
+  .prose-post hr {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 2.5em 0;
+  }
+  .prose-post table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+  .prose-post th,
+  .prose-post td {
+    border-bottom: 1px solid var(--rule);
+    padding: 0.5em 0.6em;
+    text-align: left;
+  }
+}
 
 @layer base {
   * {
@@ -412,159 +697,4 @@ a {
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
-}
-
-/* ------------------------------------------------------------------
-   Project stages: a colored panel behind each product screenshot,
-   in that product's own color, with a faint dot grid.
-   ------------------------------------------------------------------ */
-.stage {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: 1.25rem;
-  padding: clamp(1rem, 3.2vw, 2.5rem);
-  background: linear-gradient(150deg, var(--stage-from), var(--stage-to));
-}
-.stage::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background-image: radial-gradient(var(--stage-dot) 1.2px, transparent 1.3px);
-  background-size: 18px 18px;
-  mask-image: radial-gradient(ellipse at 70% 30%, black 20%, transparent 75%);
-}
-.stage[data-stage="cyd"] {
-  --stage-from: var(--stage-cyd-from);
-  --stage-to: var(--stage-cyd-to);
-  --stage-dot: var(--stage-cyd-dot);
-}
-.stage[data-stage="systemlab"] {
-  --stage-from: var(--stage-systemlab-from);
-  --stage-to: var(--stage-systemlab-to);
-  --stage-dot: var(--stage-systemlab-dot);
-}
-
-/* The simulator's diagram area reads as a design canvas. */
-.sim-canvas {
-  background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1.2px);
-  background-size: 16px 16px;
-  background-position: -8px -8px;
-}
-
-/* Buttons on the colored contact band. */
-.btn-on-band {
-  border: 1px solid rgb(255 255 255 / 0.4);
-  color: var(--band-ink);
-}
-.btn-on-band:hover {
-  border-color: var(--band-ink);
-  background: rgb(255 255 255 / 0.08);
-}
-.btn-band-solid {
-  background: var(--band-ink);
-  color: var(--band);
-}
-.btn-band-solid:hover {
-  background: rgb(255 255 255 / 0.88);
-}
-
-
-
-/* ------------------------------------------------------------------
-   Background design elements: a fine grid that fades out from behind the
-   simulator, and three soft color glows (signal blue, green, amber) that
-   drift very slowly. Used behind the hero and the contact band.
-   ------------------------------------------------------------------ */
-.bg-field {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  /* Fade out at the bottom so the glows never end in a hard edge. */
-  mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
-}
-.bg-field::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 56px 56px;
-  background-position: -1px -1px;
-  mask-image: radial-gradient(ellipse 75% 70% at 72% 45%, black 25%, transparent 78%);
-}
-.glow {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(90px);
-  opacity: var(--glow-strength);
-  will-change: transform;
-  animation: glow-drift 26s ease-in-out infinite alternate;
-}
-.glow-a {
-  width: min(52vw, 760px);
-  aspect-ratio: 1;
-  top: -18%;
-  right: -10%;
-  background: var(--glow-a);
-}
-.glow-b {
-  width: min(38vw, 560px);
-  aspect-ratio: 1;
-  bottom: -14%;
-  right: 24%;
-  background: var(--glow-b);
-  animation-delay: -9s;
-  animation-duration: 31s;
-}
-.glow-c {
-  width: min(30vw, 440px);
-  aspect-ratio: 1;
-  top: 48%;
-  right: 4%;
-  background: var(--glow-c);
-  opacity: calc(var(--glow-strength) * 0.75);
-  animation-delay: -17s;
-  animation-duration: 23s;
-}
-@keyframes glow-drift {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(-5%, 7%, 0) scale(1.1);
-  }
-}
-@media (max-width: 1023px) {
-  .glow-a { width: 90vw; top: -8%; right: -40%; }
-  .glow-b { width: 70vw; bottom: 8%; right: -20%; }
-  .glow-c { width: 60vw; top: 55%; right: -10%; }
-}
-
-/* The contact band's own field: brighter dots and glows on the blue. */
-.band-field {
-  mask-image: none;
-}
-.band-field::before {
-  background-image: radial-gradient(rgb(255 255 255 / 0.16) 1.2px, transparent 1.3px);
-  background-size: 20px 20px;
-  mask-image: radial-gradient(ellipse 60% 90% at 85% 30%, black 15%, transparent 70%);
-}
-.band-field .glow {
-  opacity: 0.45;
-}
-.band-field .glow-a {
-  background: #7d95ff;
-  top: -40%;
-  right: -12%;
-}
-.band-field .glow-b {
-  background: #3fc48a;
-  opacity: 0.25;
-  bottom: -50%;
-  right: 30%;
 }

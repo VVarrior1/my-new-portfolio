@@ -3,16 +3,27 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { profile } from "@/lib/content";
 
-export const alt = `${profile.name}, full-stack and AI engineer`;
+export const alt = `${profile.name}, software engineer`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// Fonts are bundled (Satori can't read woff2, and the image is rendered at build time).
-const loadFont = (weight: 400 | 800) => readFile(join(process.cwd(), `assets/fonts/SchibstedGrotesk-${weight}.ttf`));
+// Fonts are bundled (Satori reads woff but not woff2, and the image is rendered at build time).
+const font = (file: string) => readFile(join(process.cwd(), "assets/fonts", file));
+
+// The dark theme's tokens (app/globals.css), so the preview matches the site.
+const PAPER = "#0a0b0e";
+const INK = "#f1f2f4";
+const INK_2 = "#c6c9d0";
+const GRAPHITE = "#8a8f99";
+const GO = "#3fcf8e";
+const PLATE = "rgba(136, 160, 226, 0.55)";
 
 export default async function OpenGraphImage() {
-  const [bold, regular] = await Promise.all([loadFont(800), loadFont(400)]);
-  const nodes = ["Balancer", "App servers", "Cache", "Database"];
+  const [medium, regular, mono] = await Promise.all([
+    font("IBMPlexSans-Medium.woff"),
+    font("IBMPlexSans-Regular.woff"),
+    font("IBMPlexMono-Regular.woff"),
+  ]);
 
   return new ImageResponse(
     (
@@ -21,43 +32,31 @@ export default async function OpenGraphImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          background: "#f2f3ef",
-          color: "#16191d",
-          padding: "64px 72px",
-          fontFamily: "Schibsted",
+          position: "relative",
+          background: PAPER,
+          color: INK,
+          fontFamily: "Plex",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", fontSize: 128, fontWeight: 800, lineHeight: 0.88, letterSpacing: "-0.055em" }}>
-          <span>{profile.firstName}</span>
-          <span>{profile.lastName}</span>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {nodes.map((node, i) => (
-              <div key={node} style={{ display: "flex", alignItems: "center" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "10px 16px",
-                    borderRadius: 10,
-                    border: "2px solid #d2d5ce",
-                    background: "#e8eae4",
-                    fontSize: 24,
-                  }}
-                >
-                  <div style={{ width: 12, height: 12, borderRadius: 12, background: i === 1 ? "#d48f00" : "#1f48d4" }} />
-                  {node}
-                </div>
-                {i < nodes.length - 1 && <div style={{ width: 44, height: 2, background: "#b9bdb5" }} />}
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 34, fontWeight: 400, lineHeight: 1.3, maxWidth: 1000 }}>
-            {`${profile.role} in Calgary. Production payments and messaging, a system design simulator, and computer vision. Graduating December 2026.`}
+        {/* The heat plate: slatted light rising from the bottom edge. */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 300,
+            display: "flex",
+            backgroundImage: `linear-gradient(to bottom, ${PAPER} 0%, rgba(10, 11, 14, 0.6) 45%, rgba(10, 11, 14, 0) 100%), repeating-linear-gradient(38deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 30px, ${PLATE} 64px, ${PLATE} 112px, rgba(0,0,0,0) 150px, rgba(0,0,0,0) 220px)`,
+          }}
+        />
+        <div style={{ display: "flex", flexDirection: "column", padding: "72px 80px", width: "100%" }}>
+          <div style={{ display: "flex", fontFamily: "PlexMono", fontSize: 22, color: GRAPHITE }}>sim://live · a small system you can break</div>
+          <div style={{ display: "flex", marginTop: 40, fontSize: 88, fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 1 }}>{profile.name}</div>
+          <div style={{ display: "flex", marginTop: 28, fontSize: 34, lineHeight: 1.4, color: INK_2, maxWidth: 940 }}>{profile.tagline}</div>
+          <div style={{ display: "flex", alignItems: "center", marginTop: "auto", fontFamily: "PlexMono", fontSize: 24, color: INK }}>
+            <div style={{ width: 10, height: 10, borderRadius: 10, background: GO, marginRight: 16 }} />
+            {profile.facts.join("  ·  ")}
           </div>
         </div>
       </div>
@@ -65,8 +64,9 @@ export default async function OpenGraphImage() {
     {
       ...size,
       fonts: [
-        { name: "Schibsted", data: bold, weight: 800, style: "normal" },
-        { name: "Schibsted", data: regular, weight: 400, style: "normal" },
+        { name: "Plex", data: medium, weight: 500, style: "normal" },
+        { name: "Plex", data: regular, weight: 400, style: "normal" },
+        { name: "PlexMono", data: mono, weight: 400, style: "normal" },
       ],
     },
   );

@@ -1,44 +1,34 @@
 import type { ReactNode } from "react";
 
-/** A home-page section: title in a left column on wide screens, content on the right. */
+/**
+ * A home-page section: a 1px top rule, then a two-tone heading above the content,
+ * the first clause in ink and the rest in graphite ("Work. Shipped, used, and measured.").
+ */
 export function Section({
   id,
   title,
+  muted,
   children,
-  aside,
-  wide = false,
+  className = "",
+  rule = true,
 }: {
   id: string;
   title: string;
+  /** The graphite half of the heading. */
+  muted?: string;
   children: ReactNode;
-  aside?: ReactNode;
-  /** Title above the content instead of beside it, for sections that need the full width. */
-  wide?: boolean;
+  className?: string;
+  /** False for the section right after the hero, where the plate's light fades out instead of a rule. */
+  rule?: boolean;
 }) {
-  if (wide) {
-    return (
-      <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-20 border-t border-rule">
-        <div className="mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
-          <h2 id={`${id}-title`} className="section-title">
-            {title}
-          </h2>
-          {aside && <div className="mt-3 max-w-2xl text-[0.95rem] text-graphite">{aside}</div>}
-          <div className="mt-12">{children}</div>
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-20 border-t border-rule">
-      <div className="mx-auto grid max-w-[76rem] gap-x-12 gap-y-8 px-4 py-16 sm:px-8 sm:py-24 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <div className="lg:sticky lg:top-24 lg:self-start">
-          <h2 id={`${id}-title`} className="section-title">
-            {title}
-          </h2>
-          {aside && <div className="mt-3 text-[0.95rem] text-graphite">{aside}</div>}
-        </div>
-        <div className="min-w-0">{children}</div>
+    <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-16 ${rule ? "border-t border-rule" : ""} ${className}`}>
+      <div className="wrap py-16 lg:py-28">
+        <h2 id={`${id}-title`} className="t-section max-w-[52rem]">
+          {title}
+          {muted && <span className="muted"> {muted}</span>}
+        </h2>
+        <div className="mt-10 lg:mt-14">{children}</div>
       </div>
     </section>
   );

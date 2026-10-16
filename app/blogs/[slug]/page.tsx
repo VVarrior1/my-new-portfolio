@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { BlogDetail } from "@/components/blog-detail";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getAnalytics } from "@/lib/analytics";
 import { getAllBlogs, getBlogBySlug, type BlogPost } from "@/lib/blogs";
 import { profile } from "@/lib/content";
 import { formatDateLong } from "@/lib/date-utils";
@@ -45,33 +44,32 @@ function readingMinutes(blog: BlogPost) {
 
 export default async function BlogPage({ params }: BlogPageProps) {
   const { slug } = await params;
-  const [blog, all, analytics] = await Promise.all([getBlogBySlug(slug), getAllBlogs(), getAnalytics()]);
+  const [blog, all] = await Promise.all([getBlogBySlug(slug), getAllBlogs()]);
   if (!blog) notFound();
 
   const index = all.findIndex((post) => post.slug === slug);
   const newer = index > 0 ? all[index - 1] : null;
   const older = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
-  const reads = analytics.blogs.find((entry) => entry.slug === slug)?.views ?? 0;
 
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-16">
+      <main id="main" className="wrap pb-24 pt-10 sm:pt-16">
         <article className="mx-auto max-w-[44rem]">
           <p>
-            <Link href="/blogs" className="link text-[0.95rem]">
+            <Link href="/blogs" className="t-mono inline-flex items-center gap-2 text-graphite transition-colors hover:text-ink">
+              <span aria-hidden="true">←</span>
               All writing
             </Link>
           </p>
-          <header className="mt-8">
-            <h1 className="text-[clamp(2.2rem,5.5vw,3.6rem)] font-extrabold leading-[1.02] tracking-[-0.045em]">{blog.title}</h1>
-            <p className="mt-5 text-[0.95rem] text-graphite">
-              <time dateTime={blog.date}>{formatDateLong(blog.date)}</time>, {readingMinutes(blog)} min read
-              {reads > 0 && `, ${reads.toLocaleString("en-US")} ${reads === 1 ? "read" : "reads"}`}
+          <header className="mt-8 border-b border-rule pb-8">
+            <h1 className="text-[clamp(2rem,1.4rem+2.4vw,2.5rem)] font-medium leading-[1.1] tracking-[-0.025em]">{blog.title.trim()}</h1>
+            <p className="t-mono mt-5 text-graphite">
+              <time dateTime={blog.date}>{formatDateLong(blog.date)}</time> · {readingMinutes(blog)} min read
             </p>
           </header>
 
-          <div className="mt-12">
+          <div className="mt-10">
             <BlogDetail blog={blog} />
           </div>
         </article>
@@ -80,16 +78,16 @@ export default async function BlogPage({ params }: BlogPageProps) {
           <nav aria-label="More posts" className="mx-auto mt-20 grid max-w-[44rem] gap-6 border-t border-rule pt-8 sm:grid-cols-2">
             {older ? (
               <Link href={`/blogs/${older.slug}`} className="group">
-                <span className="text-[0.9rem] text-graphite">Older</span>
-                <span className="mt-1 block font-bold leading-snug group-hover:underline">{older.title}</span>
+                <span className="t-mono text-graphite">← Older</span>
+                <span className="mt-1.5 block font-medium leading-snug text-ink group-hover:underline group-hover:underline-offset-[0.25em]">{older.title.trim()}</span>
               </Link>
             ) : (
               <span />
             )}
             {newer && (
               <Link href={`/blogs/${newer.slug}`} className="group sm:text-right">
-                <span className="text-[0.9rem] text-graphite">Newer</span>
-                <span className="mt-1 block font-bold leading-snug group-hover:underline">{newer.title}</span>
+                <span className="t-mono text-graphite">Newer →</span>
+                <span className="mt-1.5 block font-medium leading-snug text-ink group-hover:underline group-hover:underline-offset-[0.25em]">{newer.title.trim()}</span>
               </Link>
             )}
           </nav>

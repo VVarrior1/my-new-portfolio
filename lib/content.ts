@@ -15,11 +15,17 @@ export const profile = {
   linkedin: "https://www.linkedin.com/in/abdelrahman-mohamed-080488197/",
   intro:
     "I'm a software engineer who likes building things people actually use, then finding out exactly where they break.",
+  /** The hero's two-line sub, under the name. */
+  tagline: "Software engineer in Calgary. I build things people actually use, then find exactly where they break.",
   personal:
-    "When I'm not coding, I'm playing bullet chess (rated\u00a02000), at the gym, adding to a fragrance collection, or opening another Red Bull.",
+    "Off the clock: bullet chess (rated\u00a02000), the gym, a growing fragrance collection, and another Red Bull.",
+  /** The hero's fact line, in mono: what a recruiter needs in one glance. */
+  facts: ["Graduating Dec 2026", "Full-time from Jan 2027", "Canadian, TN-eligible"],
   graduation: "Graduating December 2026.",
   availability: "Available full-time from January 2027",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
+  /** The contact block's fact line. */
+  workFacts: ["Canadian citizen", "TN-eligible, no H-1B needed", "Open to relocation"],
 };
 
 export type Link = { label: string; href: string; track?: string };
@@ -35,7 +41,6 @@ export type Shot = {
 };
 
 export type FeaturedProject = {
-  /** Also picks the colored stage behind the screenshot (see .stage in globals.css). */
   slug: "cyd" | "systemlab";
   name: string;
   summary: string;
@@ -48,7 +53,37 @@ export type FeaturedProject = {
   phone?: Shot;
 };
 
+// Systemlab first: it is the work the hero simulator comes from. CYD is one project among several.
 export const featured: FeaturedProject[] = [
+  {
+    slug: "systemlab",
+    name: "Systemlab",
+    summary:
+      "A system design trainer built on a discrete-event simulator I wrote. You design an architecture, estimate its latency and cost, then run it and see where it breaks.",
+    role: "Solo project, open source",
+    facts: [
+      { value: "70", label: "lessons in 12 chapters" },
+      { value: "948", label: "tests" },
+      { value: "180K", label: "requests simulated in under 2 s" },
+    ],
+    hardPart: {
+      title: "Answers that hold across seeds",
+      body:
+        "Each lesson's reference solution has to pass at every seed, not just the lucky one, so the engine is fully deterministic and runs in a Web Worker. Replication lag, quorums, retries, circuit breakers and region outages are all modelled.",
+    },
+    stack: ["TypeScript", "Next.js", "React Flow", "Web Workers", "Gemini", "Vitest"],
+    links: [
+      { label: "Try it", href: "https://system-design-playground-pi.vercel.app", track: "project:systemlab-live" },
+      { label: "Code", href: "https://github.com/VVarrior1/systemlab", track: "project:systemlab-code" },
+    ],
+    shot: {
+      src: "/work/systemlab-lesson.jpg",
+      width: 2400,
+      height: 1560,
+      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
+      url: "system-design-playground-pi.vercel.app/learn",
+    },
+  },
   {
     slug: "cyd",
     name: "CYD Soccer Academy platform",
@@ -83,35 +118,6 @@ export const featured: FeaturedProject[] = [
       height: 2532,
       alt: "Step one of the CYD registration flow on a phone: parent details and whether the child is new or returning.",
       url: "cydsoccer.com/register",
-    },
-  },
-  {
-    slug: "systemlab",
-    name: "Systemlab",
-    summary:
-      "A system design trainer built on a discrete-event simulator I wrote. You design an architecture, estimate its latency and cost, then run it and see where it breaks.",
-    role: "Solo project, open source",
-    facts: [
-      { value: "70", label: "lessons in 12 chapters" },
-      { value: "948", label: "tests" },
-      { value: "180K", label: "requests simulated in under 2 s" },
-    ],
-    hardPart: {
-      title: "Answers that hold across seeds",
-      body:
-        "Each lesson's reference solution has to pass at every seed, not just the lucky one, so the engine is fully deterministic and runs in a Web Worker. Replication lag, quorums, retries, circuit breakers and region outages are all modelled.",
-    },
-    stack: ["TypeScript", "Next.js", "React Flow", "Web Workers", "Gemini", "Vitest"],
-    links: [
-      { label: "Try it", href: "https://system-design-playground-pi.vercel.app", track: "project:systemlab-live" },
-      { label: "Code", href: "https://github.com/VVarrior1/systemlab", track: "project:systemlab-code" },
-    ],
-    shot: {
-      src: "/work/systemlab-lesson.jpg",
-      width: 2400,
-      height: 1560,
-      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
-      url: "system-design-playground-pi.vercel.app/learn",
     },
   },
 ];

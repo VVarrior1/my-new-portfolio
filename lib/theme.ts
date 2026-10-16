@@ -6,8 +6,17 @@ export function currentTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+/** --paper for each theme, so the browser chrome on phones matches the page. */
+const PAPER: Record<Theme, string> = { light: "#f7f8fa", dark: "#0a0b0e" };
+
+/** Points both theme-color metas at the chosen theme once the visitor has picked one. */
+export function syncThemeColor(theme: Theme = currentTheme()) {
+  for (const meta of document.querySelectorAll('meta[name="theme-color"]')) meta.setAttribute("content", PAPER[theme]);
+}
+
 function apply(next: Theme) {
   document.documentElement.dataset.theme = next;
+  syncThemeColor(next);
   try {
     localStorage.setItem("theme", next);
   } catch {
