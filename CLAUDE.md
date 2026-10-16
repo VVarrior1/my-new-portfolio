@@ -28,6 +28,10 @@ Run all of them before pushing; `npm run ci` chains them.
   and respect `prefers-reduced-motion`.
 - shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
   `globals.css`, not per-component colors. cmdk separators inside the list break ARIA, so don't add them.
+- The owner found the purely typographic version "bland" three times. Keep the photo hero, the
+  colored project stages and the sunset contact band; add richness, don't strip it back.
+- Photos must be free to use (Unsplash License or the owner's own) and credited in the footer.
+  Hero text over photos needs the shade overlay plus a text shadow; check phones, where the copy sits over lit windows.
 - Don't feature ApplyOps anywhere (the owner doesn't want it shown; the repo is private).
 - Product screenshots: `node scripts/capture-work-shots.mjs`. Don't submit forms on cydsoccer.com
   while capturing, because it triggers real lead SMS and email. Avoid pages showing children or staff names.

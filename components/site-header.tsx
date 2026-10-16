@@ -37,12 +37,15 @@ export function SiteHeader() {
   }, [open]);
 
   const isCurrent = (href: string) => !href.includes("#") && pathname.startsWith(href);
+  // On the home page the header floats, transparent and white, over the hero photo until you scroll.
+  const overlay = pathname === "/" && !scrolled && !open;
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-paper/90 backdrop-blur-md transition-[border-color] ${
-        scrolled || open ? "border-b border-rule" : "border-b border-transparent"
-      }`}
+      data-overlay={overlay ? "true" : undefined}
+      className={`site-header sticky top-0 z-50 border-b transition-[background-color,border-color] duration-300 ${
+        overlay ? "border-transparent bg-transparent" : "bg-paper/90 backdrop-blur-md"
+      } ${!overlay && (scrolled || open) ? "border-rule" : "border-transparent"}`}
     >
       <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
         <Link href="/" className="font-bold tracking-tight">

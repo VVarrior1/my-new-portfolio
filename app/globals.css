@@ -449,12 +449,69 @@ a {
   background: rgb(255 255 255 / 0.88);
 }
 
-/* Hero backdrop: a dot field in the signal color radiating from behind the simulator,
-   the same canvas language as the project stages and the contact band. */
-.hero-field {
-  background-image:
-    radial-gradient(color-mix(in srgb, var(--signal) 50%, transparent) 1.3px, transparent 1.5px),
-    radial-gradient(ellipse at 78% 62%, color-mix(in srgb, var(--signal) 20%, transparent), transparent 62%);
-  background-size: 22px 22px, 100% 100%;
-  mask-image: radial-gradient(ellipse 70% 75% at 76% 64%, black 25%, transparent 72%);
+
+/* ------------------------------------------------------------------
+   Photo hero: Calgary at night behind the name, darkened for legibility.
+   ------------------------------------------------------------------ */
+.hero-photo-shade {
+  background:
+    linear-gradient(180deg, rgb(4 10 26 / 0.55) 0%, rgb(4 10 26 / 0.25) 28%, rgb(4 10 26 / 0.55) 55%, rgb(4 10 26 / 0.9) 100%),
+    linear-gradient(90deg, rgb(4 10 26 / 0.6) 0%, rgb(4 10 26 / 0.15) 60%, rgb(4 10 26 / 0.35) 100%);
+}
+
+/* The header sitting over the hero photo. */
+.site-header[data-overlay="true"] a,
+.site-header[data-overlay="true"] button {
+  color: rgb(255 255 255 / 0.88);
+}
+.site-header[data-overlay="true"] a:hover,
+.site-header[data-overlay="true"] button:hover {
+  color: #ffffff;
+}
+.site-header[data-overlay="true"] [data-slot="kbd"] {
+  background: rgb(255 255 255 / 0.14);
+  color: #ffffff;
+}
+.site-header[data-overlay="true"] .border-rule {
+  border-color: rgb(255 255 255 / 0.3);
+}
+.site-header[data-overlay="true"] .bg-rule {
+  background: rgb(255 255 255 / 0.3);
+}
+
+/* Frosted dark glass for the simulator over the night photo. It re-declares the dark palette
+   locally (including shadcn's tokens, which resolve at :root and wouldn't follow otherwise),
+   so the panel reads the same in both site themes. */
+.glass {
+  --paper: #121417;
+  --paper-raised: #1b1f25;
+  --ink: #eceee8;
+  --graphite: #a3abb4;
+  --rule: rgb(255 255 255 / 0.16);
+  --signal: #8ea5ff;
+  --trace: #f2b53a;
+  --go: #4cc38a;
+  --canvas-dot: rgb(236 238 232 / 0.1);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --muted: var(--paper-raised);
+  --muted-foreground: var(--graphite);
+  --border: var(--rule);
+  --input: rgb(255 255 255 / 0.22);
+  --ring: var(--signal);
+  color: var(--ink);
+  background: rgb(14 18 28 / 0.62);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border-color: rgb(255 255 255 / 0.16);
+  box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* Phones stack all the text over the lit buildings, so darken more evenly there. */
+@media (max-width: 1023px) {
+  .hero-photo-shade {
+    background: linear-gradient(180deg, rgb(4 10 26 / 0.62) 0%, rgb(4 10 26 / 0.66) 40%, rgb(4 10 26 / 0.8) 70%, rgb(4 10 26 / 0.92) 100%);
+  }
 }
