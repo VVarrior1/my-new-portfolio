@@ -5,12 +5,17 @@ import { LockIcon, Maximize2Icon } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Shot } from "@/lib/content";
 
-/** A browser window around a screenshot. `children` replaces the image, e.g. with a button wrapping it. */
+/** A browser window around a screenshot: radius 10, a 1px edge and a mono address bar. */
 function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-rule bg-paper-raised shadow-[0_28px_60px_-34px_rgb(10_14_20/0.45)]">
-      <div className="flex h-8 items-center gap-1.5 border-b border-rule px-3 text-[0.78rem] text-graphite">
-        <LockIcon className="size-3" aria-hidden="true" />
+    <div className="overflow-hidden rounded-[10px] border border-rule-strong bg-surface-2">
+      <div className="t-mono flex h-8 items-center gap-2 border-b border-rule px-3 text-[0.75rem] text-graphite">
+        <span aria-hidden="true" className="flex gap-1.5 pr-1.5">
+          <span className="size-2 rounded-full bg-rule-strong" />
+          <span className="size-2 rounded-full bg-rule-strong" />
+          <span className="size-2 rounded-full bg-rule-strong" />
+        </span>
+        <LockIcon className="size-3 shrink-0" aria-hidden="true" />
         <span className="truncate">{shot.url}</span>
       </div>
       {children}
@@ -18,50 +23,68 @@ function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNod
   );
 }
 
-function ShotImage({ shot, sizes }: { shot: Shot; sizes: string }) {
-  return <Image src={shot.src} width={shot.width} height={shot.height} alt={shot.alt} sizes={sizes} className="block h-auto w-full" />;
+function ShotImage({ shot, sizes, fade = false }: { shot: Shot; sizes: string; fade?: boolean }) {
+  return (
+    <Image
+      src={shot.src}
+      width={shot.width}
+      height={shot.height}
+      alt={shot.alt}
+      sizes={sizes}
+      // The capture ends mid-row, so the last strip fades into the window instead of stopping on a cut.
+      className={`shot-img block h-auto w-full ${fade ? "[mask-image:linear-gradient(to_bottom,#000_88%,transparent_100%)]" : ""}`}
+    />
+  );
 }
 
 function PhoneFrame({ shot, className = "" }: { shot: Shot; className?: string }) {
   return (
-    <div className={`overflow-hidden rounded-[1.35rem] border-[5px] border-[#16191d] bg-[#16191d] shadow-[0_24px_50px_-20px_rgb(10_14_20/0.55)] ${className}`}>
+    <div className={`overflow-hidden rounded-[22px] border-[5px] border-[var(--bezel)] bg-[var(--bezel)] ${className}`}>
       <Image
         src={shot.src}
         width={shot.width}
         height={shot.height}
         alt={shot.alt}
-        sizes="(min-width: 1024px) 160px, 28vw"
-        className="block aspect-[9/16] h-auto w-full rounded-[0.95rem] object-cover object-top"
+        sizes="(min-width: 1024px) 240px, 30vw"
+        className="block aspect-[9/16] h-auto w-full rounded-[17px] object-cover object-top"
       />
     </div>
   );
 }
 
-/** A product screenshot in a browser frame (plus an optional phone). Select it to see it full size. */
+/** A product screenshot in a browser window (plus an optional phone beside it). Select it to see it full size. */
 export function ProjectShot({ name, shot, phone }: { name: string; shot: Shot; phone?: Shot }) {
+  const trigger = (
+    <BrowserFrame shot={shot}>
+      <DialogTrigger asChild>
+        <button type="button" className="group relative block w-full cursor-zoom-in text-left" aria-label={`Enlarge screenshots of ${name}`}>
+          <ShotImage shot={shot} fade={!phone} sizes={phone ? "(min-width: 1024px) 620px, 72vw" : "(min-width: 1024px) 1104px, 100vw"} />
+          <span
+            aria-hidden="true"
+            className="t-mono pointer-events-none absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-ink px-2 py-1 text-[0.75rem] text-paper opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+          >
+            <Maximize2Icon className="size-3" />
+            Enlarge
+          </span>
+        </button>
+      </DialogTrigger>
+    </BrowserFrame>
+  );
+
   return (
     <Dialog>
-      <div className={`relative ${phone ? "pb-8 pl-6 sm:pl-10" : ""}`}>
-        <BrowserFrame shot={shot}>
-          <DialogTrigger asChild>
-            <button type="button" className="group relative block w-full cursor-zoom-in text-left" aria-label={`Enlarge screenshots of ${name}`}>
-              <ShotImage shot={shot} sizes="(min-width: 1024px) 660px, 100vw" />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-ink/80 px-2 py-1 text-[0.78rem] font-medium text-paper opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-              >
-                <Maximize2Icon className="size-3" />
-                Enlarge
-              </span>
-            </button>
-          </DialogTrigger>
-        </BrowserFrame>
-        {phone && <PhoneFrame shot={phone} className="absolute bottom-0 left-0 w-[24%] max-w-[160px]" />}
-      </div>
+      {phone ? (
+        <div className="mx-auto grid max-w-[56rem] grid-cols-[minmax(0,1fr)_26%] items-end gap-4 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-10">
+          {trigger}
+          <PhoneFrame shot={phone} />
+        </div>
+      ) : (
+        trigger
+      )}
 
       <DialogContent className="max-h-[92vh] w-[min(96vw,1280px)] max-w-none overflow-y-auto bg-paper p-4 sm:max-w-none sm:p-6">
-        <DialogTitle className="pr-10 text-lg font-bold">{name}</DialogTitle>
-        <DialogDescription className="text-[0.95rem] text-graphite">{shot.alt}</DialogDescription>
+        <DialogTitle className="pr-10 text-[1rem] font-medium">{name}</DialogTitle>
+        <DialogDescription className="text-[0.875rem] text-graphite">{shot.alt}</DialogDescription>
         <div className={phone ? "grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_260px]" : ""}>
           <BrowserFrame shot={shot}>
             <ShotImage shot={shot} sizes="96vw" />
@@ -69,7 +92,7 @@ export function ProjectShot({ name, shot, phone }: { name: string; shot: Shot; p
           {phone && (
             <div className="mx-auto w-full max-w-[260px]">
               <PhoneFrame shot={phone} />
-              <p className="mt-3 text-[0.9rem] leading-snug text-graphite">{phone.alt}</p>
+              <p className="mt-3 text-[0.875rem] leading-snug text-graphite">{phone.alt}</p>
             </div>
           )}
         </div>

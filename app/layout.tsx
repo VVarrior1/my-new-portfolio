@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { SiteAnalytics } from "@/components/site-analytics";
@@ -7,15 +7,17 @@ import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-const sans = Schibsted_Grotesk({
+// IBM Plex Sans (variable, 400-600 used) for prose and headings, Plex Mono for every date,
+// stack, number, URL and readout: one engineered family, two voices.
+const sans = IBM_Plex_Sans({
   subsets: ["latin"],
-  variable: "--font-schibsted",
+  variable: "--font-plex-sans",
   display: "swap",
 });
 
-const mono = JetBrains_Mono({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains",
+  variable: "--font-plex-mono",
   display: "swap",
   weight: ["400", "500"],
 });
@@ -55,8 +57,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f3ef" },
-    { media: "(prefers-color-scheme: dark)", color: "#121417" },
+    // Equal to --paper in each scheme (lib/theme.ts keeps them in step with the toggle).
+    { media: "(prefers-color-scheme: light)", color: "#f7f8fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0b0e" },
   ],
 };
 

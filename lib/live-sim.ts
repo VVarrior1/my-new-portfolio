@@ -376,3 +376,26 @@ export function diagnose(m: Metrics, config: SimConfig): string {
   if (config.rate < 300) return "Healthy. Push the traffic up and find the first bottleneck.";
   return "Healthy at this load. Keep pushing, or kill a server and watch what happens.";
 }
+
+export type Health = "healthy" | "strained" | "failing";
+
+/** Utilization above this marks a component as strained (the UI turns it amber). */
+export const STRAIN_UTIL = 0.7;
+/** Once strained, utilization has to fall below this to read healthy again, so the state doesn't flicker. */
+const RECOVER_UTIL = 0.62;
+
+/**
+ * The system's health, for the heat plate under the simulator and the status readout.
+ * Failing: a server is down or more than 1% of requests fail. Strained: a component is above
+ * 70% busy or the p99 is past 150 ms. `previous` adds hysteresis so the state holds steady
+ * near a threshold instead of flickering.
+ */
+export function assessHealth(m: Metrics, previous: Health = "healthy"): Health {
+  if (m.serverUp.some((up) => !up) || m.errorRate > 0.01) return "failing";
+  // Errors drain out of the 3-second window gradually; only leave "failing" once they're clearly gone.
+  if (previous === "failing" && m.errorRate > 0.004) return "failing";
+  const busiest = Math.max(m.dbUtilization, ...m.appUtilization);
+  const limit = previous === "healthy" ? STRAIN_UTIL : RECOVER_UTIL;
+  if (busiest > limit || m.p99 > 150) return "strained";
+  return "healthy";
+}

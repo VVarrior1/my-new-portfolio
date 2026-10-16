@@ -41,7 +41,7 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className="relative grow overflow-hidden rounded-full bg-rule data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+        className="relative grow overflow-hidden rounded-full bg-rule-strong data-horizontal:h-0.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-0.5"
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
@@ -53,7 +53,7 @@ function Slider({
           data-slot="slider-thumb"
           key={index}
           aria-label={thumbLabel}
-          className="relative block size-5 shrink-0 cursor-grab rounded-full border-2 border-signal bg-paper shadow-sm active:cursor-grabbing ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
+          className="relative block size-3.5 shrink-0 cursor-grab rounded-full bg-signal shadow-[0_0_0_3px_var(--paper-raised)] transition-[box-shadow] select-none after:absolute after:-inset-3.5 active:cursor-grabbing hover:shadow-[0_0_0_3px_var(--paper-raised),0_0_0_7px_color-mix(in_srgb,var(--signal)_18%,transparent)] focus-visible:shadow-[0_0_0_3px_var(--paper-raised),0_0_0_5px_var(--signal)] focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
     </SliderPrimitive.Root>

@@ -46,7 +46,7 @@ export function DailyChart({ points }: { points: DayPoint[] }) {
         {ticks.map((tick) => (
           <g key={tick}>
             <line x1={PAD.left} x2={W - PAD.right} y1={y(tick)} y2={y(tick)} stroke="var(--rule)" strokeWidth={1} />
-            <text x={PAD.left - 8} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={12} fill="var(--graphite)">
+            <text x={PAD.left - 8} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={12} fill="var(--graphite)" style={{ fontFamily: "var(--mono)" }}>
               {tick.toLocaleString("en-US")}
             </text>
           </g>
@@ -55,7 +55,7 @@ export function DailyChart({ points }: { points: DayPoint[] }) {
         {points.map((point, index) => {
           const x = PAD.left + index * slot + (slot - barW) / 2;
           const h = Math.max(0, (point.views / max) * innerH);
-          const r = Math.min(4, h, barW / 2);
+          const r = Math.min(3, h, barW / 2);
           const top = PAD.top + innerH - h;
           const base = PAD.top + innerH;
           return (
@@ -94,13 +94,14 @@ export function DailyChart({ points }: { points: DayPoint[] }) {
             textAnchor={index === 0 ? "start" : index === points.length - 1 ? "end" : "middle"}
             fontSize={12}
             fill="var(--graphite)"
+            style={{ fontFamily: "var(--mono)" }}
           >
             {label(points[index].day)}
           </text>
         ))}
       </svg>
 
-      <p className="mt-2 min-h-[1.5em] text-[0.95rem] tabular-nums text-graphite" aria-live="polite">
+      <p className="t-mono mt-2 min-h-[1.5em] tabular-nums text-graphite" aria-live="polite">
         {shown
           ? `${label(shown.day)}: ${shown.views.toLocaleString("en-US")} ${shown.views === 1 ? "view" : "views"}, ${shown.visitors.toLocaleString("en-US")} ${shown.visitors === 1 ? "visitor" : "visitors"}`
           : "Hover or tab to a day for its numbers."}

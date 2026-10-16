@@ -91,7 +91,7 @@ export function GalleryWithPagination({
             <button
               type="button"
               onClick={() => setSelectedImage(item)}
-              className="group block w-full overflow-hidden rounded-md text-left"
+              className="group block w-full overflow-hidden rounded-[10px] border border-rule-strong text-left"
               aria-label={`View ${item.title} full size`}
             >
               <GalleryImage
@@ -106,9 +106,9 @@ export function GalleryWithPagination({
               />
             </button>
             {(item.title || item.createdAt) && (
-              <p className="mt-2 flex items-baseline justify-between gap-3 text-[0.9rem]">
+              <p className="mt-2 flex items-baseline justify-between gap-3 text-[0.875rem]">
                 <span className="font-medium">{item.title}</span>
-                <span className="shrink-0 tabular-nums text-graphite">{formatDate(item.createdAt)}</span>
+                <span className="t-mono shrink-0 tabular-nums text-graphite">{formatDate(item.createdAt)}</span>
               </p>
             )}
           </li>
@@ -117,13 +117,13 @@ export function GalleryWithPagination({
 
       {hasMore && (
         <div id="load-more-trigger" className="flex justify-center">
-          <button type="button" onClick={loadMore} disabled={loading} className="btn btn-quiet disabled:opacity-60">
+          <button type="button" onClick={loadMore} disabled={loading} className="btn btn-ghost disabled:opacity-60">
             {loading ? "Loading" : "Show more"}
           </button>
         </div>
       )}
 
-      <p className="text-center text-[0.9rem] text-graphite">
+      <p className="t-mono text-center text-graphite">
         Showing {visibleItems.length} of {initialTotal}
       </p>
 

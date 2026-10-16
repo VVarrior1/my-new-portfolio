@@ -40,11 +40,18 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 ## Design
 
-Light by default, with a dark theme that follows the OS or the header toggle. The toggle reveals
-the new theme as a circle using the View Transitions API, and switches instantly where that API
-isn't available or the visitor prefers reduced motion. One typeface (Schibsted Grotesk), with
-JetBrains Mono only for code. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--graphite`,
-`--rule`, `--signal`, `--trace`, `--chart`) exposed to Tailwind as `bg-paper`, `text-graphite` and so on.
+Light by default, with a dark theme that follows the OS or the header toggle (both are authored,
+not inverted). The toggle reveals the new theme as a circle using the View Transitions API, and
+switches instantly where that API isn't available or the visitor prefers reduced motion.
+IBM Plex Sans (400-600) for prose and headings, IBM Plex Mono for every date, stack, number, URL
+and readout. Colors are CSS variables on `:root` (`--paper`, `--paper-raised`, `--surface-2`,
+`--ink`, `--ink-2`, `--graphite`, `--rule`, `--rule-strong`, `--signal`, `--trace`, `--go`,
+`--plate-*`) exposed to Tailwind as `bg-paper`, `text-graphite` and so on. Every neutral sits at
+OKLCH hue 258-274 with chroma at or below 0.017, so paper, ink and rules share one temperature.
+The UI accent (`--signal`) is ink itself; the only hues are status colors (`--trace` strained,
+`--destructive` failing, `--go` up), and they appear only in the simulator, its readouts and status dots.
+Component classes (`.btn-key`, `.btn-ghost`, `.t-section`, `.frame`, `.device`…) live in
+`@layer components`, so Tailwind utilities can still override them.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--background`,
@@ -52,11 +59,15 @@ command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--bac
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
 
-**Background elements.** The hero and the contact band sit on `.bg-field`: a fine grid that
-fades out from behind the simulator, and two or three large blurred glows (`--glow-a/b/c`, set
-per theme) that drift slowly and stop under reduced motion. The hero slides under the transparent
-sticky header (`-mt-16 pt-16`) so the glows reach the top edge. Project screenshots sit on colored
-`.stage` panels in each product's own color.
+**The heat plate** is the one decoration, and it is data. Slatted, grained light sits under the
+simulator (`.heat-plate` in `globals.css`): steel blue when the system is healthy, amber when a
+component passes 70% busy or the p99 passes 150 ms, red when requests fail or a server is down.
+`assessHealth()` in `lib/live-sim.ts` decides the state (with hysteresis, so it doesn't flicker),
+the simulator sets `data-health` on `.sim-stage`, and CSS crossfades the matching layer's opacity:
+no extra JavaScript, compositor-only, instant under reduced motion. The grain is one inline SVG
+used as a mask. A faint stateless copy (`.end-plate`) sits under the contact block. The footer shows
+the simulator's last-known state (`lib/sim-status.ts`). Project screenshots sit in edge-lit
+`.frame` panels; light captures are dimmed in dark mode (`--shot-filter`).
 
 **The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
