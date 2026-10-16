@@ -19,11 +19,11 @@
    picks one with the toggle (stored as data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
-  --paper: #f2f3ef;
-  --paper-raised: #e8eae4;
-  --ink: #16191d;
-  --graphite: #565d66;
-  --rule: #d2d5ce;
+  --paper: #fbfcfd;
+  --paper-raised: #f1f3f7;
+  --ink: #0e1217;
+  --graphite: #566070;
+  --rule: #e2e6ec;
   --signal: #1f48d4;
   --signal-ink: #ffffff;
   --trace: #d48f00;
@@ -42,7 +42,13 @@
   --stage-systemlab-from: #dbeee3;
   --stage-systemlab-to: #bfe0cd;
   --stage-systemlab-dot: rgb(22 101 70 / 0.2);
-  --canvas-dot: rgb(22 25 29 / 0.11);
+  --canvas-dot: rgb(14 18 23 / 0.1);
+  /* Background design elements (hero grid and color glows). */
+  --grid-line: rgb(14 18 23 / 0.055);
+  --glow-strength: 0.2;
+  --glow-a: #1f48d4;
+  --glow-b: #13a567;
+  --glow-c: #8b6cff;
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -90,6 +96,16 @@
     --stage-systemlab-to: #0e271d;
     --stage-systemlab-dot: rgb(124 214 168 / 0.16);
     --canvas-dot: rgb(236 238 232 / 0.09);
+  --grid-line: rgb(255 255 255 / 0.045);
+  --glow-strength: 0.34;
+  --glow-a: #2c50ff;
+  --glow-b: #12a565;
+  --glow-c: #7650ff;
+    --grid-line: rgb(255 255 255 / 0.045);
+    --glow-strength: 0.34;
+    --glow-a: #2c50ff;
+    --glow-b: #12a565;
+    --glow-c: #7650ff;
     color-scheme: dark;
   }
 }
@@ -116,6 +132,11 @@
   --stage-systemlab-to: #0e271d;
   --stage-systemlab-dot: rgb(124 214 168 / 0.16);
   --canvas-dot: rgb(236 238 232 / 0.09);
+  --grid-line: rgb(255 255 255 / 0.045);
+  --glow-strength: 0.34;
+  --glow-a: #2c50ff;
+  --glow-b: #12a565;
+  --glow-c: #7650ff;
   color-scheme: dark;
 }
 
@@ -450,68 +471,100 @@ a {
 }
 
 
+
 /* ------------------------------------------------------------------
-   Photo hero: Calgary at night behind the name, darkened for legibility.
+   Background design elements: a fine grid that fades out from behind the
+   simulator, and three soft color glows (signal blue, green, amber) that
+   drift very slowly. Used behind the hero and the contact band.
    ------------------------------------------------------------------ */
-.hero-photo-shade {
-  background:
-    linear-gradient(180deg, rgb(4 10 26 / 0.55) 0%, rgb(4 10 26 / 0.25) 28%, rgb(4 10 26 / 0.55) 55%, rgb(4 10 26 / 0.9) 100%),
-    linear-gradient(90deg, rgb(4 10 26 / 0.6) 0%, rgb(4 10 26 / 0.15) 60%, rgb(4 10 26 / 0.35) 100%);
+.bg-field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  /* Fade out at the bottom so the glows never end in a hard edge. */
+  mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
 }
-
-/* The header sitting over the hero photo. */
-.site-header[data-overlay="true"] a,
-.site-header[data-overlay="true"] button {
-  color: rgb(255 255 255 / 0.88);
+.bg-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: -1px -1px;
+  mask-image: radial-gradient(ellipse 75% 70% at 72% 45%, black 25%, transparent 78%);
 }
-.site-header[data-overlay="true"] a:hover,
-.site-header[data-overlay="true"] button:hover {
-  color: #ffffff;
+.glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(90px);
+  opacity: var(--glow-strength);
+  will-change: transform;
+  animation: glow-drift 26s ease-in-out infinite alternate;
 }
-.site-header[data-overlay="true"] [data-slot="kbd"] {
-  background: rgb(255 255 255 / 0.14);
-  color: #ffffff;
+.glow-a {
+  width: min(52vw, 760px);
+  aspect-ratio: 1;
+  top: -18%;
+  right: -10%;
+  background: var(--glow-a);
 }
-.site-header[data-overlay="true"] .border-rule {
-  border-color: rgb(255 255 255 / 0.3);
+.glow-b {
+  width: min(38vw, 560px);
+  aspect-ratio: 1;
+  bottom: -14%;
+  right: 24%;
+  background: var(--glow-b);
+  animation-delay: -9s;
+  animation-duration: 31s;
 }
-.site-header[data-overlay="true"] .bg-rule {
-  background: rgb(255 255 255 / 0.3);
+.glow-c {
+  width: min(30vw, 440px);
+  aspect-ratio: 1;
+  top: 48%;
+  right: 4%;
+  background: var(--glow-c);
+  opacity: calc(var(--glow-strength) * 0.75);
+  animation-delay: -17s;
+  animation-duration: 23s;
 }
-
-/* Frosted dark glass for the simulator over the night photo. It re-declares the dark palette
-   locally (including shadcn's tokens, which resolve at :root and wouldn't follow otherwise),
-   so the panel reads the same in both site themes. */
-.glass {
-  --paper: #121417;
-  --paper-raised: #1b1f25;
-  --ink: #eceee8;
-  --graphite: #a3abb4;
-  --rule: rgb(255 255 255 / 0.16);
-  --signal: #8ea5ff;
-  --trace: #f2b53a;
-  --go: #4cc38a;
-  --canvas-dot: rgb(236 238 232 / 0.1);
-  --background: var(--paper);
-  --foreground: var(--ink);
-  --primary: var(--ink);
-  --primary-foreground: var(--paper);
-  --muted: var(--paper-raised);
-  --muted-foreground: var(--graphite);
-  --border: var(--rule);
-  --input: rgb(255 255 255 / 0.22);
-  --ring: var(--signal);
-  color: var(--ink);
-  background: rgb(14 18 28 / 0.62);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
-  border-color: rgb(255 255 255 / 0.16);
-  box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.75), inset 0 1px 0 rgb(255 255 255 / 0.06);
-}
-
-/* Phones stack all the text over the lit buildings, so darken more evenly there. */
-@media (max-width: 1023px) {
-  .hero-photo-shade {
-    background: linear-gradient(180deg, rgb(4 10 26 / 0.62) 0%, rgb(4 10 26 / 0.66) 40%, rgb(4 10 26 / 0.8) 70%, rgb(4 10 26 / 0.92) 100%);
+@keyframes glow-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
   }
+  to {
+    transform: translate3d(-5%, 7%, 0) scale(1.1);
+  }
+}
+@media (max-width: 1023px) {
+  .glow-a { width: 90vw; top: -8%; right: -40%; }
+  .glow-b { width: 70vw; bottom: 8%; right: -20%; }
+  .glow-c { width: 60vw; top: 55%; right: -10%; }
+}
+
+/* The contact band's own field: brighter dots and glows on the blue. */
+.band-field {
+  mask-image: none;
+}
+.band-field::before {
+  background-image: radial-gradient(rgb(255 255 255 / 0.16) 1.2px, transparent 1.3px);
+  background-size: 20px 20px;
+  mask-image: radial-gradient(ellipse 60% 90% at 85% 30%, black 15%, transparent 70%);
+}
+.band-field .glow {
+  opacity: 0.45;
+}
+.band-field .glow-a {
+  background: #7d95ff;
+  top: -40%;
+  right: -12%;
+}
+.band-field .glow-b {
+  background: #3fc48a;
+  opacity: 0.25;
+  bottom: -50%;
+  right: 30%;
 }

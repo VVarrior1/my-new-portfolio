@@ -43,7 +43,7 @@ export function CommandMenu() {
         type="button"
         onClick={() => show(true)}
         onPointerEnter={() => setLoaded(true)}
-        className="hidden h-9 items-center gap-2 rounded-md border border-rule px-2.5 text-[0.9rem] text-graphite transition-colors hover:border-ink hover:text-ink lg:inline-flex"
+        className="hidden h-9 items-center gap-2 rounded-md border border-rule bg-paper/80 px-2.5 text-[0.9rem] text-graphite backdrop-blur-sm transition-colors hover:border-ink hover:text-ink lg:inline-flex"
         aria-label="Open the command menu"
         aria-keyshortcuts="Meta+K Control+K"
       >

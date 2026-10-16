@@ -76,8 +76,7 @@ function utilColor(util: number, up = true) {
 
 const fmtMs = (ms: number) => (ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`);
 
-/** `glass` renders the panel as frosted glass, for use over the hero photo. */
-export function LiveSystem({ glass = false }: { glass?: boolean }) {
+export function LiveSystem() {
   const [config, setConfig] = useState<SimConfig>(INITIAL);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [width, setWidth] = useState(520);
@@ -254,7 +253,10 @@ export function LiveSystem({ glass = false }: { glass?: boolean }) {
   const { node } = layout;
 
   return (
-    <figure className={`rounded-xl border p-4 sm:p-5 ${glass ? "glass" : "border-rule bg-paper"}`} aria-labelledby="live-system-title">
+    <figure
+      className="rounded-xl border border-rule bg-paper/85 p-4 shadow-[0_30px_70px_-40px_rgb(14_18_23/0.35)] backdrop-blur-xl sm:p-5"
+      aria-labelledby="live-system-title"
+    >
       <figcaption className="flex items-start justify-between gap-4">
         <div>
           <p id="live-system-title" className="font-semibold leading-snug">
