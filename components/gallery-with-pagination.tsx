@@ -80,7 +80,7 @@ export function GalleryWithPagination({
   const visibleItems = items.filter(item => !hiddenItems.has(item.id));
 
   if (!visibleItems.length && !loading) {
-    return <p className="text-graphite">Nothing here yet.</p>;
+    return <p className="t-body text-graphite">Nothing here yet.</p>;
   }
 
   return (
@@ -91,7 +91,7 @@ export function GalleryWithPagination({
             <button
               type="button"
               onClick={() => setSelectedImage(item)}
-              className="group block w-full overflow-hidden rounded-md text-left"
+              className="group block w-full overflow-hidden rounded-[0.625rem] border border-rule text-left"
               aria-label={`View ${item.title} full size`}
             >
               <GalleryImage
@@ -106,9 +106,9 @@ export function GalleryWithPagination({
               />
             </button>
             {(item.title || item.createdAt) && (
-              <p className="mt-2 flex items-baseline justify-between gap-3 text-[0.9rem]">
-                <span className="font-medium">{item.title}</span>
-                <span className="shrink-0 tabular-nums text-graphite">{formatDate(item.createdAt)}</span>
+              <p className="mt-2 flex items-baseline justify-between gap-3">
+                <span className="t-small font-medium text-ink">{item.title}</span>
+                <span className="t-meta shrink-0 text-graphite">{formatDate(item.createdAt)}</span>
               </p>
             )}
           </li>
@@ -123,7 +123,7 @@ export function GalleryWithPagination({
         </div>
       )}
 
-      <p className="text-center text-[0.9rem] text-graphite">
+      <p className="t-meta text-center text-graphite">
         Showing {visibleItems.length} of {initialTotal}
       </p>
 

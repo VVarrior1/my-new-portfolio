@@ -34,14 +34,14 @@ function Slider({
       min={min}
       max={max}
       className={cn(
-        "relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
+        "relative flex h-4 w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col",
         className
       )}
       {...props}
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className="relative grow overflow-hidden rounded-full bg-rule data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+        className="relative grow overflow-hidden rounded-full bg-rule data-horizontal:h-0.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-0.5"
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
@@ -53,7 +53,7 @@ function Slider({
           data-slot="slider-thumb"
           key={index}
           aria-label={thumbLabel}
-          className="relative block size-5 shrink-0 cursor-grab rounded-full border-2 border-signal bg-paper shadow-sm active:cursor-grabbing ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
+          className="relative block size-4 shrink-0 cursor-grab rounded-full bg-signal transition-transform select-none after:absolute after:-inset-3 hover:scale-110 active:scale-110 active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-signal disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
     </SliderPrimitive.Root>

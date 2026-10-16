@@ -56,44 +56,49 @@ export default async function BlogPage({ params }: BlogPageProps) {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-16">
-        <article className="mx-auto max-w-[44rem]">
-          <p>
-            <Link href="/blogs" className="link text-[0.95rem]">
-              All writing
-            </Link>
-          </p>
-          <header className="mt-8">
-            <h1 className="text-[clamp(2.2rem,5.5vw,3.6rem)] font-extrabold leading-[1.02] tracking-[-0.045em]">{blog.title}</h1>
-            <p className="mt-5 text-[0.95rem] text-graphite">
-              <time dateTime={blog.date}>{formatDateLong(blog.date)}</time>, {readingMinutes(blog)} min read
-              {reads > 0 && `, ${reads.toLocaleString("en-US")} ${reads === 1 ? "read" : "reads"}`}
+      <main id="main" className="frame">
+        <div className="mx-auto max-w-[76rem] px-4 pb-20 pt-10 sm:px-8 sm:pt-16 lg:pb-28">
+          <article className="mx-auto max-w-[44rem]">
+            <p>
+              <Link href="/blogs" className="link t-small">
+                <span className="mr-1" aria-hidden="true">
+                  ←
+                </span>
+                All writing
+              </Link>
             </p>
-          </header>
+            <header className="mt-10">
+              <p className="t-meta text-graphite">
+                <time dateTime={blog.date}>{formatDateLong(blog.date)}</time> · {readingMinutes(blog)} min read
+                {reads >= 50 && ` · ${reads.toLocaleString("en-US")} reads`}
+              </p>
+              <h1 className="t-section mt-4 text-balance">{blog.title.trim()}</h1>
+            </header>
 
-          <div className="mt-12">
-            <BlogDetail blog={blog} />
-          </div>
-        </article>
+            <div className="mt-10 border-t border-rule pt-10">
+              <BlogDetail blog={blog} />
+            </div>
+          </article>
 
-        {(newer || older) && (
-          <nav aria-label="More posts" className="mx-auto mt-20 grid max-w-[44rem] gap-6 border-t border-rule pt-8 sm:grid-cols-2">
-            {older ? (
-              <Link href={`/blogs/${older.slug}`} className="group">
-                <span className="text-[0.9rem] text-graphite">Older</span>
-                <span className="mt-1 block font-bold leading-snug group-hover:underline">{older.title}</span>
-              </Link>
-            ) : (
-              <span />
-            )}
-            {newer && (
-              <Link href={`/blogs/${newer.slug}`} className="group sm:text-right">
-                <span className="text-[0.9rem] text-graphite">Newer</span>
-                <span className="mt-1 block font-bold leading-snug group-hover:underline">{newer.title}</span>
-              </Link>
-            )}
-          </nav>
-        )}
+          {(newer || older) && (
+            <nav aria-label="More posts" className="mx-auto mt-20 grid max-w-[44rem] gap-6 border-t border-rule pt-8 sm:grid-cols-2">
+              {older ? (
+                <Link href={`/blogs/${older.slug}`} className="group">
+                  <span className="t-meta text-graphite">← Older</span>
+                  <span className="t-item mt-1.5 block transition-colors duration-200 group-hover:text-signal">{older.title.trim()}</span>
+                </Link>
+              ) : (
+                <span />
+              )}
+              {newer && (
+                <Link href={`/blogs/${newer.slug}`} className="group sm:text-right">
+                  <span className="t-meta text-graphite">Newer →</span>
+                  <span className="t-item mt-1.5 block transition-colors duration-200 group-hover:text-signal">{newer.title.trim()}</span>
+                </Link>
+              )}
+            </nav>
+          )}
+        </div>
       </main>
       <SiteFooter />
     </>

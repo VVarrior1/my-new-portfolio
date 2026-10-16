@@ -51,8 +51,8 @@ export function GalleryImage({ src, alt, width, height, className, onError, prio
 
   if (hasError) {
     return (
-      <div className="relative flex aspect-[4/3] w-full items-center justify-center rounded-md bg-paper-raised">
-        <div className="text-center text-sm text-graphite">
+      <div className="relative flex aspect-[4/3] w-full items-center justify-center rounded-[0.625rem] bg-paper-raised">
+        <div className="t-meta text-center text-graphite">
           <div className="w-8 h-8 mx-auto mb-2 opacity-50">
             <svg fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
@@ -71,7 +71,7 @@ export function GalleryImage({ src, alt, width, height, className, onError, prio
       aria-label={description || title || alt}
     >
       {isLoading && (
-        <div className="absolute inset-0 animate-pulse rounded-md bg-paper-raised" />
+        <div className="absolute inset-0 animate-pulse rounded-[0.625rem] bg-paper-raised" />
       )}
       <Image
         src={currentSrc}

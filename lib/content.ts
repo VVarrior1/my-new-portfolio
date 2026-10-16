@@ -15,12 +15,23 @@ export const profile = {
   linkedin: "https://www.linkedin.com/in/abdelrahman-mohamed-080488197/",
   intro:
     "I'm a software engineer who likes building things people actually use, then finding out exactly where they break.",
+  /** The intro folded into the hero headline: the name in ink, the rest in graphite. */
+  headline: "builds software people actually use, then finds exactly where it breaks.",
   personal:
     "When I'm not coding, I'm playing bullet chess (rated\u00a02000), at the gym, adding to a fragrance collection, or opening another Red Bull.",
   graduation: "Graduating December 2026.",
   availability: "Available full-time from January 2027",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
 };
+
+/** The recruiter facts in the hero, restated from the profile above. `live` marks the availability row. */
+export const heroFacts: Array<{ label: string; value: string; live?: boolean }> = [
+  { label: "Role", value: "Software engineer, full-stack + AI" },
+  { label: "Based", value: "Calgary, AB" },
+  { label: "Graduating", value: "Dec 2026, BSc CS, UCalgary" },
+  { label: "Available", value: "Full-time from Jan 2027", live: true },
+  { label: "Work auth", value: "Canadian \u00b7 TN-eligible" },
+];
 
 export type Link = { label: string; href: string; track?: string };
 
@@ -35,11 +46,13 @@ export type Shot = {
 };
 
 export type FeaturedProject = {
-  /** Also picks the colored stage behind the screenshot (see .stage in globals.css). */
+  /** Also picks the stage behind the screenshot (see .stage in globals.css). */
   slug: "cyd" | "systemlab";
   name: string;
   summary: string;
   role: string;
+  /** Figure caption above the screenshot. */
+  caption: string;
   facts: Array<{ value: string; label: string }>;
   hardPart: { title: string; body: string };
   stack: string[];
@@ -48,13 +61,45 @@ export type FeaturedProject = {
   phone?: Shot;
 };
 
+// Systemlab first: the hero simulator comes from it, and CYD is one project among others.
 export const featured: FeaturedProject[] = [
+  {
+    slug: "systemlab",
+    name: "Systemlab",
+    summary:
+      "A system design trainer built on a discrete-event simulator I wrote. You design an architecture, estimate its latency and cost, then run it and see where it breaks.",
+    role: "Solo project \u00b7 open source",
+    caption: "A lesson after a run: the API server at 100%, p95 at 4.8 s",
+    facts: [
+      { value: "70", label: "lessons in 12 chapters" },
+      { value: "948", label: "tests" },
+      { value: "180K", label: "requests simulated in under 2 s" },
+    ],
+    hardPart: {
+      title: "Answers that hold across seeds",
+      body:
+        "Each lesson's reference solution has to pass at every seed, not just the lucky one, so the engine is fully deterministic and runs in a Web Worker. Replication lag, quorums, retries, circuit breakers and region outages are all modelled.",
+    },
+    stack: ["TypeScript", "Next.js", "React Flow", "Web Workers", "Gemini", "Vitest"],
+    links: [
+      { label: "Try it", href: "https://system-design-playground-pi.vercel.app", track: "project:systemlab-live" },
+      { label: "Code", href: "https://github.com/VVarrior1/systemlab", track: "project:systemlab-code" },
+    ],
+    shot: {
+      src: "/work/systemlab-lesson.jpg",
+      width: 2400,
+      height: 1560,
+      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
+      url: "system-design-playground-pi.vercel.app/learn",
+    },
+  },
   {
     slug: "cyd",
     name: "CYD Soccer Academy platform",
     summary:
       "Registration, Stripe billing, SMS and email, and roster sync for a youth soccer academy in Calgary. Families sign up and pay without anyone entering data by hand.",
-    role: "Sole engineer, May 2025 to now",
+    role: "Sole engineer \u00b7 May 2025 to now",
+    caption: "The venue picker, filtered by the child\u2019s age, and step one on a phone",
     facts: [
       { value: "~300", label: "active families" },
       { value: "5", label: "Calgary venues" },
@@ -83,35 +128,6 @@ export const featured: FeaturedProject[] = [
       height: 2532,
       alt: "Step one of the CYD registration flow on a phone: parent details and whether the child is new or returning.",
       url: "cydsoccer.com/register",
-    },
-  },
-  {
-    slug: "systemlab",
-    name: "Systemlab",
-    summary:
-      "A system design trainer built on a discrete-event simulator I wrote. You design an architecture, estimate its latency and cost, then run it and see where it breaks.",
-    role: "Solo project, open source",
-    facts: [
-      { value: "70", label: "lessons in 12 chapters" },
-      { value: "948", label: "tests" },
-      { value: "180K", label: "requests simulated in under 2 s" },
-    ],
-    hardPart: {
-      title: "Answers that hold across seeds",
-      body:
-        "Each lesson's reference solution has to pass at every seed, not just the lucky one, so the engine is fully deterministic and runs in a Web Worker. Replication lag, quorums, retries, circuit breakers and region outages are all modelled.",
-    },
-    stack: ["TypeScript", "Next.js", "React Flow", "Web Workers", "Gemini", "Vitest"],
-    links: [
-      { label: "Try it", href: "https://system-design-playground-pi.vercel.app", track: "project:systemlab-live" },
-      { label: "Code", href: "https://github.com/VVarrior1/systemlab", track: "project:systemlab-code" },
-    ],
-    shot: {
-      src: "/work/systemlab-lesson.jpg",
-      width: 2400,
-      height: 1560,
-      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
-      url: "system-design-playground-pi.vercel.app/learn",
     },
   },
 ];

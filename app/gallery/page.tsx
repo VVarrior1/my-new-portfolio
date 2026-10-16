@@ -18,15 +18,20 @@ export default async function GalleryPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
-        <header className="max-w-3xl">
-          <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.05em]">Gallery</h1>
-          <p className="measure mt-6 text-[1.2rem] leading-relaxed text-graphite">
-            Pictures worth keeping: notes I liked, screenshots, and the odd photo. Select one to see it full size.
-          </p>
-        </header>
-        <div className="mt-14">
-          <GalleryWithPagination initialItems={items} initialHasMore={hasMore} initialTotal={total} />
+      <main id="main" className="frame">
+        <div className="mx-auto max-w-[76rem] px-4 pb-20 pt-10 sm:px-8 sm:pt-16 lg:pb-28">
+          <header>
+            <p className="t-meta text-graphite">
+              {total > 0 ? `${total} ${total === 1 ? "picture" : "pictures"} · select one to see it full size` : "Notes, screenshots, photos"}
+            </p>
+            <h1 className="t-display mt-4 max-w-[59.75rem]">
+              <span className="text-ink">Gallery.</span>{" "}
+              <span className="text-graphite">Pictures worth keeping: notes I liked, screenshots, and the odd photo.</span>
+            </h1>
+          </header>
+          <div className="mt-14 lg:mt-20">
+            <GalleryWithPagination initialItems={items} initialHasMore={hasMore} initialTotal={total} />
+          </div>
         </div>
       </main>
       <SiteFooter />

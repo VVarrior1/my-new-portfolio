@@ -15,10 +15,23 @@ const links = [
   { href: "/#contact", label: "Contact" },
 ];
 
+/** A drafting crosshair, the site's mark. */
+function Mark() {
+  return (
+    <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" className="shrink-0">
+      <circle cx="10" cy="10" r="5.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 1v5.5M10 13.5V19M1 10h5.5M13.5 10H19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="10" cy="10" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // On the home page the name is already the headline, so the wordmark waits until the h1 scrolls away.
+  const [headlineVisible, setHeadlineVisible] = useState(pathname === "/");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -26,6 +39,17 @@ export function SiteHeader() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const headline = pathname === "/" ? document.getElementById("hero-title") : null;
+    if (!headline) {
+      setHeadlineVisible(false);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => setHeadlineVisible(entry.isIntersecting), { rootMargin: "-64px 0px 0px 0px" });
+    io.observe(headline);
+    return () => io.disconnect();
+  }, [pathname]);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -37,25 +61,35 @@ export function SiteHeader() {
   }, [open]);
 
   const isCurrent = (href: string) => !href.includes("#") && pathname.startsWith(href);
+  const showName = !headlineVisible || open;
+
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-transparent"
+        scrolled || open ? "border-rule bg-paper/90 backdrop-blur-md" : "border-transparent bg-paper"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
-        <Link href="/" className="font-bold tracking-tight">
-          <span className="sm:hidden">A. Mohamed</span>
-          <span className="hidden sm:inline">Abdelrahman Mohamed</span>
+        <Link href="/" aria-label="Abdelrahman Mohamed, home" className="-ml-0.5 flex items-center gap-2.5 font-semibold tracking-[-0.01em]">
+          <Mark />
+          <span
+            aria-hidden="true"
+            className={`text-[0.9375rem] transition-[opacity,transform] duration-300 ${
+              showName ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"
+            }`}
+          >
+            <span className="sm:hidden">A. Mohamed</span>
+            <span className="hidden sm:inline">Abdelrahman Mohamed</span>
+          </span>
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-0.5 md:flex">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              className="rounded-md px-3 py-2 text-[0.95rem] text-graphite transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-trace aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
+              className="rounded-lg px-3 py-2 text-[0.9375rem] font-medium text-graphite transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-ink aria-[current=page]:decoration-1 aria-[current=page]:underline-offset-[0.4em]"
             >
               {link.label}
             </Link>
@@ -74,7 +108,7 @@ export function SiteHeader() {
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            className="ml-1 inline-flex h-10 items-center rounded-md px-3 font-medium"
+            className="ml-1 inline-flex h-10 items-center rounded-lg px-3 text-[0.9375rem] font-medium"
           >
             {open ? "Close" : "Menu"}
           </button>
@@ -86,7 +120,7 @@ export function SiteHeader() {
           <ul>
             {links.map((link) => (
               <li key={link.href} className="border-b border-rule">
-                <Link href={link.href} onClick={() => setOpen(false)} className="block py-4 text-2xl font-bold tracking-tight">
+                <Link href={link.href} onClick={() => setOpen(false)} className="t-title block py-4">
                   {link.label}
                 </Link>
               </li>

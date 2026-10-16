@@ -43,12 +43,12 @@ export function CommandMenu() {
         type="button"
         onClick={() => show(true)}
         onPointerEnter={() => setLoaded(true)}
-        className="hidden h-9 items-center gap-2 rounded-md border border-rule bg-paper/80 px-2.5 text-[0.9rem] text-graphite backdrop-blur-sm transition-colors hover:border-ink hover:text-ink lg:inline-flex"
+        className="mr-1 hidden h-9 items-center gap-2.5 rounded-lg border border-rule bg-paper pl-3 pr-1.5 text-[0.9375rem] font-medium text-graphite transition-colors hover:border-ink hover:text-ink lg:inline-flex"
         aria-label="Open the command menu"
         aria-keyshortcuts="Meta+K Control+K"
       >
         Jump to
-        <Kbd className="bg-paper-raised">{mac ? "⌘" : "Ctrl"} K</Kbd>
+        <Kbd className="h-6 rounded-md bg-paper-raised px-1.5 font-mono text-[0.75rem] text-graphite">{mac ? "⌘" : "Ctrl"} K</Kbd>
       </button>
       {loaded && <CommandPalette open={open} onOpenChange={show} />}
     </>

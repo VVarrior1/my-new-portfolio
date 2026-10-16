@@ -40,11 +40,34 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 ## Design
 
-Light by default, with a dark theme that follows the OS or the header toggle. The toggle reveals
-the new theme as a circle using the View Transitions API, and switches instantly where that API
-isn't available or the visitor prefers reduced motion. One typeface (Schibsted Grotesk), with
-JetBrains Mono only for code. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--graphite`,
-`--rule`, `--signal`, `--trace`, `--chart`) exposed to Tailwind as `bg-paper`, `text-graphite` and so on.
+"Drafted instrument": a cool-white engineering drawing with one ultramarine. Light by default,
+with a dark theme that follows the OS or the header toggle. The toggle reveals the new theme as a
+circle using the View Transitions API, and switches instantly where that API isn't available or
+the visitor prefers reduced motion.
+
+**Color.** Every neutral sits at OKLCH hue 269-275, the same hue as the signal blue, so the page
+reads as one material; light and dark share that temperature. Each token in `app/globals.css` has
+one job, written next to it: `--ink` (headings), `--ink-2` (body prose), `--graphite` (metadata
+only), `--rule` (hairlines), `--signal` (packets, slider, switch, link hover, focus, the hard-part
+rule), and `--trace` / `--go` / `--destructive`, which appear only in the simulator, its readout
+and status dots. Saturated color comes in three places with meanings: the simulator, the deep
+Systemlab stage (the product the simulator comes from) and the closing contact band.
+
+**Type.** Schibsted Grotesk at 400/500/600 on a seven-step scale (`.t-meta` 13 mono, `.t-small`
+15, `.t-body` 17, `.t-item` 20, `.t-title` 28, `.t-section` 44, `.t-display` 58), and JetBrains
+Mono for every date, stack, number, caption and readout.
+
+**Structure instead of decoration.** Everything sits on one 12-column grid (1152px, 24px gutters).
+The page frame (`.frame` on `<main>`) draws two hairline verticals one gutter outside the grid,
+section rules (`.ruled`) run full-bleed, and 9px registration marks sit where they cross. The
+Experience timeline is drawn on the frame line on wide screens. Figures carry mono `Fig. n`
+captions. Dot fields appear only inside bounded objects (the simulator canvas, the stages, the
+band). There are no blurred glows, no background grid and no ambient animation.
+
+**The live readout** above the headline (`components/sim-readout.tsx`) is fed by the simulator
+through a tiny store (`lib/sim-readout.ts`): requests, p99 and errors, with a status dot that
+follows the system's state and reads "paused" while the simulator is off-screen. It is
+`aria-hidden`; the simulator's own `aria-live` hint is the accessible source.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--background`,
@@ -52,17 +75,13 @@ command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--bac
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
 
-**Background elements.** The hero and the contact band sit on `.bg-field`: a fine grid that
-fades out from behind the simulator, and two or three large blurred glows (`--glow-a/b/c`, set
-per theme) that drift slowly and stop under reduced motion. The hero slides under the transparent
-sticky header (`-mt-16 pt-16`) so the glows reach the top edge. Project screenshots sit on colored
-`.stage` panels in each product's own color.
-
 **The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
-and in background tabs, and draws no request dots under reduced motion. `diagnose()` writes the
+and in background tabs, and draws no request dots under reduced motion. Below a 480px canvas the
+diagram flows top to bottom. Utilization shows by state only: signal, then trace above 70%, then
+destructive above 90% or when a server is down. `diagnose()` writes the
 hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`

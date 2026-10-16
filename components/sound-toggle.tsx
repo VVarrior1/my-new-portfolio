@@ -13,8 +13,8 @@ export function SoundToggle() {
       aria-pressed={isPlaying}
       aria-label={label}
       title={label}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors hover:text-ink ${
-        isPlaying ? "text-trace" : "text-graphite"
+      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:text-ink ${
+        isPlaying ? "text-ink" : "text-graphite"
       }`}
     >
       <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" fill="currentColor">

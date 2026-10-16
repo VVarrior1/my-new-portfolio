@@ -51,15 +51,15 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 function Table({ caption, columns, rows }: { caption: string; columns: string[]; rows: Array<[string, ...number[]]> }) {
   return (
     <div>
-      <h2 className="text-lg font-bold">{caption}</h2>
+      <h2 className="t-item">{caption}</h2>
       {rows.length === 0 ? (
-        <p className="mt-3 text-graphite">Nothing recorded yet.</p>
+        <p className="t-small mt-3 text-graphite">Nothing recorded yet.</p>
       ) : (
-        <table className="mt-3 w-full table-fixed text-left text-[0.97rem]">
+        <table className="t-small mt-4 w-full table-fixed text-left">
           <thead>
             <tr className="border-b border-rule text-graphite">
               {columns.map((column, i) => (
-                <th key={column} scope="col" className={`py-2 font-medium ${i > 0 ? "w-[5.5rem] text-right" : ""}`}>
+                <th key={column} scope="col" className={`t-meta py-2 font-normal ${i > 0 ? "w-[5.5rem] text-right" : ""}`}>
                   {column}
                 </th>
               ))}
@@ -68,11 +68,11 @@ function Table({ caption, columns, rows }: { caption: string; columns: string[];
           <tbody>
             {rows.map(([name, ...values]) => (
               <tr key={name} className="border-b border-rule">
-                <th scope="row" className="truncate py-2.5 pr-4 font-normal" title={name}>
+                <th scope="row" className="truncate py-2.5 pr-4 font-normal text-ink-2" title={name}>
                   {name}
                 </th>
                 {values.map((value, i) => (
-                  <td key={i} className="py-2.5 pl-4 text-right tabular-nums">
+                  <td key={i} className="py-2.5 pl-4 text-right font-mono text-[0.8125rem] tabular-nums text-ink">
                     {fmt(value)}
                   </td>
                 ))}
@@ -111,37 +111,41 @@ export default async function StatsPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
-        <header className="max-w-3xl">
-          <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.05em]">Site stats</h1>
-          <p className="measure mt-6 text-[1.2rem] leading-relaxed text-graphite">
-            Counted by this site itself, with no third-party trackers. Crawlers and link previews are left out, and a
-            visitor is a browser, identified by a first-party cookie. Numbers update about once a minute.
+      <main id="main" className="frame">
+        <div className="mx-auto max-w-[76rem] px-4 pb-20 pt-10 sm:px-8 sm:pt-16 lg:pb-28">
+        <header>
+          <p className="t-meta text-graphite">Updated about once a minute</p>
+          <h1 className="t-display mt-4 max-w-[59.75rem]">
+            <span className="text-ink">Site stats.</span>{" "}
+            <span className="text-graphite">Counted by this site itself, with no third-party trackers.</span>
+          </h1>
+          <p className="t-body measure mt-6 text-ink-2">
+            Crawlers and link previews are left out, and a visitor is a browser, identified by a first-party cookie.
           </p>
           <Suspense fallback={null}>
             <TrackingNotice />
           </Suspense>
         </header>
 
-        <dl className="mt-14 grid grid-cols-2 gap-x-6 gap-y-8 border-y border-rule py-8 lg:grid-cols-4">
+        <dl className="mt-14 grid grid-cols-2 gap-px border-y border-rule bg-rule lg:grid-cols-4">
           {figures.map((figure) => (
-            <div key={figure.label}>
+            <div key={figure.label} className="bg-paper py-6 pr-5 [&:nth-child(2n)]:pl-5 lg:[&:not(:first-child)]:pl-5">
               <dt className="sr-only">{figure.label}</dt>
               <dd>
-                <span className="block text-[2.2rem] font-bold leading-none tracking-[-0.04em] tabular-nums sm:text-[2.8rem]">
+                <span className="block font-mono text-[2rem] font-medium leading-none tracking-[-0.02em] tabular-nums text-ink sm:text-[2.75rem]">
                   {fmt(figure.value)}
                 </span>
-                <span className="mt-2 block text-[0.95rem] text-graphite">{figure.label}</span>
+                <span className="t-meta mt-2.5 block text-graphite">{figure.label}</span>
               </dd>
             </div>
           ))}
         </dl>
 
         <section aria-labelledby="daily-title" className="mt-14">
-          <h2 id="daily-title" className="text-lg font-bold">
+          <h2 id="daily-title" className="t-item">
             Page views per day, last 30 days
           </h2>
-          <p className="mt-1 text-[0.95rem] text-graphite">
+          <p className="t-meta mt-1.5 text-graphite">
             {historyStart
               ? `Days are in UTC. Daily history starts ${formatDateLong(historyStart)}; totals above go back further.`
               : "Daily history starts with the next visit; totals above go back further."}
@@ -150,7 +154,7 @@ export default async function StatsPage() {
             <DailyChart points={days} />
           </div>
           <details className="mt-4">
-            <summary className="cursor-pointer text-[0.95rem] text-graphite hover:text-ink">Show these numbers as a table</summary>
+            <summary className="t-small cursor-pointer text-graphite hover:text-ink">Show these numbers as a table</summary>
             <div className="mt-4 max-w-md">
               <Table
                 caption="Daily views"
@@ -184,7 +188,7 @@ export default async function StatsPage() {
           />
         </div>
 
-        <p className="measure mt-16 text-[0.95rem] leading-relaxed text-graphite">
+        <p className="t-small measure mt-16 text-graphite">
           Don&apos;t want to be counted? Open{" "}
           <a href="/api/analytics/optout" className="link">
             this link
@@ -195,6 +199,7 @@ export default async function StatsPage() {
           </a>
           .
         </p>
+        </div>
       </main>
       <SiteFooter />
     </>

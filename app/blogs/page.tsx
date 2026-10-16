@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getAnalytics } from "@/lib/analytics";
 import { getAllBlogs } from "@/lib/blogs";
 import { formatDate } from "@/lib/date-utils";
-import { plainText } from "@/lib/text";
+import { excerpt } from "@/lib/text";
 
 export const revalidate = 300;
 
@@ -16,52 +15,46 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogsPage() {
-  const [blogs, analytics] = await Promise.all([getAllBlogs(), getAnalytics()]);
-  const views = new Map(analytics.blogs.map((blog) => [blog.slug, blog.views]));
+  const blogs = await getAllBlogs();
 
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
-        <header className="max-w-3xl">
-          <h1 className="text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[0.95] tracking-[-0.05em]">Writing</h1>
-          <p className="measure mt-6 text-[1.2rem] leading-relaxed text-graphite">
-            Notes on things I&apos;ve learned while building: some technical, some not.
-          </p>
-        </header>
+      <main id="main" className="frame">
+        <div className="mx-auto max-w-[76rem] px-4 pb-20 pt-10 sm:px-8 sm:pt-16 lg:pb-28">
+          <header>
+            <p className="t-meta text-graphite">
+              {blogs.length} {blogs.length === 1 ? "post" : "posts"} · newest first
+            </p>
+            <h1 className="t-display mt-4 max-w-[59.75rem]">
+              <span className="text-ink">Writing.</span>{" "}
+              <span className="text-graphite">Notes on things I&apos;ve learned while building: some technical, some not.</span>
+            </h1>
+          </header>
 
-        {blogs.length === 0 ? (
-          <p className="mt-16 text-graphite">No posts yet. The first one is on its way.</p>
-        ) : (
-          <ul className="mt-14">
-            {blogs.map((blog) => {
-              const count = views.get(blog.slug) ?? 0;
-              return (
-                <li key={blog.slug} className="border-b border-rule first:border-t">
-                  <Link
-                    href={`/blogs/${blog.slug}`}
-                    className="group grid gap-x-10 gap-y-2 py-8 md:grid-cols-[10rem_minmax(0,1fr)]"
-                  >
-                    <span className="text-[0.95rem] tabular-nums text-graphite">
-                      {formatDate(blog.date)}
-                      {count > 0 && (
-                        <span className="block text-[0.85rem]">
-                          {count.toLocaleString("en-US")} {count === 1 ? "read" : "reads"}
+          {blogs.length === 0 ? (
+            <p className="mt-16 text-graphite">No posts yet. The first one is on its way.</p>
+          ) : (
+            <ul className="mt-14 lg:mt-20">
+              {blogs.map((blog) => {
+                const teaser = excerpt(blog.excerpt, blog.title, 240);
+                return (
+                  <li key={blog.slug} className="border-b border-rule first:border-t">
+                    <Link href={`/blogs/${blog.slug}`} className="group grid grid-cols-1 gap-y-1.5 py-7 sm:grid-cols-12 sm:gap-x-6">
+                      <span className="t-meta text-graphite sm:col-span-3 sm:pt-[0.3rem]">{formatDate(blog.date)}</span>
+                      <span className="sm:col-span-9 lg:col-span-8">
+                        <span className="t-title block text-ink transition-colors duration-200 group-hover:text-signal">
+                          {blog.title.trim()}
                         </span>
-                      )}
-                    </span>
-                    <span>
-                      <span className="block text-[1.5rem] font-bold leading-tight tracking-[-0.025em] group-hover:underline group-hover:decoration-2 group-hover:underline-offset-4">
-                        {blog.title}
+                        {teaser && <span className="t-body mt-2 line-clamp-2 text-ink-2">{teaser}</span>}
                       </span>
-                      <span className="measure mt-2 line-clamp-3 leading-relaxed text-graphite">{plainText(blog.excerpt)}</span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </main>
       <SiteFooter />
     </>
