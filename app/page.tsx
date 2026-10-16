@@ -46,7 +46,9 @@ export default async function Home() {
       <SiteHeader />
       <main id="main">
         {/* Hero */}
-        <section className="mx-auto max-w-[76rem] px-4 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16">
+        <section className="relative isolate">
+          <div aria-hidden="true" className="hero-field pointer-events-none absolute inset-0 -z-10" />
+          <div className="mx-auto max-w-[76rem] px-4 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16">
           <h1 className="display-name">
             {profile.firstName}
             <br />
@@ -58,8 +60,9 @@ export default async function Home() {
               <p className="measure text-[1.35rem] font-medium leading-[1.4] tracking-[-0.012em] sm:text-[1.5rem]">
                 {profile.intro}
               </p>
-              <p className="measure mt-5 text-graphite">
-                {profile.role} in {profile.location}. {profile.availability}
+              <p className="measure mt-5 text-[1.08rem] leading-relaxed">{profile.personal}</p>
+              <p className="measure mt-4 text-graphite">
+                {profile.role} in {profile.location}. {profile.graduation}
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -78,11 +81,17 @@ export default async function Home() {
                   </a>
                 </span>
               </div>
+
+              <p className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-rule py-1.5 pl-3 pr-4 text-[0.95rem]">
+                <span className="size-2 rounded-full bg-go shadow-[0_0_0_4px_color-mix(in_srgb,var(--go)_22%,transparent)]" aria-hidden="true" />
+                {profile.availability}
+              </p>
             </div>
 
             <div id="play" className="scroll-mt-24 lg:col-span-7">
               <LiveSystem />
             </div>
+          </div>
           </div>
         </section>
 
@@ -96,7 +105,9 @@ export default async function Home() {
                 className="grid items-center gap-x-14 gap-y-8 lg:grid-cols-12"
               >
                 <div className={`lg:col-span-7 ${index % 2 === 1 ? "lg:order-2" : ""}`}>
-                  <ProjectShot name={project.name} shot={project.shot} phone={project.phone} />
+                  <div className="stage" data-stage={project.slug}>
+                    <ProjectShot name={project.name} shot={project.shot} phone={project.phone} />
+                  </div>
                 </div>
 
                 <div className={`lg:col-span-5 ${index % 2 === 1 ? "lg:order-1" : ""}`}>
@@ -154,13 +165,21 @@ export default async function Home() {
 
         {/* Experience */}
         <Section id="experience" title="Experience">
-          <ol className="space-y-0">
-            {experience.map((job) => (
+          <ol className="relative before:absolute before:bottom-2 before:left-[5px] before:top-2 before:w-px before:bg-rule">
+            {experience.map((job) => {
+              const current = job.end === "Now";
+              return (
               <li
                 key={`${job.company}-${job.start}`}
-                className="grid gap-x-8 gap-y-1 border-b border-rule py-7 first:pt-0 md:grid-cols-[9.5rem_minmax(0,1fr)]"
+                className="group relative grid gap-x-8 gap-y-1 py-6 pl-8 first:pt-0 md:grid-cols-[9.5rem_minmax(0,1fr)]"
               >
-                <p className="text-[0.95rem] tabular-nums text-graphite">
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-0 top-[1.87rem] size-[11px] rounded-full border-2 group-first:top-[0.37rem] ${
+                    current ? "border-go bg-go shadow-[0_0_0_4px_color-mix(in_srgb,var(--go)_20%,transparent)]" : "border-graphite bg-paper"
+                  }`}
+                />
+                <p className={`text-[0.95rem] tabular-nums ${current ? "font-semibold text-go" : "text-graphite"}`}>
                   {job.start} – {job.end}
                 </p>
                 <div>
@@ -179,7 +198,8 @@ export default async function Home() {
                   <p className="measure mt-3 leading-relaxed">{job.summary}</p>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ol>
 
           <div className="mt-14 grid gap-12 xl:grid-cols-2">
@@ -237,30 +257,34 @@ export default async function Home() {
         </Section>
 
         {/* Contact */}
-        <section id="contact" aria-labelledby="contact-title" className="scroll-mt-20 border-t border-rule bg-paper-raised">
+        <section id="contact" aria-labelledby="contact-title" className="relative isolate scroll-mt-20 overflow-hidden bg-band text-band-ink">
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 -z-10 bg-[radial-gradient(rgb(255_255_255/0.14)_1.2px,transparent_1.3px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_at_85%_20%,black_15%,transparent_65%)]"
+          />
           <div className="mx-auto grid max-w-[76rem] gap-12 px-4 py-20 sm:px-8 sm:py-28 lg:grid-cols-[minmax(0,1fr)_13.75rem] lg:items-end">
             <div className="min-w-0">
               <h2 id="contact-title" className="section-title">
                 Hiring for 2027?
               </h2>
-              <p className="measure mt-5 text-[1.2rem] leading-relaxed">
+              <p className="measure mt-5 text-[1.2rem] leading-relaxed text-band-muted">
                 I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or
                 somewhere I can move to. {profile.workAuth}
               </p>
               <a
                 href={`mailto:${profile.email}`}
                 data-track="email"
-                className="mt-10 block text-[clamp(1.3rem,4.4vw,2.85rem)] font-bold leading-[1.05] tracking-[-0.035em] underline decoration-trace decoration-[3px] underline-offset-[0.18em] transition-colors hover:text-signal"
+                className="mt-10 block text-[clamp(1.3rem,4.4vw,2.85rem)] font-bold leading-[1.05] tracking-[-0.035em] underline decoration-trace decoration-[3px] underline-offset-[0.18em] transition-opacity hover:opacity-85"
               >
                 {profile.email.split("@")[0]}
                 <wbr />@{profile.email.split("@")[1]}
               </a>
               <div className="mt-8 flex flex-wrap gap-3">
-                <CopyEmail email={profile.email} />
-                <a href={RESUME_PATH} className="btn btn-quiet" data-track="resume-download">
+                <CopyEmail email={profile.email} className="btn btn-band-solid" />
+                <a href={RESUME_PATH} className="btn btn-on-band" data-track="resume-download">
                   Résumé (PDF)
                 </a>
-                <a href={profile.linkedin} className="btn btn-quiet" target="_blank" rel="noreferrer" data-track="linkedin">
+                <a href={profile.linkedin} className="btn btn-on-band" target="_blank" rel="noreferrer" data-track="linkedin">
                   LinkedIn
                 </a>
               </div>
@@ -272,7 +296,7 @@ export default async function Home() {
                 height={460}
                 alt="Abdelrahman Mohamed in a suit, standing outdoors by a river on a sunny day"
                 sizes="220px"
-                className="aspect-square w-full rounded-xl object-cover"
+                className="aspect-square w-full rounded-xl object-cover ring-4 ring-white/15"
               />
             </figure>
           </div>

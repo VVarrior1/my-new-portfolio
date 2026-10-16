@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DatabaseIcon, NetworkIcon, ServerIcon, ZapIcon, type LucideIcon } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { LiveSim, MAX_SERVERS, diagnose, type Finished, type Metrics, type SimConfig, type Stage } from "@/lib/live-sim";
@@ -271,7 +272,7 @@ export function LiveSystem() {
         </button>
       </figcaption>
 
-      <div ref={box} className="relative mt-4" style={{ height: layout.height }}>
+      <div ref={box} className="sim-canvas relative mt-4 rounded-lg" style={{ height: layout.height }}>
         <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
           <g stroke="var(--rule)" strokeWidth={1.5} fill="none">
             <line x1={layout.entry.x} y1={layout.entry.y} x2={layout.lb.x - node.w / 2} y2={layout.lb.y} strokeDasharray="3 4" />
@@ -288,7 +289,7 @@ export function LiveSystem() {
         <canvas ref={canvas} className="pointer-events-none absolute inset-0" style={{ width: layout.width, height: layout.height }} aria-hidden="true" />
         <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
 
-          <Node at={layout.lb} size={node} title="Balancer" detail="round robin" />
+          <Node at={layout.lb} size={node} title="Balancer" detail="round robin" icon={NetworkIcon} accent="var(--signal)" />
           {layout.apps.map((app, i) => {
             const up = metrics?.serverUp[i] ?? true;
             const util = metrics?.appUtilization[i] ?? 0;
@@ -298,6 +299,8 @@ export function LiveSystem() {
                 at={app}
                 size={node}
                 title={`App ${i + 1}`}
+                icon={ServerIcon}
+                accent={up ? "var(--ink)" : "var(--destructive)"}
                 detail={up ? `${Math.round(util * 100)}% busy` : "down"}
                 util={up ? util : 1}
                 color={utilColor(util, up)}
@@ -309,6 +312,8 @@ export function LiveSystem() {
             at={layout.cache}
             size={node}
             title="Cache"
+            icon={ZapIcon}
+            accent="var(--trace)"
             detail={config.cache ? `${Math.round((metrics?.cacheHitRate ?? 0) * 100)}% hits` : "off"}
             dashed={!config.cache}
             muted={!config.cache}
@@ -317,6 +322,8 @@ export function LiveSystem() {
             at={layout.db}
             size={node}
             title="Database"
+            icon={DatabaseIcon}
+            accent="var(--go)"
             detail={`${Math.round((metrics?.dbUtilization ?? 0) * 100)}% busy`}
             util={metrics?.dbUtilization ?? 0}
             color={utilColor(metrics?.dbUtilization ?? 0)}
@@ -420,6 +427,8 @@ function Node({
   color = "var(--ink)",
   dashed = false,
   muted = false,
+  icon: Icon,
+  accent = "var(--ink)",
 }: {
   at: Point;
   size: { w: number; h: number };
@@ -429,9 +438,14 @@ function Node({
   color?: string;
   dashed?: boolean;
   muted?: boolean;
+  icon?: LucideIcon;
+  accent?: string;
 }) {
   const x = at.x - size.w / 2;
   const y = at.y - size.h / 2;
+  // Icons only where the boxes are wide enough to hold them next to the label.
+  const showIcon = !!Icon && size.w >= 96;
+  const textX = x + (showIcon ? 30 : 9);
   return (
     <g>
       <rect
@@ -444,10 +458,14 @@ function Node({
         stroke={dashed ? "var(--graphite)" : "var(--rule)"}
         strokeDasharray={dashed ? "4 3" : undefined}
       />
-      <text x={x + 9} y={y + 17} fontSize={12} fontWeight={600} fill={muted ? "var(--graphite)" : "var(--ink)"}>
+      <rect x={x} y={y + 6} width={3} height={size.h - 12} rx={1.5} fill={muted ? "var(--rule)" : accent} />
+      {showIcon && Icon && (
+        <Icon x={x + 10} y={y + size.h / 2 - 8} width={16} height={16} strokeWidth={1.75} color={muted ? "var(--graphite)" : accent} />
+      )}
+      <text x={textX} y={y + 17} fontSize={12} fontWeight={600} fill={muted ? "var(--graphite)" : "var(--ink)"}>
         {title}
       </text>
-      <text x={x + 9} y={y + 32} fontSize={11} fill="var(--graphite)" className="tabular-nums">
+      <text x={textX} y={y + 32} fontSize={11} fill="var(--graphite)" className="tabular-nums">
         {detail}
       </text>
       {util !== undefined && (

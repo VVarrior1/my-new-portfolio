@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { trackEvent } from "./site-analytics";
 
-export function CopyEmail({ email }: { email: string }) {
+export function CopyEmail({ email, className = "btn btn-quiet" }: { email: string; className?: string }) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -20,7 +20,7 @@ export function CopyEmail({ email }: { email: string }) {
   };
 
   return (
-    <button type="button" onClick={copy} className="btn btn-quiet">
+    <button type="button" onClick={copy} className={className}>
       {copied ? "Copied" : "Copy address"}
     </button>
   );

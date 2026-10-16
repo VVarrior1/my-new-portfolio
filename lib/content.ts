@@ -14,8 +14,11 @@ export const profile = {
   github: "https://github.com/VVarrior1",
   linkedin: "https://www.linkedin.com/in/abdelrahman-mohamed-080488197/",
   intro:
-    "I build software that has to keep working: a payments and messaging platform a business runs on every day, a simulation engine for learning system design, and vision models for roads most datasets ignore.",
-  availability: "Graduating December 2026. Available full-time from January 2027.",
+    "I'm a software engineer who likes building things people actually use, then finding out exactly where they break.",
+  personal:
+    "When I'm not coding, I'm playing bullet chess (rated\u00a02000), at the gym, adding to a fragrance collection, or opening another Red Bull.",
+  graduation: "Graduating December 2026.",
+  availability: "Available full-time from January 2027",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
 };
 
@@ -32,7 +35,8 @@ export type Shot = {
 };
 
 export type FeaturedProject = {
-  slug: string;
+  /** Also picks the colored stage behind the screenshot (see .stage in globals.css). */
+  slug: "cyd" | "systemlab";
   name: string;
   summary: string;
   role: string;
@@ -53,13 +57,13 @@ export const featured: FeaturedProject[] = [
     role: "Sole engineer, May 2025 to now",
     facts: [
       { value: "~300", label: "active families" },
+      { value: "5", label: "Calgary venues" },
       { value: "~90", label: "API routes" },
-      { value: "up to 40%", label: "fewer SMS segments on long notices" },
     ],
     hardPart: {
-      title: "Billing that stops on time",
+      title: "Text messages that cost what they should",
       body:
-        "Stripe can't end a subscription after exactly N payments, and the webhook that did it failed silently. I replaced it with a daily job that asks Stripe which plans are finished, and ran it in report-only mode until its reports matched.",
+        "One curly apostrophe or emoji switches a whole SMS from GSM-7 to UCS-2, which cuts a billed segment from 160 characters to 70, so a 320-character notice went from 3 segments to 5 for every family. I added a sanitizer, a live segment and cost count in the broadcast composer, and the same check on the server.",
     },
     stack: ["Next.js", "TypeScript", "Stripe", "Twilio", "Resend", "Google Sheets API", "TeamSnap API"],
     links: [
@@ -67,11 +71,11 @@ export const featured: FeaturedProject[] = [
       { label: "Live site", href: "https://cydsoccer.com", track: "project:cyd-live" },
     ],
     shot: {
-      src: "/work/cyd-cost-calculator.jpg",
-      width: 2880,
-      height: 1800,
-      alt: "The CYD cost calculator: pick training days and number of children, and it shows the monthly payment, season total and per-session price.",
-      url: "cydsoccer.com/tools/cost-calculator",
+      src: "/work/cyd-venue-picker.jpg",
+      width: 1662,
+      height: 1110,
+      alt: "The CYD venue picker: venues are filtered by the child's age, so a full group and a venue with no group for that age are shown but can't be picked.",
+      url: "cydsoccer.com/register",
     },
     phone: {
       src: "/work/cyd-register-phone.jpg",

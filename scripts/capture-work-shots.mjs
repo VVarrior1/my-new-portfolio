@@ -1,4 +1,7 @@
 // Re-captures the product screenshots in public/work at retina resolution.
+// public/work/cyd-venue-picker.jpg is not captured here: it comes from the CYD case study repo
+// (screenshots/venue-picker.png, top 1110 px), because reaching that step means filling in the
+// registration form, and that would send real lead emails and texts.
 //   node scripts/capture-work-shots.mjs
 // Uses the installed Google Chrome through playwright-core (already a dev dependency
 // via @playwright/test). Set CHROME_PATH to use a different browser. Requires macOS
@@ -14,7 +17,6 @@ const OUT = new URL("../public/work/", import.meta.url).pathname;
 const TMP = mkdtempSync(join(tmpdir(), "work-shots-"));
 
 const shots = [
-  { url: "https://cydsoccer.com/tools/cost-calculator", file: "cyd-cost-calculator", width: 1440, height: 900 },
   { url: "https://cydsoccer.com/register/programs", file: "cyd-register-phone", width: 390, height: 844, mobile: true },
   {
     url: "https://system-design-playground-pi.vercel.app/learn/find-the-bottleneck",

@@ -29,6 +29,20 @@
   --trace: #d48f00;
   --trace-soft: rgb(212 143 0 / 0.16);
   --chart: #1f48d4;
+  /* Status green ("available", the current job). */
+  --go: #13703f;
+  /* The contact block at the end of the home page. */
+  --band: #1f48d4;
+  --band-ink: #ffffff;
+  --band-muted: rgb(255 255 255 / 0.78);
+  /* Project stages: each screenshot sits on its product's own color. */
+  --stage-cyd-from: #22449e;
+  --stage-cyd-to: #0f1f52;
+  --stage-cyd-dot: rgb(255 255 255 / 0.13);
+  --stage-systemlab-from: #dbeee3;
+  --stage-systemlab-to: #bfe0cd;
+  --stage-systemlab-dot: rgb(22 101 70 / 0.2);
+  --canvas-dot: rgb(22 25 29 / 0.11);
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -65,6 +79,17 @@
     --trace: #f2b53a;
     --trace-soft: rgb(242 181 58 / 0.16);
     --chart: #6f8cf2;
+    --go: #4cc38a;
+    --band: #1c3383;
+    --band-ink: #ffffff;
+    --band-muted: rgb(255 255 255 / 0.76);
+    --stage-cyd-from: #1d3a8a;
+    --stage-cyd-to: #0b1638;
+    --stage-cyd-dot: rgb(255 255 255 / 0.1);
+    --stage-systemlab-from: #173d2d;
+    --stage-systemlab-to: #0e271d;
+    --stage-systemlab-dot: rgb(124 214 168 / 0.16);
+    --canvas-dot: rgb(236 238 232 / 0.09);
     color-scheme: dark;
   }
 }
@@ -80,6 +105,17 @@
   --trace: #f2b53a;
   --trace-soft: rgb(242 181 58 / 0.16);
   --chart: #6f8cf2;
+  --go: #4cc38a;
+  --band: #1c3383;
+  --band-ink: #ffffff;
+  --band-muted: rgb(255 255 255 / 0.76);
+  --stage-cyd-from: #1d3a8a;
+  --stage-cyd-to: #0b1638;
+  --stage-cyd-dot: rgb(255 255 255 / 0.1);
+  --stage-systemlab-from: #173d2d;
+  --stage-systemlab-to: #0e271d;
+  --stage-systemlab-dot: rgb(124 214 168 / 0.16);
+  --canvas-dot: rgb(236 238 232 / 0.09);
   color-scheme: dark;
 }
 
@@ -93,6 +129,10 @@
   --color-signal-ink: var(--signal-ink);
   --color-trace: var(--trace);
   --color-chart: var(--chart);
+  --color-go: var(--go);
+  --color-band: var(--band);
+  --color-band-ink: var(--band-ink);
+  --color-band-muted: var(--band-muted);
   --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
   --color-ring: var(--ring);
@@ -351,4 +391,70 @@ a {
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* ------------------------------------------------------------------
+   Project stages: a colored panel behind each product screenshot,
+   in that product's own color, with a faint dot grid.
+   ------------------------------------------------------------------ */
+.stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  padding: clamp(1rem, 3.2vw, 2.5rem);
+  background: linear-gradient(150deg, var(--stage-from), var(--stage-to));
+}
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(var(--stage-dot) 1.2px, transparent 1.3px);
+  background-size: 18px 18px;
+  mask-image: radial-gradient(ellipse at 70% 30%, black 20%, transparent 75%);
+}
+.stage[data-stage="cyd"] {
+  --stage-from: var(--stage-cyd-from);
+  --stage-to: var(--stage-cyd-to);
+  --stage-dot: var(--stage-cyd-dot);
+}
+.stage[data-stage="systemlab"] {
+  --stage-from: var(--stage-systemlab-from);
+  --stage-to: var(--stage-systemlab-to);
+  --stage-dot: var(--stage-systemlab-dot);
+}
+
+/* The simulator's diagram area reads as a design canvas. */
+.sim-canvas {
+  background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1.2px);
+  background-size: 16px 16px;
+  background-position: -8px -8px;
+}
+
+/* Buttons on the colored contact band. */
+.btn-on-band {
+  border: 1px solid rgb(255 255 255 / 0.4);
+  color: var(--band-ink);
+}
+.btn-on-band:hover {
+  border-color: var(--band-ink);
+  background: rgb(255 255 255 / 0.08);
+}
+.btn-band-solid {
+  background: var(--band-ink);
+  color: var(--band);
+}
+.btn-band-solid:hover {
+  background: rgb(255 255 255 / 0.88);
+}
+
+/* Hero backdrop: a dot field in the signal color radiating from behind the simulator,
+   the same canvas language as the project stages and the contact band. */
+.hero-field {
+  background-image:
+    radial-gradient(color-mix(in srgb, var(--signal) 50%, transparent) 1.3px, transparent 1.5px),
+    radial-gradient(ellipse at 78% 62%, color-mix(in srgb, var(--signal) 20%, transparent), transparent 62%);
+  background-size: 22px 22px, 100% 100%;
+  mask-image: radial-gradient(ellipse 70% 75% at 76% 64%, black 25%, transparent 72%);
 }

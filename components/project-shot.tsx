@@ -41,7 +41,7 @@ function PhoneFrame({ shot, className = "" }: { shot: Shot; className?: string }
 export function ProjectShot({ name, shot, phone }: { name: string; shot: Shot; phone?: Shot }) {
   return (
     <Dialog>
-      <div className={`relative ${phone ? "pb-8 pr-6 sm:pr-10" : ""}`}>
+      <div className={`relative ${phone ? "pb-8 pl-6 sm:pl-10" : ""}`}>
         <BrowserFrame shot={shot}>
           <DialogTrigger asChild>
             <button type="button" className="group relative block w-full cursor-zoom-in text-left" aria-label={`Enlarge screenshots of ${name}`}>
@@ -56,7 +56,7 @@ export function ProjectShot({ name, shot, phone }: { name: string; shot: Shot; p
             </button>
           </DialogTrigger>
         </BrowserFrame>
-        {phone && <PhoneFrame shot={phone} className="absolute bottom-0 right-0 w-[24%] max-w-[160px]" />}
+        {phone && <PhoneFrame shot={phone} className="absolute bottom-0 left-0 w-[24%] max-w-[160px]" />}
       </div>
 
       <DialogContent className="max-h-[92vh] w-[min(96vw,1280px)] max-w-none overflow-y-auto bg-paper p-4 sm:max-w-none sm:p-6">
