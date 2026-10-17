@@ -8,3 +8,12 @@
 [build.environment]
   NODE_VERSION = "22"
   NEXT_ALLOW_MIDDLEWARE_RESPONSE_BODY = "true"
+
+# The old Netlify address keeps working for links already out there (résumés, LinkedIn),
+# but every request lands on the real domain. Only this exact host matches, so deploy
+# permalinks and branch deploys are unaffected.
+[[redirects]]
+  from = "https://abdelrahmanmohamed1.netlify.app/*"
+  to = "https://abdelrahmanm.dev/:splat"
+  status = 301
+  force = true

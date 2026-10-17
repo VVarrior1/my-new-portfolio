@@ -1,4 +1,4 @@
-# abdelrahmanmohamed1.netlify.app
+# abdelrahmanm.dev
 
 Personal site of Abdelrahman Mohamed: work, experience, writing, a gallery and public site stats.
 Next.js 15 (App Router), TypeScript, Tailwind CSS v4, deployed on Netlify. Blog posts, gallery

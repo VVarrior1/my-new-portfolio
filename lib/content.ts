@@ -1,7 +1,7 @@
 // All profile content in one place. Source of truth: the October 2026 résumés
 // and the CYD platform case study (github.com/VVarrior1/cyd-platform-case-study).
 
-export const SITE_URL = "https://abdelrahmanmohamed1.netlify.app";
+export const SITE_URL = "https://abdelrahmanm.dev";
 export const RESUME_PATH = "/Abdelrahman_Mohamed_Resume.pdf";
 
 export const profile = {
