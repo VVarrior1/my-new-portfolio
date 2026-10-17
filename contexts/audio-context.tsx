@@ -1,151 +1,227 @@
 "use client";
 
-import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { PLAYLIST_NAME, nextIndex, previousTarget, type Track } from "@/lib/playlist";
 
 type AudioContextType = {
+  tracks: Track[];
+  index: number;
+  track: Track | null;
   isPlaying: boolean;
   volume: number;
-  togglePlay: () => void;
+  /** Seconds into the current track. */
+  position: number;
+  duration: number;
+  togglePlay: () => Promise<void>;
+  next: () => void;
+  previous: () => void;
+  playTrack: (index: number) => void;
+  seek: (seconds: number) => void;
   setVolume: (volume: number) => void;
-  currentTrack: string | null;
 };
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 export function useAudio() {
   const context = useContext(AudioContext);
-  if (context === undefined) {
-    throw new Error('useAudio must be used within an AudioProvider');
-  }
+  if (context === undefined) throw new Error("useAudio must be used within an AudioProvider");
   return context;
 }
 
-type AudioProviderProps = {
-  children: ReactNode;
-  trackUrl: string;
-};
+const VOLUME_KEY = "music-volume";
+const TRACK_KEY = "music-track";
 
-export function AudioProvider({ children, trackUrl }: AudioProviderProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolumeState] = useState(0.3); // Start at 30% volume
+function readNumber(key: string): number | null {
+  try {
+    const value = Number(localStorage.getItem(key));
+    return localStorage.getItem(key) === null || Number.isNaN(value) ? null : value;
+  } catch {
+    return null;
+  }
+}
+
+function save(key: string, value: number) {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // Private mode: preferences just won't persist.
+  }
+}
+
+/**
+ * One <audio> element plays the playlist in order and loops back to the start.
+ * Nothing downloads until the visitor presses play (preload="none"), and playback never
+ * starts on its own. Media Session wiring gives lock-screen and media-key controls.
+ */
+export function AudioProvider({ children, tracks }: { children: ReactNode; tracks: Track[] }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const latestVolume = useRef(volume);
-  const [isClient, setIsClient] = useState(false);
+  const wantsPlay = useRef(false);
+  const [index, setIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolumeState] = useState(0.35);
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(tracks[0]?.duration ?? 0);
 
-  // Keep volume in sync with the audio element
+  const track = tracks[index] ?? null;
+
+  // Restore the visitor's volume and last track (never their playing state: autoplay rules).
   useEffect(() => {
-    latestVolume.current = volume;
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
+    const savedVolume = readNumber(VOLUME_KEY);
+    if (savedVolume !== null) setVolumeState(Math.max(0, Math.min(1, savedVolume)));
+    const savedTrack = readNumber(TRACK_KEY);
+    if (savedTrack !== null && savedTrack >= 0 && savedTrack < tracks.length) setIndex(savedTrack);
+  }, [tracks.length]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  // Track when we're on the client to avoid hydration mismatches
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Wire up media events once the audio element exists or the track changes
-  useEffect(() => {
-    if (!isClient) {
-      return;
-    }
-
+  const start = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio) {
-      return;
-    }
-
-    const handleError = (event: Event) => {
-      console.error('Audio loading error:', event);
+    if (!audio) return;
+    wantsPlay.current = true;
+    try {
+      await audio.play();
+      setIsPlaying(true);
+    } catch (error) {
+      console.warn("Playback was prevented:", error);
+      wantsPlay.current = false;
       setIsPlaying(false);
-    };
-    const handleEnded = () => setIsPlaying(false);
-
-    const codecSupport = audio.canPlayType('audio/mp4; codecs="mp4a.40.2"') || audio.canPlayType('audio/aac');
-    if (!codecSupport) {
-      console.warn('Background audio format not supported in this browser. Consider providing an MP3 fallback.');
-    }
-
-    audio.loop = true;
-    audio.volume = latestVolume.current;
-    audio.preload = 'metadata';
-
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('ended', handleEnded);
-
-    // Ensure metadata is loaded so the first user interaction can start playback everywhere
-    audio.load();
-
-    return () => {
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('ended', handleEnded);
-    };
-  }, [trackUrl, isClient]);
-
-  // Load user preferences
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedVolume = localStorage.getItem('music-volume');
-
-      if (savedVolume) {
-        const vol = parseFloat(savedVolume);
-        setVolumeState(Number.isNaN(vol) ? 0.3 : vol);
-        if (audioRef.current && !Number.isNaN(vol)) {
-          audioRef.current.volume = vol;
-        }
-      }
-
-      // Don't auto-restore playing state to respect autoplay policies
     }
   }, []);
 
-  const togglePlay = async () => {
-    if (!audioRef.current) return;
+  // A new track loads its source; keep playing if we were.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !track) return;
+    if (!audio.src.endsWith(track.src)) {
+      audio.src = track.src;
+      setPosition(0);
+      setDuration(track.duration);
+      if (wantsPlay.current) void start();
+    }
+    save(TRACK_KEY, index);
+  }, [index, track, start]);
 
-    try {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-        localStorage.setItem('music-playing', 'false');
-      } else {
-        // Attempt to play - this may fail due to autoplay policies
-        await audioRef.current.play();
-        setIsPlaying(true);
-        localStorage.setItem('music-playing', 'true');
-      }
-    } catch (error) {
-      console.warn('Audio play was prevented:', error);
+  const goTo = useCallback(
+    (target: number) => {
+      if (tracks.length === 0) return;
+      setIndex(((target % tracks.length) + tracks.length) % tracks.length);
+    },
+    [tracks.length],
+  );
+
+  const next = useCallback(() => goTo(nextIndex(index, tracks.length)), [goTo, index, tracks.length]);
+
+  const previous = useCallback(() => {
+    const audio = audioRef.current;
+    const target = previousTarget(index, tracks.length, audio?.currentTime ?? 0);
+    if (target.restart && audio) {
+      audio.currentTime = 0;
+      setPosition(0);
+    } else {
+      goTo(target.index);
+    }
+  }, [goTo, index, tracks.length]);
+
+  const togglePlay = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      wantsPlay.current = false;
+      audio.pause();
       setIsPlaying(false);
+    } else {
+      await start();
     }
-  };
+  }, [isPlaying, start]);
 
-  const setVolume = (newVolume: number) => {
-    const clampedVolume = Math.max(0, Math.min(1, newVolume));
-    setVolumeState(clampedVolume);
+  const playTrack = useCallback(
+    (target: number) => {
+      wantsPlay.current = true;
+      if (target === index) void start();
+      else goTo(target);
+    },
+    [goTo, index, start],
+  );
 
-    if (audioRef.current) {
-      audioRef.current.volume = clampedVolume;
+  const seek = useCallback((seconds: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = seconds;
+    setPosition(seconds);
+  }, []);
+
+  const setVolume = useCallback((value: number) => {
+    const clamped = Math.max(0, Math.min(1, value));
+    setVolumeState(clamped);
+    save(VOLUME_KEY, clamped);
+  }, []);
+
+  // Element events keep state honest when playback changes from outside (media keys, OS).
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTime = () => setPosition(Math.floor(audio.currentTime));
+    const onMeta = () => Number.isFinite(audio.duration) && setDuration(audio.duration);
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onEnded = () => {
+      wantsPlay.current = true;
+      next();
+    };
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("pause", onPause);
+    audio.addEventListener("ended", onEnded);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, [next]);
+
+  // Lock screen, headphones and keyboard media keys.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator) || !track) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist,
+        album: PLAYLIST_NAME,
+        artwork: [{ src: "/apple-icon", sizes: "180x180", type: "image/png" }],
+      });
+      navigator.mediaSession.setActionHandler("play", () => void start());
+      navigator.mediaSession.setActionHandler("pause", () => void togglePlay());
+      navigator.mediaSession.setActionHandler("nexttrack", next);
+      navigator.mediaSession.setActionHandler("previoustrack", previous);
+    } catch {
+      // Older browsers: no media session, no problem.
     }
-
-    localStorage.setItem('music-volume', clampedVolume.toString());
-  };
+  }, [track, start, togglePlay, next, previous]);
 
   const value: AudioContextType = {
+    tracks,
+    index,
+    track,
     isPlaying,
     volume,
+    position,
+    duration,
     togglePlay,
+    next,
+    previous,
+    playTrack,
+    seek,
     setVolume,
-    currentTrack: trackUrl,
   };
 
   return (
     <AudioContext.Provider value={value}>
-      {isClient ? (
-        <audio ref={audioRef} className="hidden" preload="metadata" loop>
-          <source src={trackUrl} type="audio/mp4" />
-        </audio>
-      ) : null}
+      <audio ref={audioRef} preload="none" className="hidden" />
       {children}
     </AudioContext.Provider>
   );
