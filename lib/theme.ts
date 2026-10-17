@@ -6,8 +6,8 @@ export function currentTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-// --paper for each theme, so the browser chrome matches the page after a manual switch.
-const PAPER: Record<Theme, string> = { light: "#f3f2ef", dark: "#151412" };
+// --stage for each theme (the title card), so the browser chrome matches the page after a manual switch.
+const PAPER: Record<Theme, string> = { light: "#edede8", dark: "#080907" };
 
 function apply(next: Theme) {
   document.documentElement.dataset.theme = next;

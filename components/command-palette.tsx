@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/command";
 import { useAudio } from "@/contexts/audio-context";
 import { RESUME_PATH, profile } from "@/lib/content";
+import { scrollToHash } from "@/lib/smooth-scroll";
 import { toggleTheme } from "@/lib/theme";
 import { GithubMark, LinkedinMark } from "./brand-icons";
 import { trackEvent } from "./site-analytics";
@@ -41,7 +42,11 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
     action();
   };
 
-  const go = (href: string) => run(() => router.push(href));
+  // A section on this page glides there (smoothly when the home page's scroller is running); anything else navigates.
+  const go = (href: string) =>
+    run(() => {
+      if (!scrollToHash(href)) router.push(href);
+    });
   const visit = (href: string, event: string) =>
     run(() => {
       trackEvent(event);

@@ -55,21 +55,21 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-paper"
+      className={`intro-header sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
+        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
+      <div className="wrap flex h-16 items-center justify-between gap-4">
         <Link href="/" className="group flex items-center gap-2.5" aria-label="A. Mohamed, home">
           <span
             aria-hidden="true"
-            className="inline-flex size-7 items-center justify-center rounded-lg border border-rule-strong bg-key-face font-mono text-[0.75rem] font-medium tracking-[-0.02em] text-ink shadow-[var(--key-shadow)] transition-transform group-active:translate-y-px"
+            className="t-wide inline-flex size-7 items-center justify-center rounded-md bg-ink text-[0.875rem] leading-none text-paper transition-transform duration-200 group-active:scale-95"
           >
             AM
           </span>
           <span
             aria-hidden="true"
-            className={`t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
+            className={`t-wide text-[1.0625rem] leading-none tracking-[0.005em] transition-[opacity,transform] duration-300 motion-reduce:transition-none ${
               hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
             }`}
           >
@@ -83,7 +83,7 @@ export function SiteHeader() {
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              className="rounded-lg px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-signal-text aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
+              className="rounded-lg px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-signal aria-[current=page]:decoration-[3px] aria-[current=page]:underline-offset-[0.45em]"
             >
               {link.label}
             </Link>

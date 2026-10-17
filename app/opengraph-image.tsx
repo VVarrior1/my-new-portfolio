@@ -10,20 +10,20 @@ export const contentType = "image/png";
 // Fonts are bundled as static WOFF instances (Satori reads neither woff2 nor variable fonts).
 const font = (file: string) => readFile(join(process.cwd(), "assets/fonts", file));
 
-// The workbench palette (app/globals.css, light theme).
-const PAPER = "#f8f7f4";
-const RAISED = "#edebe7";
-const RULE = "#dbd9d5";
-const RULE_STRONG = "#c8c6c2";
-const INK = "#171614";
-const INK_2 = "#353431";
-const GRAPHITE = "#5c5a57";
-const GO = "#18723f";
-const SIGNAL = "#ff4f00";
-const SIGNAL_EDGE = "#c23b00";
-const SCREEN = "#141311";
-const SCREEN_INK = "#ecebe8";
-const SCREEN_GRAPHITE = "#91908c";
+// The "Signal" palette (app/globals.css, light theme).
+const PAPER = "#edede8";
+const RAISED = "#fafaf7";
+const RULE = "#dfdfd8";
+const RULE_STRONG = "#c6c7bf";
+const INK = "#0c0d0a";
+const INK_2 = "#30312c";
+const GRAPHITE = "#5c5d57";
+const GO = "#19763f";
+const SIGNAL = "#c8f135";
+const SIGNAL_EDGE = "#0c0d0a";
+const SCREEN = "#0d0e0c";
+const SCREEN_INK = "#eef0e8";
+const SCREEN_GRAPHITE = "#91938b";
 const SCREEN_OUTLINE = "#4a4946";
 const SCREEN_WIRE = "#55534f";
 const SCREEN_TRACK = "#2e2d2b";
@@ -77,8 +77,8 @@ export default async function OpenGraphImage() {
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 420 }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", flexDirection: "column", fontFamily: "ArchivoWide", fontSize: 64, lineHeight: 0.98, letterSpacing: "-0.025em" }}>
-              <span>{profile.firstName}</span>
-              <span>{profile.lastName}</span>
+              <span>{profile.firstName.toUpperCase()}</span>
+              <span>{profile.lastName.toUpperCase()}</span>
             </div>
             {/* The fact strip on fixed lines, so no separator ends a line. */}
             <div style={{ display: "flex", flexDirection: "column", marginTop: 26, fontFamily: "Mono", fontSize: 18, color: INK, lineHeight: 1.55 }}>
@@ -93,7 +93,7 @@ export default async function OpenGraphImage() {
           <div style={{ display: "flex", fontSize: 25, lineHeight: 1.38, color: INK_2 }}>{profile.intro}</div>
         </div>
 
-        {/* The device: a raised panel, a dark screen, and the orange key. */}
+        {/* The device: a raised panel, a dark screen, and the volt key. */}
         <div
           style={{
             display: "flex",

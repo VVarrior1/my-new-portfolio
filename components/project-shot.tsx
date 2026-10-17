@@ -9,9 +9,11 @@ import type { Shot } from "@/lib/content";
 function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNode }) {
   return (
     <div className="shot-frame">
-      <div className="flex h-8 items-center gap-1.5 border-b border-rule px-3 font-mono text-[0.8125rem] text-graphite">
+      <div className="relative flex h-8 items-center gap-1.5 border-b border-rule px-3 font-mono text-[0.8125rem] text-graphite">
         <LockIcon className="size-3 shrink-0" aria-hidden="true" />
         <span className="truncate">{shot.url}</span>
+        {/* Runs when the spine's packet reaches the frame (components/choreography.tsx). */}
+        <span className="shot-load" aria-hidden="true" />
       </div>
       {children}
     </div>

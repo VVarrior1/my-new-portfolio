@@ -65,9 +65,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    // Equal to --paper in each scheme (app/globals.css).
-    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#151412" },
+    // Equal to --stage in each scheme (app/globals.css): the title card the page opens on.
+    { media: "(prefers-color-scheme: light)", color: "#edede8" },
+    { media: "(prefers-color-scheme: dark)", color: "#080907" },
   ],
 };
 
@@ -76,7 +76,9 @@ export const viewport: Viewport = {
 //    production domain. React then can't match <head> and re-renders the whole page on the
 //    client (error #418). Remove comments and whitespace-only text nodes that precede this script.
 // 2. Applies a saved theme before first paint so there's no flash.
-const headScript = `(function(){var n=document.head&&document.head.firstChild;while(n){var x=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!/\\S/.test(n.nodeValue)))n.parentNode.removeChild(n);n=x}})();try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+// 3. Marks the page as scripted (data-js), so pieces that wait for a measurement can hide until then
+//    without hiding anything when JavaScript is off.
+const headScript = `(function(){var n=document.head&&document.head.firstChild;while(n){var x=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!/\\S/.test(n.nodeValue)))n.parentNode.removeChild(n);n=x}})();document.documentElement.dataset.js="";try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 const personJsonLd = {
   "@context": "https://schema.org",

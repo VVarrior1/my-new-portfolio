@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-16 sm:px-8 sm:pt-24">
+      <main id="main" className="wrap pb-24 pt-16 sm:pt-24">
         <p className="t-mono mb-5 text-graphite">404</p>
         <h1 className="t-display">Nothing here</h1>
         <p className="measure mt-6 text-[1.25rem] leading-relaxed text-ink-2">

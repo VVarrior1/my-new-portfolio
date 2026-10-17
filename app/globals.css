@@ -15,64 +15,72 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens: the workbench. Warm grey paper, objects with a job, and one
-   colour, international orange, used on things you press and on "now"
-   (the current role and the timeline's cursor), never on large areas.
+   Tokens: "Signal". The page is a request's journey: a title card, a
+   sheet that slides over it carrying the live system, and one line (the
+   spine) that leaves the simulator and runs past every project to the
+   contact console. One colour, volt (--signal), marks what is live: the
+   packet on the spine, the stations it has reached, the things you press
+   to break the system, and the email key at the end.
 
-   Every neutral sits on one warm hue (OKLCH h≈88) at chroma ≤ 0.006, so
-   light and dark share one temperature. Status colours (--trace, --fail,
-   --screen-go) live only on the dark screens (the simulator and the
-   readouts). Light is the default; dark follows the OS unless the visitor
-   picks one with the toggle (stored as data-theme on <html>).
+   Neutrals are near-greyscale on one olive hue (OKLCH h 106–129, chroma
+   ≤ 0.012) so they sit with the volt (h 122) instead of fighting it. Volt is a
+   fill, never text on a light surface (1.2:1): in light mode it carries
+   an ink edge, and accent text falls back to ink. Status colours
+   (--trace, --fail, --screen-go) live only on the dark screens.
+   Light is the default; dark follows the OS unless the visitor picks one
+   with the toggle (stored as data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
-  /* Near-white paper with grey hardware on it, like a Braun on a white table: the page is the
-     lightest surface but one, the panels sit a step darker, and keycaps are pure white. */
-  --paper: #f8f7f4;
-  /* Device panel, project mats, the experience track, the tools board. */
-  --paper-raised: #edebe7;
-  /* Keycap faces. */
+  /* The title card behind the hero: one step darker than the sheet that slides over it. */
+  --stage: #edede8;
+  /* The sheet: the reading surface for everything after the title card. */
+  --paper: #fafaf7;
+  /* The simulator's device panel, the tools board, the experience track. */
+  --paper-raised: #f0f0ea;
+  /* Fills of plain keys. */
   --key-face: #ffffff;
-  --ink: #171614;
+  --ink: #0c0d0a;
   /* Body prose. */
-  --ink-2: #353431;
-  /* Metadata only (≥ 5.7:1 on every surface). */
-  --graphite: #5c5a57;
-  --rule: #dbd9d5;
-  --rule-strong: #c8c6c2;
-  /* International orange: fills of actuators and the "now" marks. Never text on paper, never tinted. */
-  --signal: #ff4f00;
-  --signal-edge: #c23b00;
-  --signal-ink: #171614;
-  /* The only text-safe orange (5.0:1 on paper). */
-  --signal-text: #c23b00;
-  /* Screens are dark in both themes. Only the simulator and the /stats chart are screens. */
-  --screen: #141311;
-  --screen-ink: #ecebe8;
-  --screen-graphite: #91908c;
-  --screen-line: rgb(236 235 232 / 0.14);
-  --screen-wire: rgb(236 235 232 / 0.28);
-  --screen-outline: rgb(236 235 232 / 0.24);
-  --screen-dot: rgb(236 235 232 / 0.075);
-  --screen-fill: rgb(236 235 232 / 0.045);
-  --screen-track: rgb(236 235 232 / 0.12);
+  --ink-2: #30312c;
+  /* Metadata only (≥ 5.5:1 on every surface). */
+  --graphite: #5c5d57;
+  --rule: #dfdfd8;
+  --rule-strong: #c6c7bf;
+  /* Volt: what is live. A fill only. */
+  --signal: #c8f135;
+  /* The edge volt gets on light surfaces, where the fill alone would vanish. */
+  --signal-edge: #0c0d0a;
+  --signal-ink: #0c0d0a;
+  /* "Accent text" (arrows, the active nav item): ink here, volt in dark. */
+  --signal-text: #0c0d0a;
+  --focus: #0c0d0a;
+  /* The spine: the unlit wire, and the part the packet has passed. */
+  --spine: #cfd0c8;
+  --spine-lit: #0c0d0a;
+  /* Screens are dark in both themes: the simulator, the contact console, the /stats chart. */
+  --screen: #0d0e0c;
+  --screen-ink: #eef0e8;
+  --screen-graphite: #91938b;
+  --screen-line: rgb(238 240 232 / 0.13);
+  --screen-wire: rgb(238 240 232 / 0.28);
+  --screen-outline: rgb(238 240 232 / 0.24);
+  --screen-dot: rgb(238 240 232 / 0.07);
+  --screen-fill: rgb(238 240 232 / 0.045);
+  --screen-track: rgb(238 240 232 / 0.12);
   --screen-go: #4fc98a;
   --trace: #ffc247;
   --fail: #ff5c52;
-  /* Page-level status: the available dot and the current job. */
-  --go: #18723f;
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -2px 0 rgb(23 22 20 / 0.1);
-  --key-shadow-down: inset 0 1px 2px rgb(23 22 20 / 0.14);
-  --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -2px 0 rgb(0 0 0 / 0.18);
-  --signal-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.28);
-  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -2px 0 rgb(0 0 0 / 0.4);
-  --ink-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.5);
-  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
-  --screen-inset: inset 0 2px 6px rgb(0 0 0 / 0.35);
-  /* The single elevation, for screenshot frames. */
-  --elevation: 0 1px 0 rgb(23 22 20 / 0.05), 0 16px 32px -24px rgb(23 22 20 / 0.3);
+  /* The same failure, dark enough to read on the paper (the packet when the simulator is failing). */
+  --fail-paper: #cf3328;
+  /* Page-level status: the "available" dot. */
+  --go: #19763f;
+  /* The sheet's lift over the title card, and the one elevation for frames. */
+  --sheet-shadow: 0 -1px 0 var(--rule), 0 -24px 48px -32px rgb(12 13 10 / 0.22);
+  --elevation: 0 1px 0 rgb(12 13 10 / 0.04), 0 24px 48px -32px rgb(12 13 10 / 0.35);
   /* Behind dialogs: a flat scrim, no blur. */
-  --scrim: rgb(23 22 20 / 0.42);
+  --scrim: rgb(12 13 10 / 0.45);
+  /* The contact console's rim: none on light paper, a faint one where the page is nearly as dark. */
+  --console-edge: transparent;
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -93,71 +101,66 @@
   --destructive: #c4321f;
   --border: var(--rule);
   --input: var(--rule);
-  --ring: var(--signal-text);
+  --ring: var(--focus);
   --radius: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #151412;
-    --paper-raised: #262522;
-    --key-face: #302e2b;
-    --ink: #eceae6;
-    --ink-2: #ceccc8;
-    --graphite: #9d9b98;
-    --rule: #383633;
-    --rule-strong: #4a4844;
-    --signal: #ff5f1f;
-    --signal-edge: #ff5f1f;
-    --signal-ink: #151412;
-    --signal-text: #ff5f1f;
-    --screen: #0b0b0a;
+    --stage: #080907;
+    --paper: #111210;
+    --paper-raised: #191a17;
+    --key-face: #20211d;
+    --ink: #f1f2ec;
+    --ink-2: #c9cac2;
+    --graphite: #95968e;
+    --rule: #272824;
+    --rule-strong: #3b3c37;
+    --signal-edge: #c8f135;
+    --signal-text: #c8f135;
+    --focus: #c8f135;
+    --spine: #33342f;
+    --spine-lit: #f1f2ec;
+    --screen: #0a0b09;
     --go: #4fc98a;
-    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-    --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-    --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
-    --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
-    --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
-    --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-    /* A faint inner ring, so the screen reads as recessed into the panel. */
-    --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
-    --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
-    --scrim: rgb(0 0 0 / 0.62);
+    --fail-paper: #ff5c52;
+    --console-edge: rgb(255 255 255 / 0.09);
+    --sheet-shadow: 0 -1px 0 #2a2b27, 0 -24px 48px -28px rgb(0 0 0 / 0.8);
+    --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 24px 48px -32px rgb(0 0 0 / 0.8);
+    --scrim: rgb(0 0 0 / 0.65);
     --destructive: #ff6a55;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --paper: #151412;
-  --paper-raised: #262522;
-  --key-face: #302e2b;
-  --ink: #eceae6;
-  --ink-2: #ceccc8;
-  --graphite: #9d9b98;
-  --rule: #383633;
-  --rule-strong: #4a4844;
-  --signal: #ff5f1f;
-  --signal-edge: #ff5f1f;
-  --signal-ink: #151412;
-  --signal-text: #ff5f1f;
-  --screen: #0b0b0a;
+  --stage: #080907;
+  --paper: #111210;
+  --paper-raised: #191a17;
+  --key-face: #20211d;
+  --ink: #f1f2ec;
+  --ink-2: #c9cac2;
+  --graphite: #95968e;
+  --rule: #272824;
+  --rule-strong: #3b3c37;
+  --signal-edge: #c8f135;
+  --signal-text: #c8f135;
+  --focus: #c8f135;
+  --spine: #33342f;
+  --spine-lit: #f1f2ec;
+  --screen: #0a0b09;
   --go: #4fc98a;
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-  --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-  --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
-  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
-  --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
-  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-  /* A faint inner ring, so the screen reads as recessed into the panel. */
-  --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
-  --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
-  --scrim: rgb(0 0 0 / 0.62);
+  --fail-paper: #ff5c52;
+  --console-edge: rgb(255 255 255 / 0.09);
+  --sheet-shadow: 0 -1px 0 #2a2b27, 0 -24px 48px -28px rgb(0 0 0 / 0.8);
+  --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 24px 48px -32px rgb(0 0 0 / 0.8);
+  --scrim: rgb(0 0 0 / 0.65);
   --destructive: #ff6a55;
   color-scheme: dark;
 }
 
 @theme inline {
+  --color-stage: var(--stage);
   --color-paper: var(--paper);
   --color-paper-raised: var(--paper-raised);
   --color-key-face: var(--key-face);
@@ -199,7 +202,7 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  /* Three radii: 8 (controls, nodes), 12 (inner frames, screens), 20 (panels, mats). */
+  /* Three radii: 8 (controls, nodes), 12 (frames, screens), 20 (panels, the console, the sheet). */
   --radius-sm: 0.5rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.5rem;
@@ -207,6 +210,35 @@
   --radius-2xl: 1.25rem;
   --radius-3xl: 1.25rem;
   --radius-4xl: 1.25rem;
+  /* The motion curves. "out" is the settle every arrival uses; "swift" is for small UI. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-swift: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ------------------------------------------------------------------
+   Layout: one container. The spine runs in the left padding (its lane),
+   so the padding is wider on the left: --pad-l is where content starts,
+   --lane is where the spine sits, both measured from the container edge.
+   ------------------------------------------------------------------ */
+:root {
+  --container: 78rem;
+  --pad-l: 1.75rem;
+  --pad-r: 1.25rem;
+  --lane: 0.6875rem;
+}
+@media (min-width: 640px) {
+  :root {
+    --pad-l: 4rem;
+    --pad-r: 2.5rem;
+    --lane: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --pad-l: 5.5rem;
+    --pad-r: 3rem;
+    --lane: 2.25rem;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -215,6 +247,20 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+/* Lenis drives the scroll on the home page; native smooth scrolling would fight it. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
 }
 
 body {
@@ -229,8 +275,8 @@ body {
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--signal);
+  color: var(--signal-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -248,45 +294,68 @@ body {
 
 /* Type and objects live in the components layer, so Tailwind utilities can still override them. */
 @layer components {
-  /* ------------------------------------------------------------------
-     Type. Seven steps: 13 (mono labels), 15 (labels, buttons), 17 (body),
-     20 (lead, item titles), 26 (project titles, stat numbers), 40 (section
-     titles), 56 (display). Weights 400/500/600, and 650 for the display.
-     Mono is for data only (dates, numbers, stacks, URLs, everything on a
-     screen) and is 13px off-screen; 12px exists only on the screens.
-     Display steps (26 and up) are Archivo, whose width axis does the expressive work: wider
-     means louder. Everything smaller is Instrument Sans.
-     ------------------------------------------------------------------ */
-  .t-display {
-    font-family: var(--font-display);
-    font-size: clamp(2.5rem, 3.9vw, 3.5rem);
-    font-weight: 720;
-    font-stretch: 118%;
-    line-height: 0.95;
-    letter-spacing: -0.025em;
+  .wrap {
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-left: var(--pad-l);
+    padding-right: var(--pad-r);
   }
-  @media (max-width: 639px) {
-    .t-display {
-      font-stretch: 104%;
-    }
+
+  /* ------------------------------------------------------------------
+     Type. Display is Archivo at its condensed end (wdth 62–70), heavy and
+     in capitals: the name, section titles, project names and the big
+     numbers. Everything you read is Instrument Sans (15/17/20). Mono
+     (JetBrains, 13px; 12px only on screens) is for data: dates, numbers,
+     stacks, URLs, station labels and everything on a screen.
+     The contrast between the two ends of the scale is the point: a
+     poster above, a spec sheet below.
+     ------------------------------------------------------------------ */
+  .t-display,
+  .t-poster,
+  .t-section,
+  .t-title,
+  .t-number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-kerning: normal;
+  }
+
+  /* Secondary pages' h1 (Writing, Gallery, Stats). */
+  .t-display {
+    font-size: clamp(3.25rem, 9vw, 6.5rem);
+    font-stretch: 66%;
+    line-height: 0.88;
+    letter-spacing: -0.005em;
+  }
+
+  /* The name on the home page: sized so each line fills its measure (see .hero-name). */
+  .t-poster {
+    font-stretch: 64%;
+    line-height: 0.84;
+    letter-spacing: -0.01em;
   }
 
   .t-section {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 3vw, 2.5rem);
-    font-weight: 620;
-    font-stretch: 108%;
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    font-size: clamp(3.5rem, 10vw, 8.75rem);
+    font-stretch: 64%;
+    line-height: 0.84;
+    letter-spacing: -0.005em;
   }
 
   .t-title {
-    font-family: var(--font-display);
-    font-size: 1.625rem;
-    font-weight: 600;
-    font-stretch: 104%;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
+    font-size: clamp(2.75rem, 6.4vw, 5.75rem);
+    font-stretch: 66%;
+    line-height: 0.88;
+    letter-spacing: -0.005em;
+  }
+
+  .t-number {
+    font-size: clamp(2.5rem, 4.6vw, 4rem);
+    font-stretch: 70%;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
   }
 
   .t-item {
@@ -298,7 +367,9 @@ body {
 
   .t-wide {
     font-family: var(--font-display);
-    font-stretch: 112%;
+    font-stretch: 70%;
+    text-transform: uppercase;
+    font-weight: 800;
   }
 
   /* Mono labels: dates, stacks, specs, captions, readouts. */
@@ -310,72 +381,100 @@ body {
     font-variant-numeric: tabular-nums;
   }
 
-  /* About 70 characters of Instrument Sans (ch is the width of "0", which runs wide in it). */
+  /* About 70 characters of Instrument Sans. */
   .measure {
     max-width: 34em;
   }
 
-  /* Text links: ink with a quiet underline that turns orange on hover. */
+  /* A volt marker stroke under a phrase. The hero's sweeps in on load; links get one on hover. */
+  .marker {
+    background-image: linear-gradient(var(--signal), var(--signal));
+    background-repeat: no-repeat;
+    background-position: 0 92%;
+    background-size: 100% 0.32em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  /* Text links: ink with a quiet underline; hover lays a volt marker under the words. */
   .link {
     color: var(--ink);
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
     text-decoration-color: color-mix(in srgb, var(--ink) 30%, transparent);
     text-underline-offset: 0.25em;
-    transition: text-decoration-color 240ms ease;
+    background-image: linear-gradient(var(--signal), var(--signal));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 0.3em;
+    transition:
+      background-size 380ms var(--ease-out),
+      text-decoration-color 200ms ease;
   }
   .link:hover {
-    text-decoration-color: var(--signal-text);
-    text-decoration-thickness: 2px;
+    background-size: 100% 0.3em;
+    text-decoration-color: transparent;
   }
   .link-arrow {
     display: inline-block;
     margin-left: 0.2em;
     color: var(--graphite);
-    transition: transform 160ms ease, color 160ms ease;
+    transition:
+      transform 300ms var(--ease-out),
+      color 160ms ease;
   }
   .link:hover .link-arrow {
-    color: var(--signal-text);
+    color: var(--ink);
+    transform: translate(2px, -2px);
   }
 
   /* ------------------------------------------------------------------
-     Objects. All decoration is one of these, and each has a function.
+     Objects
      ------------------------------------------------------------------ */
 
-  /* Keycaps: anything you press. */
+  /* Keys: anything you press. Flat, with a hairline edge; they give under the finger. */
   .key {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     min-height: 2.75rem;
-    padding: 0 1.05rem;
+    padding: 0 1.1rem;
     border-radius: 0.5rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
     color: var(--ink);
-    box-shadow: var(--key-shadow);
     font-size: 0.9375rem;
-    font-weight: 550;
+    font-weight: 600;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
     user-select: none;
-    transition: transform 60ms ease, box-shadow 60ms ease, border-color 150ms ease, background-color 150ms ease;
+    transition:
+      transform 160ms var(--ease-swift),
+      border-color 160ms ease,
+      background-color 160ms ease;
+  }
+  @media (max-width: 639px) {
+    .key {
+      padding: 0 0.875rem;
+    }
   }
   .key:hover {
-    border-color: color-mix(in srgb, var(--ink) 38%, var(--rule-strong));
+    border-color: var(--ink);
   }
   .key:active,
   .key[data-latched="true"] {
-    transform: translateY(1px);
-    box-shadow: var(--key-shadow-down);
+    transform: scale(0.97);
+  }
+  .key[data-latched="true"] {
+    border-color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 8%, var(--key-face));
   }
   .key:disabled {
     cursor: not-allowed;
     opacity: 0.45;
     transform: none;
-    box-shadow: var(--key-shadow);
   }
   .key-sm {
     min-height: 2rem;
@@ -389,40 +488,30 @@ body {
     padding: 0;
   }
 
-  /* Orange keys: the actuators. */
+  /* Volt keys: the actuators (kill a server, the fader, the console's "Email me"). */
   .key-signal {
     border-color: var(--signal-edge);
     background: var(--signal);
     color: var(--signal-ink);
-    box-shadow: var(--signal-shadow);
   }
   .key-signal:hover {
     border-color: var(--signal-edge);
     background: var(--signal);
-    filter: brightness(1.04);
-  }
-  .key-signal:active,
-  .key-signal[data-latched="true"] {
-    box-shadow: var(--signal-shadow-down);
+    filter: brightness(1.05);
   }
 
-  /* Ink keys: the primary action where orange would compete with the device (the hero's "Email me"). */
+  /* Ink keys: the primary action on the paper (the hero's "Email me"). */
   .key-ink {
     border-color: var(--ink);
     background: var(--ink);
     color: var(--paper);
-    box-shadow: var(--ink-shadow);
   }
   .key-ink:hover {
     border-color: var(--ink);
     background: color-mix(in srgb, var(--ink) 86%, var(--paper));
   }
-  .key-ink:active {
-    box-shadow: var(--ink-shadow-down);
-  }
 
-  /* A legend key: the same cap as .key, but it labels something instead of doing something
-     (the tools board). No hover, no press. */
+  /* A tag: labels something instead of doing something (the tools board). No hover, no press. */
   .keycap {
     display: inline-flex;
     align-items: center;
@@ -431,7 +520,6 @@ body {
     border-radius: 0.5rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
-    box-shadow: var(--key-shadow);
     color: var(--ink);
     font-family: var(--font-mono);
     font-size: 0.8125rem;
@@ -440,8 +528,7 @@ body {
     white-space: nowrap;
   }
 
-  /* "A · B · C" lists that wrap without a separator ever ending (or starting) a line: each item
-     carries its separator on its left, and the first item of every line has it clipped away. */
+  /* "A · B · C" lists that wrap without a separator ever ending (or starting) a line. */
   .sep-list {
     overflow: hidden;
   }
@@ -470,63 +557,49 @@ body {
     content: none;
   }
 
-  /* A project's numbers: three columns between two hairlines, on the paper. */
+  /* A project's numbers: a big condensed figure and its mono label, one per row, on hairlines. */
   .stat-row {
-    display: grid;
-    /* The first two columns take their labels' width; the last takes what is left. */
-    grid-template-columns: auto auto minmax(0, 1fr);
-    column-gap: 2.5rem;
-    border-block: 1px solid var(--rule);
-    padding-block: 0.75rem;
+    border-top: 1px solid var(--rule);
   }
-  /* dt comes first in the markup (valid HTML); the number is drawn on top. */
+  /* dt comes first in the markup (valid HTML); the figure is drawn first. */
   .stat-row > div {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: row-reverse;
     justify-content: flex-end;
+    align-items: baseline;
+    gap: 1rem;
+    padding-block: 0.875rem 0.75rem;
+    border-bottom: 1px solid var(--rule);
   }
   .stat-row dd {
-    font-family: var(--font-display);
-    font-size: 1.625rem;
-    font-weight: 600;
-    font-stretch: 104%;
-    line-height: 1.1;
-    letter-spacing: -0.015em;
-    font-variant-numeric: tabular-nums;
+    flex: none;
+    min-width: 2.6em;
     color: var(--ink);
   }
   .stat-row dt {
-    margin-top: 0.25rem;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--graphite);
   }
-  /* On a phone three columns leave the labels a word wide, so each number gets its own row with
-     its label beside it, on the same hairlines as a spec table. */
-  @media (max-width: 639px) {
-    .stat-row {
-      grid-template-columns: minmax(0, 1fr);
-      padding-block: 0;
-    }
-    .stat-row > div {
-      flex-direction: row-reverse;
-      align-items: baseline;
-      gap: 0.875rem;
-      padding-block: 0.625rem;
-    }
-    .stat-row > div + div {
-      border-top: 1px solid var(--rule);
-    }
-    .stat-row dd {
-      min-width: 3.25em;
-    }
-    .stat-row dt {
-      margin-top: 0;
-    }
+
+  /* A counter: the final figure holds the width (invisible), the running one is drawn over it. */
+  .count {
+    display: inline-grid;
+  }
+  .count > * {
+    grid-area: 1 / 1;
+  }
+  .count > [data-run] {
+    visibility: hidden;
+  }
+  .count[data-counting] > [data-final] {
+    visibility: hidden;
+  }
+  .count[data-counting] > [data-run] {
+    visibility: visible;
   }
 
-  /* The little ⌘K-style keycap inside other controls. */
   .kbd {
     display: inline-flex;
     align-items: center;
@@ -534,59 +607,56 @@ body {
     min-width: 1.5rem;
     height: 1.5rem;
     padding: 0 0.4rem;
-    border-radius: 0.5rem;
+    border-radius: 0.375rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
-    box-shadow: var(--key-shadow);
     font-family: var(--font-mono);
     font-size: 0.75rem;
     font-weight: 500;
     color: var(--ink-2);
   }
 
-  /* Raised panels: the device, the project mats, the tools board. */
+  /* Raised panels: the simulator's device, the tools board. */
   .panel {
     border-radius: 1.25rem;
     border: 1px solid var(--rule);
     background: var(--paper-raised);
-    box-shadow: var(--panel-highlight);
   }
 
-  /* The contact console: the page closes on the simulator's material. A charcoal plate, dark in
-     both themes, with an engraved inner rule inset 6px. Inside it the page tokens are
-     re-pointed at the screen's, so text, hairlines, spec tables and keys all follow without
-     per-element colours. Its keys are dark caps; the orange "Email me" stays the one actuator. */
+  /* The sheet that slides over the title card and carries the rest of the page. */
+  .sheet {
+    position: relative;
+    z-index: 1;
+    background: var(--paper);
+    border-radius: 1.75rem 1.75rem 0 0;
+    box-shadow: var(--sheet-shadow);
+  }
+  @media (max-width: 639px) {
+    .sheet {
+      border-radius: 1.25rem 1.25rem 0 0;
+    }
+  }
+
+  /* The contact console: the page ends on the simulator's material, dark in both themes. Inside it
+     the page tokens are re-pointed at the screen's, so text, hairlines, spec tables and keys follow. */
   .console {
     position: relative;
     border-radius: 1.25rem;
     background: var(--screen);
     color: var(--screen-ink);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), var(--elevation);
+    box-shadow:
+      inset 0 0 0 1px var(--console-edge),
+      var(--elevation);
     --ink: var(--screen-ink);
     --ink-2: var(--screen-ink);
     --graphite: var(--screen-graphite);
     --rule: var(--screen-line);
     --rule-strong: var(--screen-outline);
-    /* Dark caps, a step above the plate: light enough to read as keys, dark enough that the
-       graphite legends ("PDF") keep 4.5:1. */
     --key-face: color-mix(in srgb, var(--screen-ink) 8%, var(--screen));
-    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-    --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-    /* On charcoal the fill orange is itself text-safe (5.7:1), so underlines and focus use it. */
+    --signal-edge: var(--signal);
     --signal-text: var(--signal);
-  }
-  .console::before {
-    content: "";
-    position: absolute;
-    inset: 6px;
-    border-radius: calc(1.25rem - 6px);
-    border: 1px solid var(--screen-line);
-    pointer-events: none;
-  }
-  @media (max-width: 639px) {
-    .console::before {
-      content: none;
-    }
+    --focus: var(--signal);
+    --paper: var(--screen);
   }
 
   /* Recessed screens: where data lives, dark in both themes. */
@@ -594,7 +664,6 @@ body {
     border-radius: 0.75rem;
     background: var(--screen);
     color: var(--screen-ink);
-    box-shadow: var(--screen-inset);
   }
   .screen-dots {
     background-image: radial-gradient(var(--screen-dot) 1px, transparent 1.2px);
@@ -602,14 +671,26 @@ body {
     background-position: 8px 8px;
   }
 
-  /* A screenshot sits on a mat inside a browser frame. Captures with a dark copy swap by theme
-     (components/project-shot.tsx); nothing is dimmed with a filter. */
+  /* A screenshot inside a browser frame. Captures with a dark copy swap by theme. */
   .shot-frame {
+    position: relative;
     overflow: hidden;
     border-radius: 0.75rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
     box-shadow: var(--elevation);
+  }
+  /* The address bar's load line: it runs when the packet reaches the frame. */
+  .shot-load {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--signal);
+    transform-origin: left;
+    transform: scaleX(0);
+    opacity: 0;
   }
 
   /* Spec tables: hairline rows of mono label and value. */
@@ -631,13 +712,10 @@ body {
   }
   .spec dt {
     color: var(--graphite);
-  }
-  .spec dt {
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     line-height: 1.5rem;
   }
-  /* Values are words, so they are set in the sans; the labels stay mono. */
   .spec dd {
     padding-left: 1rem;
     color: var(--ink);
@@ -653,24 +731,24 @@ body {
   .fader-cap {
     position: relative;
     display: block;
-    width: 28px;
-    height: 16px;
-    border-radius: 8px;
+    width: 30px;
+    height: 18px;
+    border-radius: 6px;
     border: 1px solid var(--signal-edge);
     background: var(--signal);
-    box-shadow: var(--signal-shadow);
     cursor: grab;
-    transition: transform 60ms ease;
+    transition: transform 160ms var(--ease-swift);
   }
   .fader-cap::before {
     content: "";
     position: absolute;
     left: 50%;
-    top: 3px;
+    top: 4px;
     bottom: 4px;
-    width: 1px;
-    margin-left: -0.5px;
-    background: rgb(0 0 0 / 0.35);
+    width: 1.5px;
+    margin-left: -0.75px;
+    background: var(--signal-ink);
+    opacity: 0.6;
   }
   .fader-cap::after {
     content: "";
@@ -679,168 +757,358 @@ body {
   }
   .fader-cap:active {
     cursor: grabbing;
-    transform: translateY(1px);
+    transform: scale(1.08);
+  }
+
+  /* ------------------------------------------------------------------
+     The spine (components/spine.tsx, driven by components/choreography.tsx).
+     One 2px wire in the lane left of the content. Stations are where it
+     meets something: a node on the wire and a branch to the object's edge.
+     Without JavaScript (or under reduced motion) it is a static drawing:
+     the wire, the nodes and the branches, all unlit. With motion, a volt
+     packet rides the wire at the middle of the screen, the wire behind it
+     is inked, and each station lights as the packet reaches it.
+     ------------------------------------------------------------------ */
+  .spine-host {
+    position: relative;
+  }
+  .spine-trunk {
+    position: absolute;
+    top: var(--spine-top, 0);
+    bottom: var(--spine-bottom, 0);
+    left: calc(max(0px, (100% - var(--container)) / 2) + var(--lane) - 1px);
+    width: 2px;
+    background: var(--spine);
+    pointer-events: none;
+  }
+  .spine-lit {
+    position: absolute;
+    inset: 0;
+    background: var(--spine-lit);
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+  html:not([data-motion]) .spine-lit {
+    display: none;
+  }
+  /* The rider: the packet on the wire, fixed at the middle of the screen while the page moves
+     under it, with a cable tag above it naming the route it's on and how the simulator is doing. */
+  .spine-rider {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    z-index: 30;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 240ms ease;
+  }
+  .spine-rider[data-on] {
+    opacity: 1;
+  }
+  .rider-capsule {
+    position: absolute;
+    left: -6px;
+    top: -14px;
+    width: 12px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--signal);
+    border: 1.5px solid var(--signal-edge);
+    box-shadow: 0 0 0 3px var(--paper);
+    transition:
+      background-color 240ms ease,
+      border-color 240ms ease;
+  }
+  /* The tag reads bottom to top along the wire, starting just above the packet. */
+  .rider-label {
+    position: absolute;
+    bottom: 12px;
+    left: -24px;
+    overflow: visible;
+  }
+  .rider-text {
+    fill: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .rider-label [data-method] {
+    fill: var(--ink);
+    font-weight: 500;
+  }
+  /* The simulator is failing: so is every request on the page, until you fix it. */
+  .spine-rider[data-state="failing"] .rider-capsule {
+    background: var(--fail-paper);
+    border-color: var(--fail-paper);
+  }
+  .spine-rider[data-state="failing"] .rider-label [data-method] {
+    fill: var(--fail-paper);
+  }
+  @media (max-width: 639px) {
+    .rider-label {
+      display: none;
+    }
+  }
+
+  /* A station: sits on its object's left edge; the branch runs back to the lane. */
+  .station {
+    position: absolute;
+    /* The branch stops a pad short of the object, so its end never touches the text. */
+    right: calc(100% + 0.625rem);
+    width: calc(var(--pad-l) - var(--lane) - 0.625rem);
+    height: 0;
+    pointer-events: none;
+  }
+  .station-branch {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 2px;
+    background: var(--spine);
+  }
+  .station-branch::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--spine-lit);
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 520ms var(--ease-out);
+  }
+  /* A volt sweep runs down the branch to the object when the station lights, then the ink holds. */
+  .station-branch::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    inset: -1px 0;
+    border-radius: 2px;
+    background: var(--signal);
+    transform-origin: left;
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  .station[data-lit] .station-branch::before {
+    animation: spark 700ms var(--ease-out) forwards;
+  }
+  .station-node {
+    position: absolute;
+    left: -5px;
+    top: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--spine);
+    background: var(--paper);
+    transition:
+      background-color 240ms ease,
+      border-color 240ms ease,
+      transform 520ms var(--ease-out);
+  }
+  .station-end {
+    position: absolute;
+    right: -4px;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--spine);
+    transition: background-color 240ms ease;
+  }
+  .station[data-lit] .station-branch::after {
+    transform: scaleX(1);
+  }
+  .station[data-lit] .station-node {
+    background: var(--signal);
+    border-color: var(--signal-edge);
+    transform: scale(1.3);
+  }
+  .station[data-lit] .station-end {
+    background: var(--spine-lit);
+  }
+  /* A node with no branch: the section headers, where the wire passes the index. */
+  .station-bare .station-branch,
+  .station-bare .station-end {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------------
+     Masks. A line of display type is split into letters (components/split.tsx);
+     each letter rises out of its line's mask. The resting state is the
+     finished one, so nothing is hidden without motion.
+     ------------------------------------------------------------------ */
+  .split-line {
+    display: block;
+  }
+  .split-word {
+    display: inline-block;
+    overflow: clip;
+    overflow-clip-margin: 0.06em;
+    padding-block: 0.04em 0.02em;
+    margin-block: -0.04em -0.02em;
+    white-space: nowrap;
+  }
+  .split-ch {
+    display: inline-block;
+    white-space: pre;
+  }
+}
+
+@keyframes spark {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  55% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
   }
 }
 
 /* ------------------------------------------------------------------
-   Long-form reading (blog posts)
+   Load choreography: CSS only, so it starts with the first paint and
+   needs no JavaScript. The name's letters rise out of their masks with a
+   weighty settle, the marker sweeps under the last words of the intro,
+   the rest of the title card follows, and the sheet slides up with the
+   simulator on it. Skipped entirely under reduced motion.
    ------------------------------------------------------------------ */
-.prose-post {
-  font-size: 1.0625rem;
-  line-height: 1.75;
-  color: var(--ink-2);
+@keyframes rise-settle {
+  0% {
+    transform: translateY(108%) rotate(7deg);
+  }
+  62% {
+    transform: translateY(-5%) rotate(-0.6deg);
+  }
+  82% {
+    transform: translateY(1.5%) rotate(0deg);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
-.prose-post > * + * {
-  margin-top: 1.15em;
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
-.prose-post h2 {
-  font-family: var(--font-display);
-  margin-top: 2.2em;
-  color: var(--ink);
-  font-size: 1.625rem;
-  line-height: 1.2;
-  font-weight: 600;
-  font-stretch: 104%;
-  letter-spacing: -0.015em;
+@keyframes sheet-rise {
+  from {
+    transform: translateY(42vh);
+  }
+  to {
+    transform: none;
+  }
 }
-.prose-post h3 {
-  margin-top: 1.8em;
-  color: var(--ink);
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+@keyframes marker-sweep {
+  from {
+    background-size: 0% 0.32em;
+  }
+  to {
+    background-size: 100% 0.32em;
+  }
 }
-.prose-post h4 {
-  margin-top: 1.5em;
-  color: var(--ink);
-  font-weight: 600;
+@keyframes header-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
-.prose-post a {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-  text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in srgb, var(--ink) 30%, transparent);
-  transition: text-decoration-color 240ms ease;
+
+@media (prefers-reduced-motion: no-preference) {
+  .intro-name .split-ch {
+    transform-origin: 0% 100%;
+    animation: rise-settle 1100ms var(--ease-out) both;
+    animation-delay: calc(120ms + var(--i) * 34ms);
+  }
+  .intro-fade {
+    animation: fade-rise 900ms var(--ease-out) both;
+    animation-delay: var(--d, 700ms);
+  }
+  .intro-marker {
+    animation: marker-sweep 900ms var(--ease-out) both;
+    animation-delay: 1250ms;
+  }
+  .intro-sheet {
+    animation: sheet-rise 1500ms var(--ease-out) both;
+    animation-delay: 650ms;
+  }
+  .intro-header {
+    animation: header-in 700ms var(--ease-out) both;
+    animation-delay: 60ms;
+  }
 }
-.prose-post a:hover {
-  text-decoration-color: var(--signal-text);
+
+/* ------------------------------------------------------------------
+   Scroll states set by components/choreography.tsx. Each rule only
+   applies once the script has marked the page (html[data-motion]), and
+   each describes a state the script then animates out of, so the page
+   reads the same if the script never runs.
+   ------------------------------------------------------------------ */
+html[data-motion] .shot-stage {
+  will-change: clip-path, transform;
 }
-.prose-post ul,
-.prose-post ol {
-  padding-left: 1.3em;
+
+/* The experience strip: while a role's row is on screen, its lane is inked and the others step back. */
+.span-strip .span-bar,
+.span-strip .span-label {
+  transition:
+    opacity 360ms ease,
+    color 360ms ease;
 }
-.prose-post ul {
-  list-style: disc;
+.span-strip[data-active] [data-lane]:not([data-on]) .span-bar {
+  opacity: 0.2;
 }
-.prose-post ol {
-  list-style: decimal;
-}
-.prose-post li + li {
-  margin-top: 0.4em;
-}
-.prose-post li::marker {
+.span-strip[data-active] .span-label[data-lane]:not([data-on]),
+.span-strip[data-active] [data-lane]:not([data-on]) .span-label {
   color: var(--graphite);
 }
-.prose-post strong {
+
+/* The pinned experience strip fades out at its lower edge, so rows slide under it instead of being cut. */
+@media (min-width: 1024px) {
+  .strip-dock::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 2rem;
+    background: linear-gradient(var(--paper), transparent);
+    pointer-events: none;
+  }
+}
+
+/* The simulator's diagram, until it has measured its screen (components/live-system.tsx). */
+html[data-js] .sim-unmeasured {
+  visibility: hidden;
+}
+
+/* The console's volt key waits, outlined, until the packet reaches the end of the line. */
+.key-signal[data-await] {
+  background: transparent;
   color: var(--ink);
-  font-weight: 600;
-}
-.prose-post blockquote {
-  border-left: 2px solid var(--ink);
-  padding-left: 1em;
-  color: var(--ink-2);
-}
-.prose-post code {
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-  background: var(--paper-raised);
-  padding: 0.12em 0.35em;
-  border-radius: 0.5rem;
-}
-.prose-post pre {
-  overflow-x: auto;
-  background: var(--screen);
-  color: var(--screen-ink);
-  border-radius: 0.75rem;
-  padding: 1rem 1.15rem;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-.prose-post pre code {
-  background: none;
-  padding: 0;
-}
-.prose-post img {
-  border-radius: 0.75rem;
-  border: 1px solid var(--rule);
-}
-.prose-post hr {
-  border: 0;
-  border-top: 1px solid var(--rule);
-  margin: 2.5em 0;
-}
-.prose-post table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9375rem;
-}
-.prose-post th,
-.prose-post td {
-  border-bottom: 1px solid var(--rule);
-  padding: 0.5em 0.6em;
-  text-align: left;
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  /* In the base layer, so component colours (the orange keys) win over it. */
-  a {
-    color: inherit;
-  }
-  /* Orange means "you're operating this". Utilities like outline-hidden can still opt out. */
-  :focus-visible {
-    outline: 2px solid var(--signal-text);
-    outline-offset: 3px;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
-  }
-  html {
-    @apply font-sans;
-  }
-}
-
-/* Theme switch: the new theme is revealed as a growing circle (see lib/theme.ts). */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-/* Equalizer bars on the music button (components/music-player.tsx). */
-.eq-bar {
-  height: 35%;
-  transition: height 200ms ease;
-}
-.eq-bar:nth-child(2) {
-  height: 60%;
-}
-.eq-bar-on {
-  animation: eq 0.9s ease-in-out infinite alternate;
-}
-@keyframes eq {
-  0% { height: 25%; }
-  50% { height: 100%; }
-  100% { height: 45%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .eq-bar-on { animation: none; height: 70%; }
+/* ------------------------------------------------------------------
+   The title card. Each line of the name fills its measure: the font size
+   is the content width divided by the first line's width in em (5.57 for
+   ABDELRAHMAN in Archivo at wdth 64 / wght 800, plus a hair of room).
+   Re-measure if the face, the cut or the name changes.
+   ------------------------------------------------------------------ */
+.hero-name {
+  font-size: calc((min(100vw, var(--container)) - var(--pad-l) - var(--pad-r)) / 5.62);
 }

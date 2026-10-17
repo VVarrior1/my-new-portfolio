@@ -5,10 +5,11 @@ import { Slider as SliderPrimitive } from "radix-ui";
 import { LiveSim, MAX_SERVERS, diagnose, type Finished, type Metrics, type SimConfig, type Stage } from "@/lib/live-sim";
 import { publishReadout, stateFrom } from "@/lib/sim-readout";
 import { trackEvent } from "./site-analytics";
+import { Station } from "./spine";
 
 // The hero simulator, built as a small piece of hardware: a raised panel, a dark screen
 // that shows the system (and is the only place status colours appear), and a control deck
-// of keycaps. International orange marks the things you press, the biggest of which breaks it.
+// of keys. Volt marks the things you press, the biggest of which breaks it.
 
 const INITIAL: SimConfig = { rate: 160, servers: 2, cache: false };
 const MAX_RATE = 900;
@@ -130,6 +131,8 @@ export function LiveSystem() {
   const [config, setConfig] = useState<SimConfig>(INITIAL);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [size, setSize] = useState({ w: 600, h: DISPLAY_HEIGHT - 40 });
+  /** The diagram is drawn for a guessed size until the first measurement; it stays hidden until then so it never jumps. */
+  const [measured, setMeasured] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const sim = useRef<LiveSim | null>(null);
@@ -154,6 +157,7 @@ export function LiveSystem() {
       const w = Math.max(280, Math.round(entry.contentRect.width));
       const h = Math.round(entry.contentRect.height);
       setSize((current) => (current.w === w && current.h === h ? current : { w, h }));
+      setMeasured(true);
     });
     observer.observe(element);
     return () => observer.disconnect();
@@ -362,7 +366,9 @@ export function LiveSystem() {
 
   return (
     <div>
-      <figure className="panel p-2" aria-labelledby="live-system-title">
+      <figure className="panel relative p-2" aria-labelledby="live-system-title">
+        {/* Where the spine starts: the wire is plugged into the device. */}
+        <Station role="origin" route="/" className="top-[1.3rem]" />
         <figcaption className="flex items-center justify-between gap-4 pb-2 pl-2.5 pr-0.5 pt-0.5">
           <p id="live-system-title" className="t-mono text-ink-2">
             a small system you can break
@@ -382,7 +388,7 @@ export function LiveSystem() {
               </p>
             </div>
 
-            <div ref={box} className="screen-dots relative min-h-0 flex-1">
+            <div ref={box} className={`screen-dots relative min-h-0 flex-1 ${measured ? "" : "sim-unmeasured"}`}>
               <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
                 <g stroke="var(--screen-wire)" strokeWidth={1.5} fill="none">
                   <Edge from={layout.entry} to={entryOf(layout, layout.lb, node)} dashed />
@@ -529,7 +535,7 @@ export function LiveSystem() {
             </div>
           </div>
 
-          {/* The signature: a blank orange cap, labelled on the panel the way hardware is. */}
+          {/* The signature: a blank volt cap, labelled on the panel the way hardware is. */}
           <div className="col-start-2 row-start-2 flex flex-col items-end justify-start gap-1.5 sm:row-span-2 sm:row-start-1 sm:w-[9.5rem] sm:items-center sm:justify-center sm:gap-2.5 sm:border-l sm:border-rule sm:pl-6">
             <button
               type="button"
@@ -574,7 +580,7 @@ function RestartGlyph() {
   );
 }
 
-/** A long fader: a recessed groove, an ink fill, and an orange cap. */
+/** A long fader: a groove, an ink fill, and a volt cap. */
 function Fader({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return (
     <SliderPrimitive.Root

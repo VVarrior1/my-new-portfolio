@@ -121,7 +121,7 @@ export default async function StatsPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
+      <main id="main" className="wrap pb-24 pt-12 sm:pt-20">
         <PageHeader
           title="Site stats"
           lead="Counted by this site itself, with no third-party trackers. Crawlers and link previews are left out, and a visitor is a browser, identified by a first-party cookie. Numbers update about once a minute."

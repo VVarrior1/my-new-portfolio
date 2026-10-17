@@ -19,7 +19,7 @@ export default async function GalleryPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-20">
+      <main id="main" className="wrap pb-24 pt-10 sm:pt-20">
         <PageHeader
           title="Gallery"
           lead="Pictures worth keeping: notes I liked, screenshots, and the odd photo. Select one to see it full size."

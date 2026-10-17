@@ -26,7 +26,7 @@ export default async function BlogsPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-20">
+      <main id="main" className="wrap pb-24 pt-10 sm:pt-20">
         <PageHeader
           title="Writing"
           lead={<>Notes on things I&apos;ve learned while building: some technical, some not.</>}
@@ -48,7 +48,7 @@ export default async function BlogsPage() {
                       {count >= SHOW_READS_FROM && <span className="block">{count.toLocaleString("en-US")} reads</span>}
                     </span>
                     <span className="min-w-0 lg:col-span-9">
-                      <span className="t-title block underline decoration-transparent decoration-1 underline-offset-[0.2em] transition-[text-decoration-color] duration-200 group-hover:decoration-signal-text">
+                      <span className="block text-[1.5rem] font-semibold leading-[1.25] tracking-[-0.01em] underline decoration-transparent decoration-2 underline-offset-[0.2em] transition-[text-decoration-color] duration-200 group-hover:decoration-signal sm:text-[1.75rem]">
                         {blog.title.trim()}
                       </span>
                       {summary && <span className="measure mt-2 line-clamp-2 text-ink-2">{summary}</span>}
