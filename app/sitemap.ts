@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getAllBlogs } from "@/lib/blogs";
-import { SITE_URL } from "@/lib/content";
+import { SITE_URL, featured } from "@/lib/content";
 
 export const revalidate = 3600;
 
@@ -8,6 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllBlogs();
   return [
     { url: SITE_URL, changeFrequency: "monthly", priority: 1 },
+    ...featured.map((project) => ({ url: `${SITE_URL}/work/${project.slug}`, changeFrequency: "monthly" as const, priority: 0.8 })),
     { url: `${SITE_URL}/blogs`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/gallery`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${SITE_URL}/stats`, changeFrequency: "daily", priority: 0.2 },

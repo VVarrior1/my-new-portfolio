@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { TransitionLink } from "@/components/transition-link";
 import { getAnalytics } from "@/lib/analytics";
 import { getAllBlogs } from "@/lib/blogs";
 import { formatDate } from "@/lib/date-utils";
-import { excerpt } from "@/lib/text";
+import { excerpt, postVt } from "@/lib/text";
 
 export const revalidate = 300;
 
@@ -36,24 +36,27 @@ export default async function BlogsPage() {
         {blogs.length === 0 ? (
           <p className="mt-16 text-ink-2">No posts yet. The first one is on its way.</p>
         ) : (
-          <ul className="mt-14 border-t border-rule">
+          <ul className="mt-16 border-t border-ink">
             {blogs.map((blog) => {
               const count = views.get(blog.slug) ?? 0;
               const summary = excerpt(blog.excerpt, blog.title, 120);
               return (
-                <li key={blog.slug} className="border-b border-rule">
-                  <Link href={`/blogs/${blog.slug}`} className="group grid gap-x-6 gap-y-2 py-8 lg:grid-cols-12 lg:items-start">
+                <li key={blog.slug} className="s-rise-sm border-b border-rule">
+                  <TransitionLink href={`/blogs/${blog.slug}`} className="post-row group grid gap-x-6 gap-y-2 py-8 lg:grid-cols-12 lg:items-start">
                     <span className="t-mono text-graphite lg:col-span-3 lg:pt-[0.4rem]">
                       {formatDate(blog.date)}
                       {count >= SHOW_READS_FROM && <span className="block">{count.toLocaleString("en-US")} reads</span>}
                     </span>
                     <span className="min-w-0 lg:col-span-9">
-                      <span className="t-title block underline decoration-transparent decoration-1 underline-offset-[0.2em] transition-[text-decoration-color] duration-200 group-hover:decoration-signal-text">
-                        {blog.title.trim()}
+                      <span className="t-title block" style={{ viewTransitionName: postVt(blog.slug) }}>
+                        <span className="post-title">{blog.title.trim()}</span>
+                        <span className="post-arrow ml-3 inline-block text-graphite" aria-hidden="true">
+                          →
+                        </span>
                       </span>
                       {summary && <span className="measure mt-2 line-clamp-2 text-ink-2">{summary}</span>}
                     </span>
-                  </Link>
+                  </TransitionLink>
                 </li>
               );
             })}

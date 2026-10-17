@@ -46,8 +46,8 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
       </ul>
 
       <div className="min-w-0 lg:col-span-9">
-        <div className="relative rounded-xl border border-rule bg-paper-raised py-2.5 shadow-[var(--panel-highlight)]">
-          {/* Year lines, then the "now" cursor: orange, because it is the present. */}
+        <div className="relative rounded-2xl border border-rule bg-paper-raised py-2.5 shadow-[var(--elevation)]">
+          {/* Year lines, then the "now" cursor. The current role is the volt bar. */}
           {years.map((year) =>
             year * 12 > axisStart && year * 12 < axisEnd ? (
               <span key={year} className="absolute inset-y-0 w-px bg-rule" style={{ left: at(year * 12) }} />
@@ -72,12 +72,12 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
                     {job.company}
                   </span>
                   <span
-                    className={`absolute h-1.5 rounded-full max-lg:bottom-2.5 lg:top-1/2 lg:-translate-y-1/2 ${current ? "bg-signal" : "bg-ink"}`}
+                    className={`s-grow absolute h-2 rounded-full max-lg:bottom-2.5 lg:top-1/2 lg:-translate-y-1/2 ${current ? "border border-signal-edge bg-signal" : "bg-ink"}`}
                     style={{ left: at(start), width: `calc(${at(end)} - ${at(start)})` }}
                   />
                   {current && (
                     <span
-                      className="absolute size-2.5 -translate-x-1/2 rounded-full border-2 border-paper-raised bg-signal max-lg:bottom-2 lg:top-1/2 lg:-translate-y-1/2"
+                      className="absolute size-3.5 -translate-x-1/2 rounded-full border-2 border-paper-raised bg-ink max-lg:bottom-[0.4rem] lg:top-1/2 lg:-translate-y-1/2"
                       style={{ left: at(end) }}
                     />
                   )}

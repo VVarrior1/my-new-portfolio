@@ -32,3 +32,6 @@ export function excerpt(markdown: string, title = "", max = 160): string {
   const lastSpace = cut.lastIndexOf(" ");
   return `${cut.slice(0, lastSpace > max * 0.6 ? lastSpace : max).replace(/[\s,;:.–—-]+$/, "")}…`;
 }
+
+/** A post's view-transition name, so its title in a list morphs into the heading of its page. */
+export const postVt = (slug: string) => `post-${slug.replace(/[^a-zA-Z0-9-]/g, "")}`;

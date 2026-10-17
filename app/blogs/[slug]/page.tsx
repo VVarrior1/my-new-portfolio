@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BlogDetail } from "@/components/blog-detail";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { TransitionLink } from "@/components/transition-link";
 import { getAnalytics } from "@/lib/analytics";
 import { getAllBlogs, getBlogBySlug, type BlogPost } from "@/lib/blogs";
 import { profile } from "@/lib/content";
 import { formatDateLong } from "@/lib/date-utils";
-import { plainText } from "@/lib/text";
+import { plainText, postVt } from "@/lib/text";
 
 export const revalidate = 300;
 
@@ -62,12 +62,14 @@ export default async function BlogPage({ params }: BlogPageProps) {
       <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-8 sm:px-8 sm:pt-16">
         <article className="mx-auto max-w-[42rem]">
           <p>
-            <Link href="/blogs" className="t-mono text-graphite transition-colors hover:text-ink">
+            <TransitionLink href="/blogs" className="t-mono text-graphite transition-colors hover:text-ink">
               <span aria-hidden="true">← </span>All writing
-            </Link>
+            </TransitionLink>
           </p>
           <header className="mt-8 border-b border-rule pb-8">
-            <h1 className="t-wide text-[clamp(2rem,4.6vw,2.5rem)] font-[620] leading-[1.08] tracking-[-0.02em]">{blog.title.trim()}</h1>
+            <h1 className="t-title text-[clamp(2.25rem,6vw,3.5rem)]" style={{ viewTransitionName: postVt(blog.slug) }}>
+              {blog.title.trim()}
+            </h1>
             <p className="t-mono mt-5 text-graphite">
               <time dateTime={blog.date}>{formatDateLong(blog.date)}</time>
               <span className="px-2" aria-hidden="true">·</span>
@@ -89,22 +91,22 @@ export default async function BlogPage({ params }: BlogPageProps) {
         {(newer || older) && (
           <nav aria-label="More posts" className="mx-auto mt-20 grid max-w-[42rem] gap-6 border-t border-rule pt-8 sm:grid-cols-2">
             {older ? (
-              <Link href={`/blogs/${older.slug}`} className="group">
+              <TransitionLink href={`/blogs/${older.slug}`} className="post-row group">
                 <span className="t-mono text-graphite">← Older</span>
-                <span className="mt-1.5 block font-semibold leading-snug underline decoration-transparent underline-offset-[0.25em] transition-[text-decoration-color] group-hover:decoration-signal-text">
-                  {older.title.trim()}
+                <span className="mt-1.5 block font-semibold leading-snug">
+                  <span className="post-title">{older.title.trim()}</span>
                 </span>
-              </Link>
+              </TransitionLink>
             ) : (
               <span />
             )}
             {newer && (
-              <Link href={`/blogs/${newer.slug}`} className="group sm:text-right">
+              <TransitionLink href={`/blogs/${newer.slug}`} className="post-row group sm:text-right">
                 <span className="t-mono text-graphite">Newer →</span>
-                <span className="mt-1.5 block font-semibold leading-snug underline decoration-transparent underline-offset-[0.25em] transition-[text-decoration-color] group-hover:decoration-signal-text">
-                  {newer.title.trim()}
+                <span className="mt-1.5 block font-semibold leading-snug">
+                  <span className="post-title">{newer.title.trim()}</span>
                 </span>
-              </Link>
+              </TransitionLink>
             )}
           </nav>
         )}
