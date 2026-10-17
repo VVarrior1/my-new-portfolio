@@ -129,7 +129,7 @@ export default async function Home() {
             </div>
 
             <div id="play" className="min-w-0 scroll-mt-20 lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1">
-              <LiveSystem />
+              <LiveSystem frameClassName="mat-crop" />
             </div>
 
             {/* The personal line, as a small spec sheet. */}

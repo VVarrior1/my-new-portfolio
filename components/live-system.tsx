@@ -126,7 +126,11 @@ function reading(ms: number): { value: string; unit: string } {
   return ms >= 1000 ? { value: (ms / 1000).toFixed(1), unit: "s" } : { value: String(Math.round(ms)), unit: "ms" };
 }
 
-export function LiveSystem() {
+/**
+ * `frameClassName` goes on the device's panel. The home page passes "mat-crop", which prints the
+ * cutting mat's crop marks around it (app/globals.css); the device itself knows nothing of the mat.
+ */
+export function LiveSystem({ frameClassName }: { frameClassName?: string } = {}) {
   const [config, setConfig] = useState<SimConfig>(INITIAL);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [size, setSize] = useState({ w: 600, h: DISPLAY_HEIGHT - 40 });
@@ -362,7 +366,7 @@ export function LiveSystem() {
 
   return (
     <div>
-      <figure className="panel p-2" aria-labelledby="live-system-title">
+      <figure className={frameClassName ? `panel p-2 ${frameClassName}` : "panel p-2"} aria-labelledby="live-system-title">
         <figcaption className="flex items-center justify-between gap-4 pb-2 pl-2.5 pr-0.5 pt-0.5">
           <p id="live-system-title" className="t-mono text-ink-2">
             a small system you can break

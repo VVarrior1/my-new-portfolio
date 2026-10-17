@@ -1,37 +1,47 @@
+import type { CSSProperties } from "react";
+
 /**
  * The cutting mat the home page sits on (styles in app/globals.css, under "The cutting mat").
  * Everything here is printed decoration: server-rendered, aria-hidden, no JavaScript.
+ *
+ * One unit of the mat is one column pitch of the 12-column grid ((content width + gutter) / 12,
+ * 98px = 74 + 24 once the container is at its full 76rem), so text edges land on its lines. The
+ * CSS owns the length (--mat-ux across, --mat-uy down); markup only says which unit a mark is on.
  */
 
-/** One unit of the mat is one column pitch (74px column + 24px gutter), so text edges land on its lines. */
-const UNITS = Array.from({ length: 32 }, (_, i) => i + 1);
+/** Numerals on every second unit, enough for a section 64 units tall (about 6,300px). */
+const UNITS = Array.from({ length: 32 }, (_, i) => (i + 1) * 2);
 
 /**
- * The scale printed down the mat's left edge (wide screens only). It restarts at every section,
- * whose number is printed at the origin. While you read a section, an orange cursor holds that
- * number at the top of the window and the scale slides under it. The cursor rests under the
- * printed origin (which is opaque), so only the section you are in shows orange; it is plain
- * position: sticky, so the handover between sections needs no script.
+ * Puts a mark on unit `i` of the scale it sits in (see .mat-scale-units and .mat-edge-col). Unit
+ * and column numerals are printed from `data-n` by CSS, so they are never selected, copied or
+ * announced, and contrast checkers don't mistake the faint print for text.
+ */
+const onUnit = (i: number) => ({ "--i": i }) as CSSProperties;
+
+/**
+ * The scale printed down the mat's left edge (wide screens only). It restarts at every section.
+ * While you read a section, an orange cursor holds that section's number at the top of the
+ * window and the scale slides under it. Each section's scale is clipped to the section, and its
+ * cursor waits just above the section's top edge, out of sight. So as an edge passes the cursor,
+ * the old number is cut off above the edge while the new one is uncovered below it, in the same
+ * place: the handover happens at the edge itself and two numbers never stand side by side. It is
+ * plain position: sticky, no script.
  */
 export function MatScale({ index }: { index?: string }) {
   return (
     <div className="mat-scale" aria-hidden="true">
       <div className="mat-scale-units">
         {UNITS.map((unit) => (
-          <span key={unit} style={{ top: unit * 98 }}>
-            {unit}
-          </span>
+          <span key={unit} style={onUnit(unit)} data-n={unit} />
         ))}
       </div>
       {index && (
-        <>
+        <div className="mat-scale-track">
           <span className="mat-cursor">
             <span>{index}</span>
           </span>
-          <span className="mat-origin">
-            <span>{index}</span>
-          </span>
-        </>
+        </div>
       )}
     </div>
   );
@@ -64,8 +74,8 @@ const COLUMNS = Array.from({ length: 12 }, (_, i) => i + 1);
 
 /**
  * The scale along the mat's bottom edge, under the contact console: the same ticks as the left
- * scale, with the twelve columns of the page grid numbered on wide screens, and the mat's own
- * printed label.
+ * scale, with the twelve columns of the page grid numbered once the page is on that grid, and
+ * the mat's own printed label.
  */
 export function MatEdge() {
   return (
@@ -73,11 +83,9 @@ export function MatEdge() {
       <div className="mx-auto h-full max-w-[76rem] px-4 sm:px-8">
         <div className="relative h-full">
           {COLUMNS.map((column) => (
-            <span key={column} className="mat-edge-col" style={{ left: (column - 1) * 98 }}>
-              {column}
-            </span>
+            <span key={column} className="mat-edge-col" style={onUnit(column - 1)} data-n={column} />
           ))}
-          <span className="mat-edge-label">self-healing · 98 px grid</span>
+          <span className="mat-edge-label">self-healing</span>
         </div>
       </div>
     </div>

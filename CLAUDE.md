@@ -45,13 +45,18 @@ at the top of `app/globals.css`.
   `backdrop-filter` only on the sticky header.
 - The one background is the cutting mat under the home page (`components/mat.tsx`, `.mat*` in
   `globals.css`), because "bland" kept coming back. It is printed, never lit: a grid in ink at low
-  alpha (`--mat-*` tokens) whose unit is one column pitch (98px) anchored to the content edge, so
-  each section edge is a mat line; a scale down the left edge (≥1280px) whose orange cursor holds
-  the current section's number (plain `position: sticky`, no script); registration targets where
-  section edges cross the content edges; crop marks around the hero device and the console; and
-  angle guides, column numbers and a printed label at the bottom edge. Its numerals are 11px mono,
-  the only size outside the type scale. If a mat line ever competes with content, lower its alpha;
-  don't add more mat. The header is transparent at the top so the mat runs under it.
+  alpha (`--mat-*` tokens) whose unit is one column pitch of the 12-column grid (fluid from 64rem,
+  98px at the full container and below 64rem; whole units only on phones) anchored to the content
+  edge, so each section edge is a mat line and the vertical lines sit on column edges at every
+  width; a scale down the left edge (≥85rem) whose orange cursor holds the current section's
+  number (plain `position: sticky`, no script: each section's scale is clipped to the section and
+  its cursor waits out of sight above the top edge, so the number changes exactly at the edge and
+  two never show at once); registration targets where section edges cross the content edges; crop
+  marks (`.mat-crop`) around the hero device and the console; and angle guides, column numbers and
+  a printed label at the bottom edge. Its numerals are 11px mono, the only size outside the type
+  scale, on every second unit. If a mat line ever competes with content, lower its alpha; don't add
+  more mat. It disappears in forced colours and print. The header is transparent at the top so the
+  mat runs under it.
 - Type: Archivo (variable, the width axis carries the display voice via `font-stretch`) and
   JetBrains Mono for data only: dates, numbers, stacks, URLs and everything on a screen. Words
   (spec values, captions) are Archivo. Seven sizes (13/15/17/20/26/40/56), weights 400–650; mono

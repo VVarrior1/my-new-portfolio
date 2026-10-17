@@ -702,40 +702,58 @@ body {
      The cutting mat. The home page lies on a self-healing mat: a grid in
      ink at low alpha, a scale printed down its left edge, and registration
      targets where each section's edge crosses the content edges. One unit is
-     one column pitch (98px = 74 + 24), anchored to the content edge, so text
-     and objects land on its lines. Each section restarts the grid and the
+     one column pitch of the 12-column grid, anchored to the content edge, so
+     text and objects land on its lines. Each section restarts the grid and the
      scale at its top edge, so every section edge is a mat line. Printed
      decoration only: aria-hidden, no pointer events, no motion of its own.
      ------------------------------------------------------------------ */
   .mat {
     position: relative;
+    /* The unit. Below the 12-column layout it is a fixed 98px. From 64rem it is the column
+       pitch, (content width + 24px gutter) / 12, which is 98px once the container is at its full
+       76rem. Across, it is a percentage of the section, so the vertical lines sit exactly on the
+       column edges at every width; down, it is the same length taken from the viewport (a
+       background's height can't be a percentage of its width), so the cells stay square. */
+    --mat-ux: 98px;
+    --mat-uy: 98px;
+    /* The content edge. Below 76rem it is the container's padding; past it, the centred edge,
+       written in background-position terms (50% there is half of the width minus one unit). */
     --mat-x: 1rem;
     background-image:
       linear-gradient(to right, var(--mat-major) 1px, transparent 1px),
-      linear-gradient(to right, transparent 49px, var(--mat-minor) 49px, var(--mat-minor) 50px, transparent 50px),
-      linear-gradient(to bottom, transparent 97px, var(--mat-major) 97px),
-      linear-gradient(to bottom, transparent 48px, var(--mat-minor) 48px, var(--mat-minor) 49px, transparent 49px);
-    background-size: 98px 98px;
+      linear-gradient(to right, transparent 50%, var(--mat-minor) 50%, var(--mat-minor) calc(50% + 1px), transparent calc(50% + 1px)),
+      linear-gradient(to bottom, transparent calc(100% - 1px), var(--mat-major) calc(100% - 1px)),
+      linear-gradient(to bottom, transparent calc(50% - 1px), var(--mat-minor) calc(50% - 1px), var(--mat-minor) 50%, transparent 50%);
+    background-size: var(--mat-ux) var(--mat-uy);
     background-position: var(--mat-x) 0;
+  }
+  /* On a phone the half-unit lines are just noise: the whole units only. */
+  @media (max-width: 639px) {
+    .mat {
+      background-image:
+        linear-gradient(to right, var(--mat-major) 1px, transparent 1px),
+        linear-gradient(to bottom, transparent calc(100% - 1px), var(--mat-major) calc(100% - 1px));
+    }
   }
   @media (min-width: 640px) {
     .mat {
-      --mat-x: 2rem;
+      --mat-x: calc(2rem + max(0px, 50% + 49px - 38rem));
     }
   }
-  /* Past the 76rem container the content edge is centred: 50% of (width - 98) + 49 - 576. */
-  @media (min-width: 76rem) {
+  @media (min-width: 64rem) {
     .mat {
-      --mat-x: calc(50% - 527px);
+      --mat-ux: calc((min(100%, 76rem) - 2.5rem) / 12);
+      --mat-uy: calc((min(100vw, 76rem) - 2.5rem) / 12);
     }
   }
 
-  /* The scale: a band down the left edge of the window, wide screens only. Ticks every quarter
-     unit, a longer one at the half, a numbered one at each unit. */
+  /* The scale: a band down the left edge of the window, on wide screens only (from 85rem the
+     band clears the content edge by 3rem). Ticks every quarter unit, a longer one at the half
+     and at each unit, numerals on every second unit. */
   .mat-scale {
     display: none;
   }
-  @media (min-width: 80rem) {
+  @media (min-width: 85rem) {
     .mat-scale {
       position: absolute;
       top: -1px;
@@ -745,22 +763,24 @@ body {
       display: block;
       width: 3.5rem;
       pointer-events: none;
+      /* Each section's scale ends at the section's edges. The cursor's handover depends on it. */
+      overflow-y: clip;
       background-color: var(--paper);
       background-image:
         linear-gradient(to bottom, var(--mat-tick) 1px, transparent 1px),
-        linear-gradient(to bottom, transparent 49px, var(--mat-tick) 49px, var(--mat-tick) 50px, transparent 50px),
+        linear-gradient(to bottom, transparent 50%, var(--mat-tick) 50%, var(--mat-tick) calc(50% + 1px), transparent calc(50% + 1px)),
         linear-gradient(
           to bottom,
-          transparent 24.5px,
-          var(--mat-tick) 24.5px,
-          var(--mat-tick) 25.5px,
-          transparent 25.5px,
-          transparent 73.5px,
-          var(--mat-tick) 73.5px,
-          var(--mat-tick) 74.5px,
-          transparent 74.5px
+          transparent calc(25% - 0.5px),
+          var(--mat-tick) calc(25% - 0.5px),
+          var(--mat-tick) calc(25% + 0.5px),
+          transparent calc(25% + 0.5px),
+          transparent calc(75% - 0.5px),
+          var(--mat-tick) calc(75% - 0.5px),
+          var(--mat-tick) calc(75% + 0.5px),
+          transparent calc(75% + 0.5px)
         );
-      background-size: 0.875rem 98px, 0.5625rem 98px, 0.3125rem 98px;
+      background-size: 0.875rem var(--mat-uy), 0.5625rem var(--mat-uy), 0.3125rem var(--mat-uy);
       background-repeat: repeat-y;
       box-shadow: inset -1px 0 0 var(--mat-major);
     }
@@ -771,8 +791,7 @@ body {
     overflow: clip;
   }
   .mat-scale-units > span,
-  .mat-cursor > span,
-  .mat-origin > span {
+  .mat-cursor > span {
     position: absolute;
     font-family: var(--font-mono);
     font-size: 0.6875rem;
@@ -780,24 +799,38 @@ body {
     font-variant-numeric: tabular-nums;
     transform: translateY(-50%);
   }
+  /* The unit and column numerals are generated content (see components/mat.tsx). */
+  .mat-scale-units > span::before,
+  .mat-edge-col::before {
+    content: attr(data-n);
+  }
   .mat-scale-units > span {
+    top: calc(var(--i) * var(--mat-uy));
     left: 1.125rem;
     color: var(--mat-label);
   }
-  /* The cursor: an orange hairline across the scale, holding the section's number in view. */
+  /* The cursor: an orange hairline across the scale, holding the section's number in view, just
+     under the 64px header. Its containing block (the track) runs 2rem past the section's bottom,
+     so it stays put until the section's clipped edge has passed right over it. It waits 1.5rem
+     above the section's top edge, where the clip hides it, so it is already in place when the
+     edge arrives. Old number above the edge, new number below: the handover is the edge itself. */
+  .mat-scale-track {
+    position: absolute;
+    top: 0;
+    bottom: -2rem;
+    left: 0;
+    width: 100%;
+  }
   .mat-cursor {
     position: sticky;
-    /* Just under the 64px header, so the printed origin and the held cursor overlap for only a
-       few pixels of scrolling at each section edge. */
     top: 4.75rem;
     display: block;
     width: 2rem;
     height: 2px;
-    margin-top: -0.5px;
+    margin-top: -1.5rem;
     background: var(--signal);
   }
-  .mat-cursor > span,
-  .mat-origin > span {
+  .mat-cursor > span {
     left: 2.25rem;
     top: 1px;
     padding: 0.125rem 0.25rem 0.125rem 0;
@@ -805,24 +838,8 @@ body {
     color: var(--ink);
     font-size: 0.8125rem;
   }
-  /* The printed origin covers the resting cursor, so orange shows only once the cursor holds. */
-  .mat-origin {
-    position: absolute;
-    top: -0.5rem;
-    left: 0;
-    z-index: 1;
-    width: 3.5rem;
-    height: 1rem;
-    background:
-      linear-gradient(var(--mat-tick), var(--mat-tick)) 0 calc(0.5rem - 0.5px) / 2rem 1px no-repeat,
-      var(--paper);
-  }
-  .mat-origin > span {
-    top: 50%;
-    color: var(--graphite);
-  }
 
-  /* The bottom edge: ticks rising from the mat's last line, on the same columns as the grid. */
+  /* The bottom edge: ticks rising from the mat's last line, on the same units as the grid. */
   .mat-edge {
     position: absolute;
     right: 0;
@@ -832,19 +849,19 @@ body {
     pointer-events: none;
     background-image:
       linear-gradient(to right, var(--mat-tick) 1px, transparent 1px),
-      linear-gradient(to right, transparent 49px, var(--mat-tick) 49px, var(--mat-tick) 50px, transparent 50px),
+      linear-gradient(to right, transparent 50%, var(--mat-tick) 50%, var(--mat-tick) calc(50% + 1px), transparent calc(50% + 1px)),
       linear-gradient(
         to right,
-        transparent 24.5px,
-        var(--mat-tick) 24.5px,
-        var(--mat-tick) 25.5px,
-        transparent 25.5px,
-        transparent 73.5px,
-        var(--mat-tick) 73.5px,
-        var(--mat-tick) 74.5px,
-        transparent 74.5px
+        transparent calc(25% - 0.5px),
+        var(--mat-tick) calc(25% - 0.5px),
+        var(--mat-tick) calc(25% + 0.5px),
+        transparent calc(25% + 0.5px),
+        transparent calc(75% - 0.5px),
+        var(--mat-tick) calc(75% - 0.5px),
+        var(--mat-tick) calc(75% + 0.5px),
+        transparent calc(75% + 0.5px)
       );
-    background-size: 98px 0.875rem, 98px 0.5625rem, 98px 0.3125rem;
+    background-size: var(--mat-ux) 0.875rem, var(--mat-ux) 0.5625rem, var(--mat-ux) 0.3125rem;
     background-position: var(--mat-x) bottom, var(--mat-x) bottom, var(--mat-x) bottom;
     background-repeat: repeat-x;
     /* Clip sideways only: the label sits above the ticks. */
@@ -859,13 +876,15 @@ body {
     color: var(--mat-label);
     white-space: nowrap;
   }
+  /* The column numbers, once the page is on its 12 columns: one column pitch apart, (content
+     width + gutter) / 12, the same unit as the ticks under them. */
   .mat-edge-col {
     display: none;
     bottom: 0.25rem;
+    left: calc(var(--i) * (100% + 1.5rem) / 12);
     margin-left: 0.25rem;
   }
-  /* The columns are 98px apart only once the container is at its full 76rem. */
-  @media (min-width: 76rem) {
+  @media (min-width: 64rem) {
     .mat-edge-col {
       display: block;
     }
@@ -879,7 +898,7 @@ body {
   .mat-corner {
     display: none;
   }
-  @media (min-width: 80rem) {
+  @media (min-width: 85rem) {
     .mat-corner {
       position: absolute;
       right: 0;
@@ -925,12 +944,12 @@ body {
   }
 
   /* Crop marks: an object placed on the mat (the hero device, the contact console) gets the
-     printer's corner marks, on the extension of its edges, 6px clear of it. */
+     printer's corner marks, on the extension of its edges, 6px clear of it. The page puts the
+     class on the object (LiveSystem takes it as frameClassName). */
   .mat-crop {
     position: relative;
   }
-  .mat-crop::after,
-  #play .panel::after {
+  .mat-crop::after {
     content: "";
     position: absolute;
     inset: -1rem;
@@ -948,8 +967,7 @@ body {
   }
   /* On a phone the gutter is 16px, so the marks come in to stay on screen. */
   @media (max-width: 639px) {
-    .mat-crop::after,
-    #play .panel::after {
+    .mat-crop::after {
       inset: -0.75rem;
       background:
         linear-gradient(var(--c), var(--c)) left 0 top 0.75rem / 0.375rem 1px no-repeat,
@@ -962,8 +980,22 @@ body {
         linear-gradient(var(--c), var(--c)) right 0.75rem bottom 0 / 1px 0.375rem no-repeat;
     }
   }
-  #play .panel {
-    position: relative;
+
+  /* The mat is printed decoration: in forced colours (where its alphas would turn into solid
+     system lines) and on paper it goes away entirely, leaving the page as it reads without it. */
+  @media (forced-colors: active), print {
+    .mat {
+      background-image: none;
+    }
+    .mat-scale,
+    .mat-edge,
+    .mat-corner,
+    .mat-reg {
+      display: none;
+    }
+    .mat-crop::after {
+      content: none;
+    }
   }
 }
 
