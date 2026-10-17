@@ -15,64 +15,71 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens: the workbench. Warm grey paper, objects with a job, and one
-   colour, international orange, used on things you press and on "now"
-   (the current role and the timeline's cursor), never on large areas.
+   Tokens: Liquid. The page is a sheet over a pool. Under the hero and
+   the contact section a real fluid simulation shows through (ink on
+   paper in the light theme, smoke on black in the dark one); every
+   other section is an opaque sheet that slides over it.
 
-   Every neutral sits on one warm hue (OKLCH h≈88) at chroma ≤ 0.006, so
-   light and dark share one temperature. Status colours (--trace, --fail,
-   --screen-go) live only on the dark screens (the simulator and the
-   readouts). Light is the default; dark follows the OS unless the visitor
-   picks one with the toggle (stored as data-theme on <html>).
+   One accent, cobalt (--signal), and neutrals that all sit on one cool
+   hue (OKLCH h≈265, chroma ≤ 0.016), so both themes share a temperature.
+   Cobalt fills the things you press, marks "now", and is the only
+   colour the fluid can bloom into (when the simulator is strained or a
+   server dies). Status colours (--trace, --fail, --screen-go) live only
+   on the simulator's screen. Dark follows the OS unless the visitor picks
+   a theme with the toggle (stored as data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
-  /* Near-white paper with grey hardware on it, like a Braun on a white table: the page is the
-     lightest surface but one, the panels sit a step darker, and keycaps are pure white. */
-  --paper: #f8f7f4;
-  /* Device panel, project mats, the experience track, the tools board. */
-  --paper-raised: #edebe7;
-  /* Keycap faces. */
+  --paper: #f4f4f5;
+  /* Frames, the tools board, the experience track: one step off the paper. */
+  --paper-raised: #e8e9eb;
+  /* Button faces and popovers. */
   --key-face: #ffffff;
-  --ink: #171614;
+  --ink: #0e0f12;
   /* Body prose. */
-  --ink-2: #353431;
-  /* Metadata only (≥ 5.7:1 on every surface). */
-  --graphite: #5c5a57;
-  --rule: #dbd9d5;
-  --rule-strong: #c8c6c2;
-  /* International orange: fills of actuators and the "now" marks. Never text on paper, never tinted. */
-  --signal: #ff4f00;
-  --signal-edge: #c23b00;
-  --signal-ink: #171614;
-  /* The only text-safe orange (5.0:1 on paper). */
-  --signal-text: #c23b00;
-  /* Screens are dark in both themes. Only the simulator and the /stats chart are screens. */
-  --screen: #141311;
-  --screen-ink: #ecebe8;
-  --screen-graphite: #91908c;
-  --screen-line: rgb(236 235 232 / 0.14);
-  --screen-wire: rgb(236 235 232 / 0.28);
-  --screen-outline: rgb(236 235 232 / 0.24);
-  --screen-dot: rgb(236 235 232 / 0.075);
-  --screen-fill: rgb(236 235 232 / 0.045);
-  --screen-track: rgb(236 235 232 / 0.12);
+  --ink-2: #33353b;
+  /* Metadata only (≥ 5.5:1 on every surface). */
+  --graphite: #5d6067;
+  --rule: #d9dadc;
+  --rule-strong: #c2c4c8;
+  /* Cobalt. Fills (buttons you press, the kill key, the fader cap, "now"), and text that is a link
+     or an arrow. White on it is 6:1, and as text on the paper it is 5.6:1. */
+  --signal: #2a46ff;
+  --signal-ink: #ffffff;
+  --signal-text: #2a46ff;
+  /* The simulator is a dark instrument in both themes. */
+  --screen: #0d0e11;
+  --screen-raised: #16171b;
+  --screen-ink: #eceef2;
+  --screen-graphite: #9095a0;
+  --screen-line: rgb(236 238 242 / 0.12);
+  --screen-wire: rgb(236 238 242 / 0.26);
+  --screen-outline: rgb(236 238 242 / 0.22);
+  --screen-dot: rgb(236 238 242 / 0.07);
+  --screen-fill: rgb(236 238 242 / 0.045);
+  --screen-track: rgb(236 238 242 / 0.12);
   --screen-go: #4fc98a;
   --trace: #ffc247;
   --fail: #ff5c52;
-  /* Page-level status: the available dot and the current job. */
+  /* The cobalt that reads on the dark screen (5.3:1). */
+  --screen-signal: #5b74ff;
+  /* Page-level status: the availability dot. */
   --go: #18723f;
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -2px 0 rgb(23 22 20 / 0.1);
-  --key-shadow-down: inset 0 1px 2px rgb(23 22 20 / 0.14);
-  --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -2px 0 rgb(0 0 0 / 0.18);
-  --signal-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.28);
-  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -2px 0 rgb(0 0 0 / 0.4);
-  --ink-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.5);
-  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
-  --screen-inset: inset 0 2px 6px rgb(0 0 0 / 0.35);
-  /* The single elevation, for screenshot frames. */
-  --elevation: 0 1px 0 rgb(23 22 20 / 0.05), 0 16px 32px -24px rgb(23 22 20 / 0.3);
-  /* Behind dialogs: a flat scrim, no blur. */
-  --scrim: rgb(23 22 20 / 0.42);
+  /* The fluid's two dyes and how far each may cover the paper. The light theme is ink in water,
+     flat; the dark theme is lit smoke, with a soft relief from the dye's surface. */
+  /* The pool: what the liquid sits in, a step below the paper, so the sheets read as sheets. */
+  --pool: #e6e7e9;
+  --fluid-neutral: #16181e;
+  --fluid-accent: #2a46ff;
+  --fluid-neutral-max: 0.55;
+  --fluid-accent-max: 0.85;
+  --fluid-shading: 0;
+  --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
+  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 40px 80px -40px rgb(14 15 18 / 0.55), 0 12px 24px -16px rgb(14 15 18 / 0.35);
+  --scrim: rgb(14 15 18 / 0.42);
+  /* Motion. A spring for things with weight, and an expo-out for things that glide. */
+  --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-pour: cubic-bezier(0.65, 0, 0.2, 1);
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -94,34 +101,33 @@
   --border: var(--rule);
   --input: var(--rule);
   --ring: var(--signal-text);
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #151412;
-    --paper-raised: #262522;
-    --key-face: #302e2b;
-    --ink: #eceae6;
-    --ink-2: #ceccc8;
-    --graphite: #9d9b98;
-    --rule: #383633;
-    --rule-strong: #4a4844;
-    --signal: #ff5f1f;
-    --signal-edge: #ff5f1f;
-    --signal-ink: #151412;
-    --signal-text: #ff5f1f;
-    --screen: #0b0b0a;
+    --paper: #0b0c0e;
+    --paper-raised: #141518;
+    --key-face: #1b1c20;
+    --ink: #eeeff2;
+    --ink-2: #c0c3ca;
+    --graphite: #8d919b;
+    --rule: #24262b;
+    --rule-strong: #34363d;
+    --signal: #3d5afe;
+    --signal-ink: #ffffff;
+    --signal-text: #8597ff;
+    --screen: #101115;
+    --screen-raised: #18191e;
     --go: #4fc98a;
-    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-    --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-    --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
-    --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
-    --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
-    --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-    /* A faint inner ring, so the screen reads as recessed into the panel. */
-    --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
-    --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
+    --pool: #070809;
+    --fluid-neutral: #c4c8d2;
+    --fluid-accent: #5470ff;
+    --fluid-neutral-max: 0.58;
+    --fluid-accent-max: 0.95;
+    --fluid-shading: 0.5;
+    --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
+    --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
     --scrim: rgb(0 0 0 / 0.62);
     --destructive: #ff6a55;
     color-scheme: dark;
@@ -129,29 +135,28 @@
 }
 
 :root[data-theme="dark"] {
-  --paper: #151412;
-  --paper-raised: #262522;
-  --key-face: #302e2b;
-  --ink: #eceae6;
-  --ink-2: #ceccc8;
-  --graphite: #9d9b98;
-  --rule: #383633;
-  --rule-strong: #4a4844;
-  --signal: #ff5f1f;
-  --signal-edge: #ff5f1f;
-  --signal-ink: #151412;
-  --signal-text: #ff5f1f;
-  --screen: #0b0b0a;
+  --paper: #0b0c0e;
+  --paper-raised: #141518;
+  --key-face: #1b1c20;
+  --ink: #eeeff2;
+  --ink-2: #c0c3ca;
+  --graphite: #8d919b;
+  --rule: #24262b;
+  --rule-strong: #34363d;
+  --signal: #3d5afe;
+  --signal-ink: #ffffff;
+  --signal-text: #8597ff;
+  --screen: #101115;
+  --screen-raised: #18191e;
   --go: #4fc98a;
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-  --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-  --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
-  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
-  --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
-  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-  /* A faint inner ring, so the screen reads as recessed into the panel. */
-  --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
-  --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
+  --pool: #070809;
+  --fluid-neutral: #c4c8d2;
+  --fluid-accent: #5470ff;
+  --fluid-neutral-max: 0.58;
+  --fluid-accent-max: 0.95;
+  --fluid-shading: 0.5;
+  --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
+  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
   --scrim: rgb(0 0 0 / 0.62);
   --destructive: #ff6a55;
   color-scheme: dark;
@@ -179,7 +184,8 @@
   --color-fail: var(--fail);
   --color-go: var(--go);
   --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-archivo), var(--font-instrument), ui-sans-serif, sans-serif;
+  --font-display: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -199,14 +205,14 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  /* Three radii: 8 (controls, nodes), 12 (inner frames, screens), 20 (panels, mats). */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1.25rem;
-  --radius-3xl: 1.25rem;
-  --radius-4xl: 1.25rem;
+  /* Radii: 10 (nodes, small controls), 14 (frames, screens), 24 (the device, panels); buttons are pills. */
+  --radius-sm: 0.625rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 1.5rem;
 }
 
 /* ------------------------------------------------------------------
@@ -215,6 +221,20 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+/* Lenis drives scrolling when it runs; native smooth scrolling would fight it. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
 }
 
 body {
@@ -229,8 +249,8 @@ body {
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--signal);
+  color: var(--signal-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -246,59 +266,83 @@ body {
   }
 }
 
+/* The fluid canvas: fixed behind the whole page, seen only through the transparent "windows"
+   (the hero and the contact section). It fades in once its first frame is drawn. */
+.liquid-field {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1400ms var(--ease-out);
+}
+.liquid-field[data-ready] {
+  opacity: 1;
+}
+
 /* Type and objects live in the components layer, so Tailwind utilities can still override them. */
 @layer components {
   /* ------------------------------------------------------------------
-     Type. Seven steps: 13 (mono labels), 15 (labels, buttons), 17 (body),
-     20 (lead, item titles), 26 (project titles, stat numbers), 40 (section
-     titles), 56 (display). Weights 400/500/600, and 650 for the display.
-     Mono is for data only (dates, numbers, stacks, URLs, everything on a
-     screen) and is 13px off-screen; 12px exists only on the screens.
-     Display steps (26 and up) are Archivo, whose width axis does the expressive work: wider
-     means louder. Everything smaller is Instrument Sans.
+     Type. Instrument Sans throughout, tight and large where it speaks
+     (the name, section titles), with Instrument Serif italic as the
+     second voice, for one or two words per heading. JetBrains Mono is for
+     data only: dates, numbers, stacks, URLs and everything on a screen.
+     Steps: 13 (mono), 15 (labels, buttons), 17 (body), 20 (lead, items),
+     32 (project titles), 48–88 (section titles), 64–148 (the name).
      ------------------------------------------------------------------ */
   .t-display {
     font-family: var(--font-display);
-    font-size: clamp(2.5rem, 3.9vw, 3.5rem);
-    font-weight: 720;
-    font-stretch: 118%;
-    line-height: 0.95;
-    letter-spacing: -0.025em;
+    font-size: clamp(3.25rem, 9.6vw, 9.25rem);
+    font-weight: 600;
+    font-stretch: 94%;
+    line-height: 0.86;
+    letter-spacing: -0.052em;
   }
-  @media (max-width: 639px) {
-    .t-display {
-      font-stretch: 104%;
-    }
+  .t-serif {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  /* The hero's name fills its column exactly: sized on the column (a container), not the viewport. */
+  .t-name {
+    font-size: min(17.4cqi, 9.5rem);
+  }
+  .t-display .t-serif {
+    letter-spacing: -0.035em;
+    /* The serif runs smaller on the body; a little extra size matches the cap heights. */
+    font-size: 1.08em;
   }
 
   .t-section {
     font-family: var(--font-display);
-    font-size: clamp(2rem, 3vw, 2.5rem);
-    font-weight: 620;
-    font-stretch: 108%;
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.875rem, 6.4vw, 5.5rem);
+    font-weight: 600;
+    font-stretch: 94%;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
   }
 
   .t-title {
     font-family: var(--font-display);
-    font-size: 1.625rem;
+    font-size: clamp(1.75rem, 2.6vw, 2.25rem);
     font-weight: 600;
-    font-stretch: 104%;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
   }
 
   .t-item {
     font-size: 1.25rem;
     font-weight: 600;
     line-height: 1.3;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   .t-wide {
     font-family: var(--font-display);
-    font-stretch: 112%;
+    letter-spacing: -0.02em;
   }
 
   /* Mono labels: dates, stacks, specs, captions, readouts. */
@@ -310,128 +354,140 @@ body {
     font-variant-numeric: tabular-nums;
   }
 
-  /* About 70 characters of Instrument Sans (ch is the width of "0", which runs wide in it). */
   .measure {
     max-width: 34em;
   }
 
-  /* Text links: ink with a quiet underline that turns orange on hover. */
+  /* Text links: ink with a quiet underline that pours into cobalt on hover. */
   .link {
     color: var(--ink);
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
     text-decoration-color: color-mix(in srgb, var(--ink) 30%, transparent);
     text-underline-offset: 0.25em;
-    transition: text-decoration-color 240ms ease;
+    transition: text-decoration-color 240ms ease, text-underline-offset 420ms var(--ease-spring);
   }
   .link:hover {
     text-decoration-color: var(--signal-text);
     text-decoration-thickness: 2px;
+    text-underline-offset: 0.32em;
   }
   .link-arrow {
     display: inline-block;
     margin-left: 0.2em;
     color: var(--graphite);
-    transition: transform 160ms ease, color 160ms ease;
+    transition: transform 520ms var(--ease-spring), color 160ms ease;
   }
   .link:hover .link-arrow {
     color: var(--signal-text);
+    transform: translate(0.12em, -0.12em);
   }
 
   /* ------------------------------------------------------------------
-     Objects. All decoration is one of these, and each has a function.
+     Buttons. Pills with weight: on hover a fill pours up from the bottom
+     with a curved meniscus, on a spring, and they settle when pressed.
      ------------------------------------------------------------------ */
-
-  /* Keycaps: anything you press. */
   .key {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0 1.05rem;
-    border-radius: 0.5rem;
+    min-height: 2.875rem;
+    padding: 0 1.25rem;
+    border-radius: 999px;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
     color: var(--ink);
-    box-shadow: var(--key-shadow);
     font-size: 0.9375rem;
     font-weight: 550;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
     user-select: none;
-    transition: transform 60ms ease, box-shadow 60ms ease, border-color 150ms ease, background-color 150ms ease;
+    transition: transform 420ms var(--ease-spring), border-color 200ms ease, color 260ms ease, background-color 200ms ease;
   }
-  .key:hover {
-    border-color: color-mix(in srgb, var(--ink) 38%, var(--rule-strong));
+  /* The pour: a disc wider than the key, risen from below. */
+  .key::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: -25%;
+    right: -25%;
+    top: 0;
+    height: 220%;
+    border-radius: 50%;
+    background: var(--pour, var(--ink));
+    transform: translateY(100%);
+    transition: transform 620ms var(--ease-pour);
+  }
+  @media (hover: hover) {
+    .key:hover {
+      color: var(--pour-ink, var(--paper));
+      border-color: var(--pour, var(--ink));
+    }
+    .key:hover::before {
+      transform: translateY(-18%);
+    }
   }
   .key:active,
   .key[data-latched="true"] {
-    transform: translateY(1px);
-    box-shadow: var(--key-shadow-down);
+    transform: scale(0.96);
+    transition-duration: 120ms;
   }
   .key:disabled {
     cursor: not-allowed;
-    opacity: 0.45;
+    opacity: 0.4;
     transform: none;
-    box-shadow: var(--key-shadow);
+  }
+  .key:disabled::before {
+    display: none;
+  }
+  @media (max-width: 400px) {
+    .key {
+      padding: 0 1.05rem;
+    }
   }
   .key-sm {
     min-height: 2rem;
-    padding: 0 0.7rem;
+    padding: 0 0.8rem;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     font-weight: 500;
   }
   .key-icon {
-    width: 2.75rem;
+    width: 2.875rem;
     padding: 0;
   }
 
-  /* Orange keys: the actuators. */
+  /* Cobalt keys: the actuators and the main "Email me". They pour into ink. */
   .key-signal {
-    border-color: var(--signal-edge);
+    border-color: var(--signal);
     background: var(--signal);
     color: var(--signal-ink);
-    box-shadow: var(--signal-shadow);
-  }
-  .key-signal:hover {
-    border-color: var(--signal-edge);
-    background: var(--signal);
-    filter: brightness(1.04);
-  }
-  .key-signal:active,
-  .key-signal[data-latched="true"] {
-    box-shadow: var(--signal-shadow-down);
+    --pour: var(--ink);
+    --pour-ink: var(--paper);
   }
 
-  /* Ink keys: the primary action where orange would compete with the device (the hero's "Email me"). */
+  /* Ink keys: the strongest neutral. They pour into cobalt. */
   .key-ink {
     border-color: var(--ink);
     background: var(--ink);
     color: var(--paper);
-    box-shadow: var(--ink-shadow);
-  }
-  .key-ink:hover {
-    border-color: var(--ink);
-    background: color-mix(in srgb, var(--ink) 86%, var(--paper));
-  }
-  .key-ink:active {
-    box-shadow: var(--ink-shadow-down);
+    --pour: var(--signal);
+    --pour-ink: var(--signal-ink);
   }
 
-  /* A legend key: the same cap as .key, but it labels something instead of doing something
-     (the tools board). No hover, no press. */
+  /* A tag: labels something, never presses (the tools board). */
   .keycap {
     display: inline-flex;
     align-items: center;
-    height: 1.875rem;
-    padding: 0 0.625rem;
-    border-radius: 0.5rem;
+    height: 2rem;
+    padding: 0 0.8rem;
+    border-radius: 999px;
     border: 1px solid var(--rule-strong);
-    background: var(--key-face);
-    box-shadow: var(--key-shadow);
     color: var(--ink);
     font-family: var(--font-mono);
     font-size: 0.8125rem;
@@ -470,16 +526,14 @@ body {
     content: none;
   }
 
-  /* A project's numbers: three columns between two hairlines, on the paper. */
+  /* A project's numbers: big figures over mono labels, between two hairlines. */
   .stat-row {
     display: grid;
-    /* The first two columns take their labels' width; the last takes what is left. */
     grid-template-columns: auto auto minmax(0, 1fr);
     column-gap: 2.5rem;
     border-block: 1px solid var(--rule);
-    padding-block: 0.75rem;
+    padding-block: 1rem;
   }
-  /* dt comes first in the markup (valid HTML); the number is drawn on top. */
   .stat-row > div {
     display: flex;
     flex-direction: column-reverse;
@@ -487,23 +541,20 @@ body {
   }
   .stat-row dd {
     font-family: var(--font-display);
-    font-size: 1.625rem;
+    font-size: 2.5rem;
     font-weight: 600;
-    font-stretch: 104%;
-    line-height: 1.1;
-    letter-spacing: -0.015em;
+    line-height: 1;
+    letter-spacing: -0.045em;
     font-variant-numeric: tabular-nums;
     color: var(--ink);
   }
   .stat-row dt {
-    margin-top: 0.25rem;
+    margin-top: 0.4rem;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--graphite);
   }
-  /* On a phone three columns leave the labels a word wide, so each number gets its own row with
-     its label beside it, on the same hairlines as a spec table. */
   @media (max-width: 639px) {
     .stat-row {
       grid-template-columns: minmax(0, 1fr);
@@ -513,13 +564,14 @@ body {
       flex-direction: row-reverse;
       align-items: baseline;
       gap: 0.875rem;
-      padding-block: 0.625rem;
+      padding-block: 0.75rem;
     }
     .stat-row > div + div {
       border-top: 1px solid var(--rule);
     }
     .stat-row dd {
-      min-width: 3.25em;
+      min-width: 2.6em;
+      font-size: 2rem;
     }
     .stat-row dt {
       margin-top: 0;
@@ -537,64 +589,48 @@ body {
     border-radius: 0.5rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
-    box-shadow: var(--key-shadow);
     font-family: var(--font-mono);
     font-size: 0.75rem;
     font-weight: 500;
     color: var(--ink-2);
   }
 
-  /* Raised panels: the device, the project mats, the tools board. */
+  /* A surface one step off the paper: the tools board, the stats page's empty state. */
   .panel {
-    border-radius: 1.25rem;
+    border-radius: 1.5rem;
     border: 1px solid var(--rule);
     background: var(--paper-raised);
-    box-shadow: var(--panel-highlight);
   }
 
-  /* The contact console: the page closes on the simulator's material. A charcoal plate, dark in
-     both themes, with an engraved inner rule inset 6px. Inside it the page tokens are
-     re-pointed at the screen's, so text, hairlines, spec tables and keys all follow without
-     per-element colours. Its keys are dark caps; the orange "Email me" stays the one actuator. */
-  .console {
+  /* ------------------------------------------------------------------
+     The device: the simulator, a dark instrument floating on the fluid in
+     both themes. Inside it the page tokens are re-pointed at the screen's,
+     so keys, labels and hairlines follow without per-element colours.
+     ------------------------------------------------------------------ */
+  .device {
     position: relative;
-    border-radius: 1.25rem;
-    background: var(--screen);
+    border-radius: 1.5rem;
+    background: color-mix(in srgb, var(--screen) 90%, transparent);
     color: var(--screen-ink);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), var(--elevation);
+    box-shadow: var(--device-shadow);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     --ink: var(--screen-ink);
     --ink-2: var(--screen-ink);
     --graphite: var(--screen-graphite);
     --rule: var(--screen-line);
     --rule-strong: var(--screen-outline);
-    /* Dark caps, a step above the plate: light enough to read as keys, dark enough that the
-       graphite legends ("PDF") keep 4.5:1. */
-    --key-face: color-mix(in srgb, var(--screen-ink) 8%, var(--screen));
-    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-    --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-    /* On charcoal the fill orange is itself text-safe (5.7:1), so underlines and focus use it. */
-    --signal-text: var(--signal);
-  }
-  .console::before {
-    content: "";
-    position: absolute;
-    inset: 6px;
-    border-radius: calc(1.25rem - 6px);
-    border: 1px solid var(--screen-line);
-    pointer-events: none;
-  }
-  @media (max-width: 639px) {
-    .console::before {
-      content: none;
-    }
+    --paper: var(--screen);
+    --key-face: var(--screen-raised);
+    --signal-text: var(--screen-signal);
   }
 
-  /* Recessed screens: where data lives, dark in both themes. */
+  /* The contact block's portrait plate and the dark screens. */
   .screen {
-    border-radius: 0.75rem;
+    border-radius: 0.875rem;
     background: var(--screen);
     color: var(--screen-ink);
-    box-shadow: var(--screen-inset);
+    box-shadow: inset 0 0 0 1px var(--screen-line);
   }
   .screen-dots {
     background-image: radial-gradient(var(--screen-dot) 1px, transparent 1.2px);
@@ -602,11 +638,11 @@ body {
     background-position: 8px 8px;
   }
 
-  /* A screenshot sits on a mat inside a browser frame. Captures with a dark copy swap by theme
+  /* A screenshot in a browser frame. Captures with a dark copy swap by theme
      (components/project-shot.tsx); nothing is dimmed with a filter. */
   .shot-frame {
     overflow: hidden;
-    border-radius: 0.75rem;
+    border-radius: 0.875rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
     box-shadow: var(--elevation);
@@ -622,7 +658,7 @@ body {
   }
   .spec dt,
   .spec dd {
-    padding: 0.5rem 0;
+    padding: 0.55rem 0;
     border-top: 1px solid var(--rule);
   }
   .spec > div:last-child dt,
@@ -631,13 +667,10 @@ body {
   }
   .spec dt {
     color: var(--graphite);
-  }
-  .spec dt {
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     line-height: 1.5rem;
   }
-  /* Values are words, so they are set in the sans; the labels stay mono. */
   .spec dd {
     padding-left: 1rem;
     color: var(--ink);
@@ -649,37 +682,139 @@ body {
     line-height: 1.5rem;
   }
 
-  /* The fader in the simulator's control deck. */
+  /* The fader cap in the simulator's control deck. */
   .fader-cap {
     position: relative;
     display: block;
-    width: 28px;
-    height: 16px;
-    border-radius: 8px;
-    border: 1px solid var(--signal-edge);
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
     background: var(--signal);
-    box-shadow: var(--signal-shadow);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 22%, transparent), 0 2px 6px rgb(0 0 0 / 0.4);
     cursor: grab;
-    transition: transform 60ms ease;
-  }
-  .fader-cap::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 3px;
-    bottom: 4px;
-    width: 1px;
-    margin-left: -0.5px;
-    background: rgb(0 0 0 / 0.35);
+    transition: transform 380ms var(--ease-spring), box-shadow 300ms ease;
   }
   .fader-cap::after {
     content: "";
     position: absolute;
-    inset: -12px -10px;
+    inset: -12px;
+  }
+  .fader-cap:hover {
+    transform: scale(1.12);
   }
   .fader-cap:active {
     cursor: grabbing;
-    transform: translateY(1px);
+    transform: scale(0.92);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--signal) 26%, transparent), 0 2px 6px rgb(0 0 0 / 0.4);
+  }
+
+  /* A row that floods with ink on hover (Writing, More projects): the fill rises from the bottom
+     edge with a curved surface, on the same pour curve as the buttons. Decoration only: on touch
+     screens nothing is hidden behind it. */
+  .pour-row {
+    position: relative;
+    isolation: isolate;
+  }
+  .pour-row::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0 -1rem;
+    border-radius: 1rem;
+    background: var(--paper-raised);
+    clip-path: ellipse(75% 0% at 50% 100%);
+    transition: clip-path 700ms var(--ease-pour);
+  }
+  @media (hover: hover) {
+    .pour-row:hover::before {
+      clip-path: ellipse(90% 150% at 50% 100%);
+    }
+  }
+
+  /* The traffic reading that swells when it changes. */
+  .tick {
+    display: inline-block;
+    transition: transform 500ms var(--ease-spring);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Reveals (components/motion-root.tsx). Hidden only once motion is on, so
+   without JavaScript or under reduced motion everything is just there.
+   ------------------------------------------------------------------ */
+html[data-motion="on"] [data-reveal]:not([data-in]) {
+  opacity: 0;
+}
+html[data-motion="on"] [data-reveal="rise"]:not([data-in]) {
+  transform: translate3d(0, 2.25rem, 0);
+}
+html[data-motion="on"] [data-reveal="title"]:not([data-in]) {
+  opacity: 1;
+  transform: translate3d(0, 0.45em, 0);
+  clip-path: inset(-0.2em -0.2em 100% -0.2em);
+}
+html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
+  opacity: 1;
+  clip-path: circle(0 at 50% 50%);
+}
+[data-reveal] {
+  transition: opacity 900ms var(--ease-out), transform 1100ms var(--ease-out), clip-path 1100ms var(--ease-out);
+  transition-delay: var(--d, 0ms);
+}
+[data-reveal="title"] {
+  clip-path: inset(-0.2em -0.2em -0.2em -0.2em);
+}
+
+/* The name pours in on load: each line rises inside its own clip. It starts partly visible, so the
+   first paint already shows it. */
+.rise-line {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.rise-line > span {
+  display: inline-block;
+  animation: rise-in 1300ms var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes rise-in {
+  from {
+    transform: translate3d(0, 55%, 0) skewY(4deg);
+  }
+  to {
+    transform: none;
+  }
+}
+.fade-up {
+  animation: fade-up 1100ms var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes fade-up {
+  from {
+    opacity: 0.001;
+    transform: translate3d(0, 1rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The music player and other popovers open like a drop landing: a spring, from the trigger. */
+[data-slot="popover-content"][data-state="open"] {
+  animation: drop-in 560ms var(--ease-spring) both !important;
+}
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.94);
+    clip-path: inset(0 0 60% 0 round 1rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0 round 1rem);
   }
 }
 
@@ -797,11 +932,11 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
-  /* In the base layer, so component colours (the orange keys) win over it. */
+  /* In the base layer, so component colours (the cobalt keys) win over it. */
   a {
     color: inherit;
   }
-  /* Orange means "you're operating this". Utilities like outline-hidden can still opt out. */
+  /* Cobalt means "you are operating this". Utilities like outline-hidden can still opt out. */
   :focus-visible {
     outline: 2px solid var(--signal-text);
     outline-offset: 3px;
@@ -818,7 +953,7 @@ body {
   }
 }
 
-/* Theme switch: the new theme is revealed as a growing circle (see lib/theme.ts). */
+/* Theme switch: the new theme floods out of the toggle as an ink blot (see lib/theme.ts). */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -843,4 +978,114 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .eq-bar-on { animation: none; height: 70%; }
+}
+
+/* ------------------------------------------------------------------
+   Sheets over the pool. Every section but the hero and contact is an
+   opaque sheet with rounded corners, inset from the viewport by a thin
+   rail, so the liquid shows in the channels around and between them and
+   scrolling drags a wake off their edges (data-liquid-edge).
+   ------------------------------------------------------------------ */
+:root {
+  --rail: clamp(0.5rem, 1vw, 0.875rem);
+}
+.sheet {
+  position: relative;
+  margin-inline: var(--rail);
+  margin-top: var(--rail);
+  border-radius: 1.75rem;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--rule);
+}
+/* The off-the-clock strip and Work are one sheet. */
+.sheet-top {
+  margin-top: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.sheet-join {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+@media (max-width: 639px) {
+  .sheet {
+    border-radius: 1.25rem;
+  }
+  .sheet-top {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .sheet-join {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+}
+
+/* A project's stage: the raised surface its screenshots sit on. */
+.stage {
+  border-radius: 1.5rem;
+  background: var(--paper-raised);
+  padding: 0.75rem 0.75rem 1rem;
+}
+@media (min-width: 640px) {
+  .stage {
+    padding: 2rem;
+  }
+}
+/* Screenshots have weight: they lift on a spring when you point at them. */
+.lift {
+  transition: transform 700ms var(--ease-spring), box-shadow 500ms ease;
+}
+@media (hover: hover) {
+  .group:hover > .lift,
+  .lift:hover {
+    transform: translateY(-6px) scale(1.012);
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 40px 60px -36px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* The contact address: an underline that fills with cobalt from the left, like ink wicking along
+   a line. */
+.email-link {
+  width: fit-content;
+  max-width: 100%;
+  background-image: linear-gradient(var(--signal-text), var(--signal-text)), linear-gradient(var(--ink), var(--ink));
+  background-size: 0% 3px, 100% 2px;
+  background-position: 0 100%, 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 0.12em;
+  transition: background-size 900ms var(--ease-pour);
+}
+.email-link:hover {
+  background-size: 100% 3px, 100% 2px;
+}
+
+/* Header links: a cobalt stroke that springs out from the left on hover and stays under the
+   current page. */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--signal-text);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 520ms var(--ease-spring);
+}
+.nav-link:hover::after,
+.nav-link[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* On the home page the body is the pool, so the hero matches the liquid before it fades in (and
+   without WebGL). */
+html:has(.liquid-field) body {
+  background: var(--pool);
 }

@@ -40,22 +40,42 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 ## Design
 
-"Workbench": near-white paper with grey hardware on it, where every decoration is an object with a
-job. The hero simulator is a small device (raised panel, dark screen, keycap controls) that also
-feeds a live status strip above the name, project screenshots sit on mats with numbered captions,
-Experience opens with a span strip of every role, the tools are a board of keycaps, and the page
-closes on a charcoal contact console in the simulator's screen material. International orange
-(`--signal`) appears on things you press and on "now" (the current role and the timeline cursor),
-and in the first viewport only on the device. Light by default, with a dark
-theme at the same temperature that follows the OS or the header toggle. The toggle reveals the new
-theme as a circle using the View Transitions API, and switches instantly where that API isn't
-available or the visitor prefers reduced motion.
+"Liquid": the page is a stack of sheets floating on a pool of real fluid. A GPU fluid simulation
+(`lib/fluid.ts`, adapted from Pavel Dobryakov's MIT-licensed WebGL-Fluid-Simulation) runs on one
+fixed canvas behind everything (`components/liquid-field.tsx`). The hero and the contact section
+are transparent windows onto it, and every other section is an opaque, rounded sheet inset by a
+thin rail, so the liquid also shows in the channels between them. It is ink on paper in the light
+theme and lit smoke on near-black in the dark one, and it can only paint the neutrals and the one
+accent, cobalt (`--signal`).
 
-Type is Archivo (variable; the width axis is the display voice) with JetBrains Mono for dates,
-stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--ink-2`,
-`--graphite`, `--rule`, `--signal`, `--screen`…) exposed to Tailwind as `bg-paper`, `text-graphite`
-and so on. The object classes (`.panel`, `.screen`, `.key`, `.key-signal`, `.key-ink`, `.keycap`,
-`.spec`, `.stat-row`, `.sep-list`, `.console`, `.sim-status`) are in `app/globals.css`.
+The hero simulator drives it through `lib/flow-bus.ts`: incoming traffic is a current flowing
+into the device, strain (latency, errors, a dead server) makes it turbulent and tints it cobalt,
+and killing a server blooms cobalt out of the device at that node. The pointer stirs it,
+scrolling drags a wake off the sheets' edges (`data-liquid-edge`), and the theme toggle drops
+ink into it while the new theme floods out of the button as an ink blot (View Transitions,
+`blotPath` in `lib/theme.ts`). The fluid holds back behind the hero's text and the contact block
+(`data-liquid-protect`), so words always sit on clean water.
+
+Below the fold, `components/motion-root.tsx` adds inertial scrolling (Lenis, loaded after
+hydration) and reveals: section titles rise out of their own clip, rows rise in, and project
+screenshots and the portrait open with the same ink blot as the theme switch (`data-reveal`).
+Buttons are pills that pour full of ink (or cobalt) from the bottom on a spring. Reveals hide
+content only after `html[data-motion="on"]` is set, so without JavaScript or under
+`prefers-reduced-motion` everything is simply there; reduced motion also turns Lenis off and
+renders the liquid as one still frame.
+
+The field starts once the page has loaded and gone idle, caps the pixel ratio (1.5 desktop, 1.25
+touch), pauses in background tabs, and runs at half rate when only the rails are in view. Without
+WebGL the windows show the plain pool colour. On an M2 Pro it holds 60 fps at 1440×900 (2160×1350
+canvas) with about 0.1 ms of main-thread time a frame.
+
+Type is Instrument Sans (variable; set tight and large for the name and section titles) with
+Instrument Serif italic as a second voice for one or two words, and JetBrains Mono for dates,
+stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--pool`, `--ink`,
+`--ink-2`, `--graphite`, `--rule`, `--signal`, `--screen`, `--fluid-*`…) exposed to Tailwind as
+`bg-paper`, `text-graphite` and so on. The object classes (`.sheet`, `.device`, `.screen`, `.key`,
+`.key-signal`, `.key-ink`, `.keycap`, `.stage`, `.spec`, `.stat-row`, `.pour-row`, `.sep-list`)
+are in `app/globals.css`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,
@@ -63,7 +83,8 @@ command (⌘K menu), slider (the simulator's fader is built on its Radix primiti
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
 
-**The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
+**The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a dark
+instrument (`.device`) floating on the liquid. It is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen

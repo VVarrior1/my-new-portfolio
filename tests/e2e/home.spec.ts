@@ -89,3 +89,21 @@ test.describe("other pages", () => {
     await expect(page.getByRole("heading", { name: /^(Page views per day, last 30 days|Nothing counted yet)$/ })).toBeVisible();
   });
 });
+
+test.describe("reduced motion", () => {
+  test("shows everything without waiting on an animation", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    // Reveals only hide content once motion is on, so nothing below the fold is waiting to fade in.
+    await expect(page.locator("html")).not.toHaveAttribute("data-motion", "on");
+    const title = page.getByRole("heading", { level: 2, name: "Experience" });
+    await title.scrollIntoViewIfNeeded();
+    await expect(title).toBeVisible();
+    await expect(title).toHaveCSS("opacity", "1");
+    // The liquid, if WebGL is available, is a single still frame.
+    const field = page.locator("canvas.liquid-field");
+    await expect(field).toHaveCount(1);
+    const ready = await field.getAttribute("data-ready");
+    expect(ready === null || ready === "still").toBe(true);
+  });
+});

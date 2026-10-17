@@ -59,7 +59,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-8 sm:px-8 sm:pt-16">
+      <main id="main" className="mx-auto w-full max-w-[88rem] px-4 pb-24 pt-8 sm:px-8 sm:pt-16">
         <article className="mx-auto max-w-[42rem]">
           <p>
             <Link href="/blogs" className="t-mono text-graphite transition-colors hover:text-ink">

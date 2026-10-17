@@ -6,8 +6,8 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto border-t border-rule">
-      <div className="t-mono mx-auto flex max-w-[76rem] flex-col gap-5 px-4 py-10 text-graphite sm:flex-row sm:items-center sm:justify-between sm:px-8">
+    <footer className="sheet mb-[var(--rail)] mt-auto" data-liquid-edge>
+      <div className="t-mono mx-auto flex max-w-[88rem] flex-col gap-5 px-4 py-10 text-graphite sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <p>
           <span className="text-ink-2">
             © {year} {profile.name}

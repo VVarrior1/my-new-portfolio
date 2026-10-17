@@ -6,9 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } 
 import type { Shot } from "@/lib/content";
 
 /** A browser window around a screenshot. `children` replaces the image, e.g. with a button wrapping it. */
-function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNode }) {
+function BrowserFrame({ shot, children, lift = false }: { shot: Shot; children: React.ReactNode; lift?: boolean }) {
   return (
-    <div className="shot-frame">
+    <div className={lift ? "shot-frame lift" : "shot-frame"}>
       <div className="flex h-8 items-center gap-1.5 border-b border-rule px-3 font-mono text-[0.8125rem] text-graphite">
         <LockIcon className="size-3 shrink-0" aria-hidden="true" />
         <span className="truncate">{shot.url}</span>
@@ -57,7 +57,7 @@ function PhoneFrame({ shot, sizes }: { shot: Shot; sizes: string }) {
  */
 export function ProjectShot({ name, shot, phone, figure, caption }: { name: string; shot: Shot; phone?: Shot; figure: number; caption: string }) {
   const browser = (
-    <BrowserFrame shot={shot}>
+    <BrowserFrame shot={shot} lift>
       <DialogTrigger asChild>
         <button type="button" className="group relative block w-full cursor-zoom-in text-left" aria-label={`Enlarge screenshots of ${name}`}>
           <ShotImage shot={shot} sizes={phone ? "(min-width: 1024px) 440px, 66vw" : "(min-width: 1024px) 620px, 100vw"} />
@@ -80,7 +80,7 @@ export function ProjectShot({ name, shot, phone, figure, caption }: { name: stri
           <div className="grid grid-cols-[minmax(0,1fr)_26%] items-end gap-3 sm:grid-cols-[minmax(0,1fr)_9.5rem] sm:gap-5">
             {browser}
             <DialogTrigger asChild>
-              <button type="button" className="block w-full cursor-zoom-in" aria-label={`Enlarge the phone view of ${name}`}>
+              <button type="button" className="lift block w-full cursor-zoom-in rounded-xl sm:rounded-[1.25rem]" aria-label={`Enlarge the phone view of ${name}`}>
                 <PhoneFrame shot={phone} sizes="(min-width: 640px) 152px, 26vw" />
               </button>
             </DialogTrigger>
@@ -94,7 +94,7 @@ export function ProjectShot({ name, shot, phone, figure, caption }: { name: stri
         </figcaption>
       </figure>
 
-      <DialogContent className="max-h-[92vh] w-[min(96vw,1280px)] max-w-none overflow-y-auto rounded-[1.25rem] bg-paper p-4 sm:max-w-none sm:p-6">
+      <DialogContent className="max-h-[92vh] w-[min(96vw,1280px)] max-w-none overflow-y-auto rounded-[1.5rem] bg-paper p-4 sm:max-w-none sm:p-6">
         <DialogTitle className="t-wide pr-10 text-[1.25rem] font-semibold">{name}</DialogTitle>
         <DialogDescription className="text-[0.9375rem] text-ink-2">{shot.alt}</DialogDescription>
         <div className={phone ? "grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_260px]" : ""}>

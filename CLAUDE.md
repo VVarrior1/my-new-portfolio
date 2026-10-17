@@ -20,54 +20,55 @@ Run all of them before pushing; `npm run ci` chains them.
 
 ## Design rules
 
-The design is "Workbench": near-white warm paper with grey hardware on it, objects with a job, and
-one colour, international orange, used on things you press and on "now". Read the token comments
-at the top of `app/globals.css`.
+The design is "Liquid": sheets floating on a real fluid simulation, ink on paper (light) or smoke
+on black (dark), with one accent, cobalt. Read `README.md` → Design and the token comments at the
+top of `app/globals.css`.
 
-- Colors only through the tokens in `app/globals.css` (`paper`, `paper-raised`, `key-face`, `ink`,
-  `ink-2`, `graphite`, `rule`, `signal`, `signal-text`, `screen-*`, `trace`, `fail`, `go`). Every
-  token has a dark value; check both themes. Every neutral sits on one warm hue at OKLCH chroma
-  ≤ 0.006, so light and dark share one temperature. Check new neutrals with a script, not by eye.
-- Every color has one job. `--signal` (orange) fills actuators (the simulator's kill key and fader
-  cap, the contact console's "Email me") and marks the present: the current role's bar, dot and
-  the "now" cursor in Experience. `--signal-text` is for orange text, hover underlines and arrows
-  (links, Writing rows, the active nav item). The hero's "Email me" is an ink key (`.key-ink`) so
-  the first viewport's only orange is on the device. Orange is never large areas and never text on
-  paper (2.9:1). Never tint, blend or fade it. Status colours (`--trace`, `--fail`, `--screen-go`)
-  appear only on screen material (`.screen`: the simulator, the hero's live status strip and the
-  /stats chart); `--go` is the page's only status dot on paper (availability).
-- Decoration is objects, never backgrounds: `.panel` (device, project mats, tools board),
-  `.console` (the contact card: screen material, which re-points the page tokens at the screen's),
-  the experience span strip, `.screen` (the simulator, the status strip and the /stats chart), `.key` /
-  `.key-signal` / `.key-ink` (anything pressable), `.keycap` (a legend key that labels, never
-  presses), `.spec` (label/value tables), `.stat-row` (a project's numbers, on the paper).
-  No glows, blur, gradients (other than the 1px key highlights), textures or ambient animation.
-  `backdrop-filter` only on the sticky header.
-- Type: Archivo (variable, the width axis carries the display voice via `font-stretch`) and
-  JetBrains Mono for data only: dates, numbers, stacks, URLs and everything on a screen. Words
-  (spec values, captions) are Archivo. Seven sizes (13/15/17/20/26/40/56), weights 400–650; mono
-  is 13px off-screen, 12px only on screens. Body prose is `ink` or `ink-2`; `graphite` is metadata only.
-- "A · B · C" lists use `DotList` (`.sep-list`), which never leaves a separator dangling at a line end.
-- Layout: one 12-column grid (74px columns, 24px gutters) in a 72rem container. Section titles sit
-  on the content edge with the mono index on its own line above. Hero and Systemlab: text in
-  cols 1-5, object in 6-12 (CYD mirrors it). Experience, Background, Writing and More projects
-  share the 3/9 split, and the span strip and tools board put their content on the same col-4
-  edge. Three radii: 8px (controls, nodes), 12px (inner frames, screens), 20px (panels, mats).
+- Colors only through the tokens in `app/globals.css` (`paper`, `pool`, `paper-raised`, `key-face`,
+  `ink`, `ink-2`, `graphite`, `rule`, `signal`, `signal-text`, `screen-*`, `trace`, `fail`, `go`,
+  `fluid-*`). Every token has a dark value; check both themes. Neutrals sit on one cool hue
+  (OKLCH h≈265, chroma ≤ 0.016). Check new neutrals and contrast with a script, not by eye.
+- One accent. `--signal` (cobalt) fills what you press (the main "Email me", the kill button, the
+  fader cap), marks "now" (the current role's bar, the timeline cursor) and section indexes;
+  `--signal-text` is cobalt text, hover strokes and arrows. The fluid may only paint the neutral
+  dye and the accent (red and green channels of its dye texture); never add a second hue to it.
+  Status colours (`--trace`, `--fail`, `--screen-go`) appear only on the simulator's screen and
+  the /stats chart; `--go` is the availability dot.
+- The liquid (`components/liquid-field.tsx`) is seen only through windows: `data-liquid-window`
+  (the hero, the contact section, and `main` for the rails). Sections are `.sheet`s; give a new
+  sheet `data-liquid-edge` so scrolling drags a wake off it. Text over the liquid needs a
+  `data-liquid-protect` ancestor (the value is how much dye is held back, 0–1).
+- Simulator → liquid goes through `lib/flow-bus.ts` only (`setFlowState`, `emitFlow`). Points
+  are viewport pixels.
+- Motion: springs (`--ease-spring`) for things with weight, `--ease-out` for glides, `--ease-pour`
+  for fills. Animate transform, opacity and clip-path only. Entrances use `data-reveal`
+  (`rise`, `title`, `blot`) and must never be required to read anything: they hide content only
+  under `html[data-motion="on"]`. Every loop pauses in hidden tabs; the liquid also starts on
+  idle after load (LCP), caps DPR, renders one still frame under reduced motion, and must keep
+  60 fps on a laptop (measure with `window.__liquid`).
+- Hover is decoration only (pour fills, lifts, strokes). Nothing is hidden behind hover, so touch
+  loses nothing.
+- Type: Instrument Sans for everything, Instrument Serif italic for at most one or two words in a
+  heading (the surname, "2027?"), JetBrains Mono for data only. The name is sized on its column
+  (`.t-name`, container units) so it always fits on one line per word.
+- Layout: one 12-column grid in an 88rem container; the hero is text 1–6, device 7–12.
+  Experience, Background, Writing and More projects share the 3/9 split. Radii: 10px (nodes),
+  14px (frames, screens), 24–28px (device, sheets, stages); buttons are pills.
 - The name is never printed twice in one viewport: the header wordmark waits on `/` until the h1
-  scrolls out. The simulator stays the loudest object in the first viewport.
-- No all-caps eyebrow labels, chips or card grids. Hierarchy comes from type size, weight and rules.
-- The hero simulator is the only motion that isn't triggered by the user. Keep it that way,
-  keep it starting on idle (it blocked first paint when it started on hydration: Lighthouse 72 → 97),
-  and respect `prefers-reduced-motion`. The status line and diagram share a fixed height
-  (`DISPLAY_HEIGHT`) so controls never move under the pointer, and the diagram flows top to bottom
-  when the screen is narrower than 560px.
+  scrolls out.
+- No all-caps eyebrow labels or card grids. Hierarchy comes from scale: the name and section
+  titles are very large, everything else is calm.
+- The simulator's status line and diagram share a fixed height (`DISPLAY_HEIGHT`) so controls
+  never move under the pointer, and the diagram flows top to bottom below 560px.
 - shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
   `globals.css`, not per-component colors. cmdk separators inside the list break ARIA, so don't add them.
   Object classes live in `@layer components` so Tailwind utilities can still override them; keep
   element resets (`a`, `:focus-visible`) in `@layer base` for the same reason.
-- History: the owner called the purely typographic versions "bland", rejected stock photos of
-  Calgary as "forced and irrelevant", and scored the grid + blue/green/violet glows version 4/10
-  ("the colors are off"). Don't bring back glows, colored section backgrounds or multiple accent hues.
+- History: the owner called the typographic versions "bland", rejected stock photos of Calgary
+  ("forced and irrelevant"), scored the multi-hue glow version 4/10 ("the colors are off"), found
+  Night Ops (dark, light beams) "mid", and Workbench (warm paper, orange, hardware) "6.5/7,
+  something is missing". Liquid is the answer to "we need some fluid animations". Don't bring back
+  multiple accent hues, glows or stock imagery.
 - Public counts under 50 (post reads) aren't shown; the visit total lives on `/stats` only.
 - Don't feature ApplyOps anywhere (the owner doesn't want it shown; the repo is private).
 - Product screenshots: `node scripts/capture-work-shots.mjs` (it also writes the Systemlab dark copy,

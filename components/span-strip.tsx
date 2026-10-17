@@ -47,7 +47,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
 
       <div className="min-w-0 lg:col-span-9">
         <div className="relative rounded-xl border border-rule bg-paper-raised py-2.5 shadow-[var(--panel-highlight)]">
-          {/* Year lines, then the "now" cursor: orange, because it is the present. */}
+          {/* Year lines, then the "now" cursor: cobalt, because it is the present. */}
           {years.map((year) =>
             year * 12 > axisStart && year * 12 < axisEnd ? (
               <span key={year} className="absolute inset-y-0 w-px bg-rule" style={{ left: at(year * 12) }} />

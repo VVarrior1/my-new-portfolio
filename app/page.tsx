@@ -3,6 +3,7 @@ import Link from "next/link";
 import { GithubMark, LinkedinMark } from "@/components/brand-icons";
 import { CopyEmail } from "@/components/copy-email";
 import { DotList } from "@/components/dot-list";
+import { LiquidField } from "@/components/liquid-field";
 import { LiveSystem } from "@/components/live-system";
 import { ProjectShot } from "@/components/project-shot";
 import { Section } from "@/components/section";
@@ -71,20 +72,35 @@ export default async function Home() {
 
   return (
     <>
-      <SiteHeader />
-      <main id="main">
-        {/* Hero: the name and the facts on the left, the simulator (a small device) on the right. */}
-        <section aria-labelledby="hero-name">
-          <div className="mx-auto grid max-w-[76rem] gap-y-10 px-4 pb-16 pt-6 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6">
-            <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-1">
-              <h1 id="hero-name" className="t-display sm:mt-4">
-                {profile.firstName}
-                <br />
-                {profile.lastName}
+      <SiteHeader overlay />
+      <LiquidField />
+      <main id="main" data-liquid-window>
+        {/* Hero: a window onto the liquid. The name and the facts on the left (the fluid is held
+            back behind them), the simulator floating on the right; the current flows into it. */}
+        <section id="top" aria-labelledby="hero-name" data-liquid-window className="relative">
+          <div className="mx-auto grid min-h-[calc(100svh-4rem-5.5rem)] max-w-[88rem] content-center gap-y-12 px-4 pb-14 pt-8 sm:px-8 sm:pb-20 sm:pt-12 lg:grid-cols-12 lg:gap-x-8 lg:pb-16 lg:pt-6">
+            <div data-liquid-protect="0.62" className="@container min-w-0 lg:col-span-6 lg:self-center">
+              <p className="t-mono fade-up text-graphite" style={{ ["--d" as string]: "80ms" }}>
+                {profile.role} · {profile.location}
+              </p>
+              <h1 id="hero-name" className="t-display t-name mt-5 sm:mt-6">
+                <span className="rise-line">
+                  <span>{profile.firstName}</span>
+                </span>
+                <span className="rise-line">
+                  <span className="t-serif pr-[0.06em]" style={{ ["--d" as string]: "90ms" }}>
+                    {profile.lastName}
+                  </span>
+                </span>
               </h1>
-              <p className="measure mt-5 text-[1.0625rem] leading-[1.55] text-ink sm:text-[1.25rem] sm:leading-[1.45]">{profile.intro}</p>
+              <p
+                className="measure fade-up mt-7 text-[1.1875rem] leading-[1.5] text-ink sm:mt-8 sm:text-[1.375rem] sm:leading-[1.42]"
+                style={{ ["--d" as string]: "220ms" }}
+              >
+                {profile.intro}
+              </p>
               {/* What a recruiter checks first: when, then work authorization and where. */}
-              <div className="mt-5 text-[0.9375rem] leading-[1.5]">
+              <div className="fade-up mt-6 text-[0.9375rem] leading-[1.5]" style={{ ["--d" as string]: "300ms" }}>
                 <p className="flex items-center gap-2 font-[550] text-ink">
                   <span className="size-1.5 shrink-0 rounded-full bg-go" aria-hidden="true" />
                   {profile.status}
@@ -94,8 +110,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              {/* Ink, not orange: up here the only orange is on the device. */}
-              <div className="mt-7 flex flex-wrap gap-2.5">
+              <div className="fade-up mt-8 flex flex-wrap gap-2 sm:gap-2.5" style={{ ["--d" as string]: "380ms" }}>
                 <a href={`mailto:${profile.email}`} className="key key-ink" data-track="email">
                   Email me
                 </a>
@@ -125,18 +140,24 @@ export default async function Home() {
               </div>
             </div>
 
-            <div id="play" className="min-w-0 scroll-mt-20 lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1">
+            <div id="play" className="fade-up min-w-0 scroll-mt-20 lg:col-span-6 lg:self-center" style={{ ["--d" as string]: "260ms" }}>
               <LiveSystem />
             </div>
+          </div>
+        </section>
 
-            {/* The personal line, as a small spec sheet. */}
-            <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:self-start">
-              <h2 className="t-mono text-graphite">Off the clock</h2>
-              <dl className="spec mt-2">
+        {/* The personal line: the top edge of the first sheet, so the first viewport ends on it. */}
+        <section aria-labelledby="off-the-clock" className="sheet sheet-top" data-liquid-edge>
+          <div className="mx-auto max-w-[88rem] px-4 sm:px-8">
+            <div className="grid gap-x-8 border-b border-rule py-5 sm:py-6 lg:grid-cols-12 lg:items-baseline">
+              <h2 id="off-the-clock" className="t-mono text-graphite lg:col-span-2">
+                Off the clock
+              </h2>
+              <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4 lg:col-span-10 lg:mt-0">
                 {profile.offTheClock.map((row) => (
-                  <div key={row.label}>
-                    <dt>{row.label}</dt>
-                    <dd>{row.value}</dd>
+                  <div key={row.label} className="min-w-0">
+                    <dt className="t-mono text-graphite">{row.label}</dt>
+                    <dd className="mt-0.5 text-[1.0625rem] font-[550] text-ink">{row.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -144,7 +165,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <Section id="work" index="01" title="Work" meta={`${featured.length} featured · ${otherProjects.length} more`}>
+        <Section id="work" index="01" title="Work" className="sheet-join" meta={`${featured.length} featured · ${otherProjects.length} more`}>
           <div className="space-y-20 sm:space-y-28">
             {featured.map((project, index) => {
               const flip = index % 2 === 1;
@@ -157,22 +178,29 @@ export default async function Home() {
                   className="grid gap-y-8 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6 lg:gap-y-0"
                 >
                   {/* On a phone the screenshot comes straight after the summary. */}
-                  <div className={`min-w-0 lg:row-start-1 ${textCols}`}>
-                    <h3 id={`${project.slug}-title`} className="t-title">
+                  <div className={`min-w-0 lg:row-start-1 ${textCols}`} data-reveal="rise">
+                    <p className="t-mono text-graphite">
+                      <span className="text-signal-text">{String(index + 1).padStart(2, "0")}</span>
+                      <span className="px-2" aria-hidden="true">
+                        /
+                      </span>
+                      {project.role}
+                    </p>
+                    <h3 id={`${project.slug}-title`} className="t-title mt-3">
                       {project.name}
                     </h3>
-                    <p className="t-mono mt-2 text-graphite">{project.role}</p>
-                    <p className="mt-4 text-ink">{project.summary}</p>
+                    <p className="mt-4 text-[1.125rem] leading-[1.55] text-ink">{project.summary}</p>
                   </div>
 
-                  {/* The mat: a raised surface the screenshot sits on. It stays in view while the text scrolls. */}
+                  {/* The stage: a raised surface the screenshot sits on. It blooms open like ink as it
+                      enters, and stays in view while the text scrolls. */}
                   <div className={`min-w-0 lg:sticky lg:top-24 lg:row-span-2 lg:row-start-1 lg:self-start ${matCols}`}>
-                    <div className="panel p-3 pb-4 sm:p-7">
+                    <div className="stage" data-reveal="blot" data-origin={flip ? "right" : "left"}>
                       <ProjectShot name={project.name} shot={project.shot} phone={project.phone} figure={index + 1} caption={project.caption} />
                     </div>
                   </div>
 
-                  <div className={`min-w-0 lg:row-start-2 lg:pt-6 ${textCols}`}>
+                  <div className={`min-w-0 lg:row-start-2 lg:pt-8 ${textCols}`} data-reveal="rise">
                     <dl className="stat-row">
                       {project.facts.map((fact) => (
                         <div key={fact.label}>
@@ -182,7 +210,7 @@ export default async function Home() {
                       ))}
                     </dl>
 
-                    <div className="mt-7 border-l-2 border-rule-strong pl-4">
+                    <div className="mt-8 border-l-2 border-signal pl-4">
                       <h4 className="font-semibold text-ink">{project.hardPart.title}</h4>
                       <p className="mt-1.5 text-ink-2">{project.hardPart.body}</p>
                     </div>
@@ -199,9 +227,9 @@ export default async function Home() {
 
           <div className={`${ROW} mt-20 border-t border-rule pt-10 sm:mt-28`}>
             <h3 className={ROW_LABEL}>More projects</h3>
-            <ul className={`${ROW_BODY} mt-4 grid gap-x-6 gap-y-9 md:grid-cols-2 lg:mt-0`}>
-              {otherProjects.map((project) => (
-                <li key={project.name}>
+            <ul className={`${ROW_BODY} mt-4 grid gap-x-6 gap-y-3 md:grid-cols-2 lg:mt-0`}>
+              {otherProjects.map((project, i) => (
+                <li key={project.name} className="pour-row py-4" data-reveal="rise" style={{ ["--d" as string]: `${(i % 2) * 90}ms` }}>
                   <h4 className="font-semibold">
                     {project.href ? (
                       <a href={project.href} target="_blank" rel="noreferrer" className="link">
@@ -230,12 +258,14 @@ export default async function Home() {
           title="Experience"
           meta={`${experience.length} roles · ${experience[experience.length - 1].start} – now`}
         >
-          <SpanStrip jobs={experience} until={profile.availableFrom} />
+          <div data-reveal="rise">
+            <SpanStrip jobs={experience} until={profile.availableFrom} />
+          </div>
           <ol className="mt-12 sm:mt-14">
             {experience.map((job) => {
               const current = job.end === "Now";
               return (
-                <li key={`${job.company}-${job.start}`} className={`${ROW} border-b border-rule py-7 first:pt-0`}>
+                <li key={`${job.company}-${job.start}`} className={`${ROW} border-b border-rule py-8 first:pt-0`} data-reveal="rise">
                   <div className={`${ROW_LABEL} flex flex-wrap gap-x-2 lg:block`}>
                     <p className="flex items-center gap-2">
                       {current && <span className="size-1.5 rounded-full bg-signal" aria-hidden="true" />}
@@ -251,7 +281,7 @@ export default async function Home() {
                     </p>
                   </div>
                   <div className={ROW_BODY}>
-                    <h3 className="t-item">
+                    <h3 className="t-item tracking-[-0.025em] sm:text-[1.625rem]">
                       {job.link ? (
                         <a href={job.link} target="_blank" rel="noreferrer" className="link">
                           {job.company}
@@ -284,9 +314,9 @@ export default async function Home() {
               <p className="measure mt-3 text-ink-2">Courses I&apos;d point to: {education.coursework.join(", ").toLowerCase()}.</p>
             </div>
           </div>
-          {/* A keyboard of what I use: one row of keycaps per toolkit, on one panel. The panel's rows sit on
-              the page grid, so the keys start on the same edge as the text above. */}
-          <div className="panel mt-8 py-4">
+          {/* What I use: one row of tags per toolkit, on one panel. The panel's rows sit on the page
+              grid, so the tags start on the same edge as the text above. */}
+          <div className="panel mt-10 py-5" data-reveal="rise">
             <h3 className="t-mono px-4 pb-3 text-ink-2">Tools</h3>
             <dl className="space-y-3 sm:space-y-2.5">
               {skills.map((skill) => (
@@ -295,7 +325,7 @@ export default async function Home() {
                   <dd className="min-w-0 lg:col-span-9 lg:pr-4">
                     <ul className="flex flex-wrap gap-1.5">
                       {skill.items.split(", ").map((item) => (
-                        <li key={item} className="keycap">
+                        <li key={item} className="keycap tag">
                           {item}
                         </li>
                       ))}
@@ -311,8 +341,8 @@ export default async function Home() {
           {shown.length > 0 ? (
             <ul>
               {shown.map((post) => (
-                <li key={post.slug} className="border-b border-rule first:[&>a]:pt-0">
-                  <Link href={`/blogs/${post.slug}`} className={`${ROW} group py-6`}>
+                <li key={post.slug} className="border-b border-rule" data-reveal="rise">
+                  <Link href={`/blogs/${post.slug}`} className={`${ROW} pour-row group py-7`}>
                     <span className={`${ROW_LABEL} transition-colors duration-200 group-hover:text-ink`}>{formatDate(post.date)}</span>
                     <span className={ROW_BODY}>
                       <span className="t-item block">
@@ -347,58 +377,54 @@ export default async function Home() {
           </p>
         </Section>
 
-        {/* Contact: the console. The page closes on the simulator's charcoal, with the orange key. */}
-        <section id="contact" aria-labelledby="contact-title" className="scroll-mt-16 border-t border-rule">
-          <div className="mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
-            <div className="console grid gap-x-12 gap-y-8 p-5 sm:p-12 lg:grid-cols-[minmax(0,1fr)_16.875rem]">
-              {/* Title and pitch at the top, the address and keys level with the last spec row. */}
-              <div className="flex min-w-0 flex-col justify-between gap-y-8">
-                <div>
-                  <p className="t-mono mb-2 text-graphite" aria-hidden="true">
-                    05
-                  </p>
-                  <h2 id="contact-title" className="t-section">
-                    Hiring for 2027?
-                  </h2>
-                  <p className="measure mt-5 text-[1.0625rem] leading-relaxed text-ink-2 sm:text-[1.25rem]">
-                    I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or
-                    somewhere I can move to. {profile.workAuth}
-                  </p>
-                </div>
-                <div>
-                  <a
-                    href={`mailto:${profile.email}`}
-                    data-track="email"
-                    className="block text-[clamp(1.0625rem,4.6vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-ink underline decoration-ink decoration-2 underline-offset-[0.22em] transition-[text-decoration-color] duration-200 hover:decoration-signal-text"
-                  >
-                    {profile.email.split("@")[0]}
-                    <wbr />@{profile.email.split("@")[1]}
+        {/* Contact: the page ends where it began, on the liquid. The fluid is held back behind the
+            words and stirs around them. */}
+        <section id="contact" aria-labelledby="contact-title" data-liquid-window className="relative scroll-mt-16">
+          <div className="mx-auto max-w-[88rem] px-4 py-24 sm:px-8 sm:py-36">
+            <div data-liquid-protect="0.92" className="grid gap-x-12 gap-y-12 lg:grid-cols-12">
+              <div className="min-w-0 lg:col-span-8">
+                <p className="t-mono mb-4 text-graphite" aria-hidden="true">
+                  05
+                </p>
+                <h2 id="contact-title" className="t-section" data-reveal="title">
+                  Hiring for <span className="t-serif">2027?</span>
+                </h2>
+                <p className="measure mt-7 text-[1.1875rem] leading-relaxed text-ink-2 sm:text-[1.375rem]" data-reveal="rise">
+                  I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or
+                  somewhere I can move to. {profile.workAuth}
+                </p>
+                <a
+                  href={`mailto:${profile.email}`}
+                  data-track="email"
+                  className="email-link mt-10 block text-[clamp(1.25rem,5.2vw,3.5rem)] font-semibold leading-[1.1] tracking-[-0.035em] text-ink"
+                >
+                  {profile.email.split("@")[0]}
+                  <wbr />@{profile.email.split("@")[1]}
+                </a>
+                <div className="mt-9 flex flex-wrap gap-2.5">
+                  <a href={`mailto:${profile.email}`} className="key key-signal" data-track="email">
+                    Email me
                   </a>
-                  <div className="mt-7 flex flex-wrap gap-2.5">
-                    <a href={`mailto:${profile.email}`} className="key key-signal" data-track="email">
-                      Email me
-                    </a>
-                    <CopyEmail email={profile.email} className="key" />
-                    <a href={RESUME_PATH} className="key" data-track="resume-download">
-                      <ResumeLabel />
-                    </a>
-                    <a href={profile.linkedin} className="key" target="_blank" rel="noreferrer" data-track="linkedin">
-                      LinkedIn
-                      <span className="sr-only"> (opens in a new tab)</span>
-                    </a>
-                  </div>
+                  <CopyEmail email={profile.email} className="key" />
+                  <a href={RESUME_PATH} className="key" data-track="resume-download">
+                    <ResumeLabel />
+                  </a>
+                  <a href={profile.linkedin} className="key" target="_blank" rel="noreferrer" data-track="linkedin">
+                    LinkedIn
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
                 </div>
               </div>
 
-              <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-start gap-x-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-x-8 lg:block">
-                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl border border-rule-strong bg-paper lg:aspect-square">
-                  {/* Head and shoulders at 4:5; the square desktop frame trims the shoulders. */}
+              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-4 lg:block lg:pt-10">
+                <div className="portrait relative aspect-[4/5] w-full overflow-hidden rounded-[1.5rem] bg-paper-raised" data-reveal="blot" data-origin="center">
+                  {/* Head and shoulders at 4:5. */}
                   <Image
                     src="/portrait-snow.jpg"
                     width={1200}
                     height={1500}
                     alt="Abdelrahman Mohamed smiling outdoors in the snow"
-                    sizes="(min-width: 1024px) 300px, (min-width: 640px) 160px, 88px"
+                    sizes="(min-width: 1024px) 360px, (min-width: 640px) 176px, 104px"
                     className="absolute inset-0 size-full object-cover object-top"
                   />
                 </div>

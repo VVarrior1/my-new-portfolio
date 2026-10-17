@@ -1,25 +1,29 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { playlist } from "@/lib/playlist";
+import { MotionRoot } from "@/components/motion-root";
 import { SiteAnalytics } from "@/components/site-analytics";
 import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-// Archivo is variable on weight and width; its wide cuts carry the display voice (name, section
-// titles, big numbers). Below about 24px it reads generic, so text is Instrument Sans.
-const display = Archivo({
+// Instrument Sans is variable on weight and width: set tight and large it is the display voice
+// (the name, section titles, big numbers), and at text sizes it is the body. Instrument Serif
+// italic is the second voice, for one or two words in a heading.
+const sans = Instrument_Sans({
   subsets: ["latin"],
   axes: ["wdth"],
-  variable: "--font-archivo",
+  variable: "--font-instrument",
   display: "swap",
 });
 
-const sans = Instrument_Sans({
+const serif = Instrument_Serif({
   subsets: ["latin"],
-  variable: "--font-instrument",
+  weight: "400",
+  style: "italic",
+  variable: "--font-instrument-serif",
   display: "swap",
 });
 
@@ -66,8 +70,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     // Equal to --paper in each scheme (app/globals.css).
-    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#151412" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f4f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0c0e" },
   ],
 };
 
@@ -92,7 +96,7 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn(display.variable, sans.variable, mono.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn(sans.variable, serif.variable, mono.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: headScript }} />
         <script
@@ -109,6 +113,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </a>
         <AudioProvider tracks={playlist}>
           {children}
+          <MotionRoot />
           <SiteAnalytics />
           <Toaster position="bottom-center" />
         </AudioProvider>
