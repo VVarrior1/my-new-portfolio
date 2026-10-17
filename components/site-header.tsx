@@ -83,7 +83,7 @@ export function SiteHeader() {
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              className="rounded-lg px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-ink aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
+              className="rounded-lg px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-signal-text aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
             >
               {link.label}
             </Link>

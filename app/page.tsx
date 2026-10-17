@@ -6,6 +6,7 @@ import { DotList } from "@/components/dot-list";
 import { LiveSystem } from "@/components/live-system";
 import { ProjectShot } from "@/components/project-shot";
 import { Section } from "@/components/section";
+import { SimStatus } from "@/components/sim-status";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SpanStrip } from "@/components/span-strip";
@@ -16,19 +17,20 @@ import {
   experience,
   featured,
   otherProjects,
+  pinnedPosts,
   profile,
   skills,
   type Link as ContentLink,
 } from "@/lib/content";
 import { formatDate } from "@/lib/date-utils";
-import { excerpt } from "@/lib/text";
+import { pickHomePosts } from "@/lib/posts";
 
 export const revalidate = 300;
 
 const formatMonth = (date: string) => new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
 
-/** Tall captures are cropped from the top on wide screens, so the first project stays the larger one. */
-const SHOT_MAX_HEIGHT: Partial<Record<(typeof featured)[number]["slug"], number>> = { cyd: 360 };
+/** The home page shows only the most technical posts; the rest are one click away. */
+const HOME_POSTS = 3;
 
 function ExternalLinks({ links }: { links: ContentLink[] }) {
   if (links.length === 0) return null;
@@ -65,6 +67,7 @@ const ROW_BODY = "min-w-0 lg:col-span-9";
 
 export default async function Home() {
   const posts = await getAllBlogs();
+  const shown = pickHomePosts(posts, pinnedPosts, HOME_POSTS);
   const toolCount = skills.reduce((sum, skill) => sum + skill.items.split(", ").length, 0);
 
   return (
@@ -75,20 +78,24 @@ export default async function Home() {
         <section aria-labelledby="hero-name">
           <div className="mx-auto grid max-w-[76rem] gap-y-10 px-4 pb-16 pt-6 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6">
             <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-1">
-              <h1 id="hero-name" className="t-display">
+              {/* Level with the device's top edge: a sliver of its screen, live. */}
+              <SimStatus />
+              <h1 id="hero-name" className="t-display mt-7 sm:mt-9">
                 {profile.firstName}
                 <br />
                 {profile.lastName}
               </h1>
-              {/* Two deliberate lines: who and where, then when and status. */}
-              <DotList
-                items={profile.facts}
-                label="At a glance"
-                breakAfter={profile.factsFirstLine}
-                lead={<span className="mr-2 inline-block size-1.5 -translate-y-px rounded-full bg-go align-middle" aria-hidden="true" />}
-                className="t-mono mt-4 text-ink"
-              />
               <p className="measure mt-5 text-[1.0625rem] leading-[1.55] text-ink sm:text-[1.25rem] sm:leading-[1.45]">{profile.intro}</p>
+              {/* What a recruiter checks first: when, then work authorization and where. */}
+              <div className="mt-5 text-[0.9375rem] leading-[1.5]">
+                <p className="flex items-center gap-2 font-[550] text-ink">
+                  <span className="size-1.5 shrink-0 rounded-full bg-go" aria-hidden="true" />
+                  {profile.status}
+                </p>
+                <div className="mt-0.5 pl-3.5">
+                  <DotList items={profile.facts} label="Work authorization and location" breakAfter={1} className="text-ink-2" />
+                </div>
+              </div>
 
               {/* Ink, not orange: up here the only orange is on the device. */}
               <div className="mt-7 flex flex-wrap gap-2.5">
@@ -163,8 +170,8 @@ export default async function Home() {
 
                   {/* The mat: a raised surface the screenshot sits on. It stays in view while the text scrolls. */}
                   <div className={`min-w-0 lg:sticky lg:top-24 lg:row-span-2 lg:row-start-1 lg:self-start ${matCols}`}>
-                    <div className="panel p-3 sm:p-7">
-                      <ProjectShot name={project.name} shot={project.shot} phone={project.phone} maxHeight={SHOT_MAX_HEIGHT[project.slug]} />
+                    <div className="panel p-3 pb-4 sm:p-7">
+                      <ProjectShot name={project.name} shot={project.shot} phone={project.phone} figure={index + 1} caption={project.caption} />
                     </div>
                   </div>
 
@@ -234,7 +241,7 @@ export default async function Home() {
                 <li key={`${job.company}-${job.start}`} className={`${ROW} border-b border-rule py-7 first:pt-0`}>
                   <div className={`${ROW_LABEL} flex flex-wrap gap-x-2 lg:block`}>
                     <p className="flex items-center gap-2">
-                      {current && <span className="size-1.5 rounded-full bg-go" aria-hidden="true" />}
+                      {current && <span className="size-1.5 rounded-full bg-signal" aria-hidden="true" />}
                       <span className={current ? "text-ink" : undefined}>
                         {job.start} – {current ? "now" : job.end}
                       </span>
@@ -304,24 +311,29 @@ export default async function Home() {
         </Section>
 
         <Section id="writing" index="04" title="Writing" meta={posts.length > 0 ? `${posts.length} posts · since ${formatMonth(posts[posts.length - 1].date)}` : undefined}>
-          {posts.length > 0 ? (
+          {shown.length > 0 ? (
             <ul>
-              {posts.slice(0, 4).map((post) => {
-                const summary = excerpt(post.excerpt, post.title, 92);
-                return (
-                  <li key={post.slug} className="border-b border-rule first:[&>a]:pt-0">
-                    <Link href={`/blogs/${post.slug}`} className={`${ROW} group py-6`}>
-                      <span className={ROW_LABEL}>{formatDate(post.date)}</span>
-                      <span className={ROW_BODY}>
-                        <span className="t-item block underline decoration-transparent decoration-1 underline-offset-[0.25em] transition-[text-decoration-color] duration-200 group-hover:decoration-signal-text">
+              {shown.map((post) => (
+                <li key={post.slug} className="border-b border-rule first:[&>a]:pt-0">
+                  <Link href={`/blogs/${post.slug}`} className={`${ROW} group py-6`}>
+                    <span className={`${ROW_LABEL} transition-colors duration-200 group-hover:text-ink`}>{formatDate(post.date)}</span>
+                    <span className={ROW_BODY}>
+                      <span className="t-item block">
+                        <span className="underline decoration-transparent decoration-2 underline-offset-[0.25em] transition-[text-decoration-color] duration-200 group-hover:decoration-signal-text">
                           {post.title.trim()}
                         </span>
-                        {summary && <span className="measure mt-1 line-clamp-2 text-ink-2 lg:line-clamp-1 lg:max-w-none">{summary}</span>}
+                        <span
+                          className="ml-2 inline-block text-graphite transition-[color,transform] duration-200 group-hover:translate-x-0.5 group-hover:text-signal-text"
+                          aria-hidden="true"
+                        >
+                          →
+                        </span>
                       </span>
-                    </Link>
-                  </li>
-                );
-              })}
+                      <span className="measure mt-1 line-clamp-2 text-ink-2 lg:line-clamp-1 lg:max-w-none">{post.teaser}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           ) : (
             <p className="text-ink-2">No posts yet.</p>
@@ -338,10 +350,10 @@ export default async function Home() {
           </p>
         </Section>
 
-        {/* Contact: the nameplate. */}
+        {/* Contact: the console. The page closes on the simulator's charcoal, with the orange key. */}
         <section id="contact" aria-labelledby="contact-title" className="scroll-mt-16 border-t border-rule">
           <div className="mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
-            <div className="panel plate grid gap-x-12 gap-y-8 p-5 sm:p-12 lg:grid-cols-[minmax(0,1fr)_16.875rem]">
+            <div className="console grid gap-x-12 gap-y-8 p-5 sm:p-12 lg:grid-cols-[minmax(0,1fr)_16.875rem]">
               {/* Title and pitch at the top, the address and keys level with the last spec row. */}
               <div className="flex min-w-0 flex-col justify-between gap-y-8">
                 <div>

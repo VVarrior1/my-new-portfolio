@@ -22,6 +22,8 @@ test.describe("home page", () => {
     for (let i = 0; i < 44; i++) await page.keyboard.press("ArrowRight"); // 160 -> 600 req/s
     await expect(sim.getByText("600 requests/s")).toBeVisible();
     await expect(hint).toContainText("app servers are saturated", { timeout: 8000 });
+    // The status strip above the name follows the simulator: its lamp leaves "healthy".
+    await expect(page.locator(".sim-status-lamp")).toHaveAttribute("data-state", /slow|failing/);
 
     await sim.getByRole("button", { name: "Add a server" }).click();
     await sim.getByRole("button", { name: "Add a server" }).click();
@@ -85,6 +87,7 @@ test.describe("other pages", () => {
   test("shows site stats", async ({ page }) => {
     await page.goto("/stats");
     await expect(page.getByRole("heading", { level: 1, name: "Site stats" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Page views per day, last 30 days" })).toBeVisible();
+    // With nothing counted yet (a fresh store, or a local run) the page says so instead of charting zeros.
+    await expect(page.getByRole("heading", { name: /^(Page views per day, last 30 days|Nothing counted yet)$/ })).toBeVisible();
   });
 });

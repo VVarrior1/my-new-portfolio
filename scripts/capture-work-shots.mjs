@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { chromium } from "playwright-core";
 
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const OUT = new URL("../public/work/", import.meta.url).pathname;
+const OUT = process.env.OUT_DIR ?? new URL("../public/work/", import.meta.url).pathname;
 const TMP = mkdtempSync(join(tmpdir(), "work-shots-"));
 
 const shots = [
@@ -30,9 +30,16 @@ const shots = [
     // The architecture canvas and the first row of run metrics, in CSS pixels. A tight crop, so the
     // app's 12px labels are still readable when the frame is ~600px wide on the home page.
     clip: { x: 509, y: 200, width: 740, height: 601 },
+    // Systemlab has no dark theme, so the dark-mode copy is the same run inverted (images and
+    // canvases are flipped back), captured from the same page so the two line up exactly.
+    dark: "systemlab-canvas-dark",
   },
 ];
 
+const DARK_CSS = `
+  html { filter: invert(0.9) hue-rotate(180deg) saturate(0.85); background: #fff; }
+  img, video, canvas, picture { filter: invert(1) hue-rotate(180deg); }
+`;
 const only = process.argv[2];
 const browser = await chromium.launch({ executablePath: CHROME });
 for (const shot of shots.filter((s) => !only || s.file.includes(only))) {
@@ -82,6 +89,14 @@ for (const shot of shots.filter((s) => !only || s.file.includes(only))) {
     await page.screenshot({ path: png, clip: shot.clip, fullPage: !!shot.clip });
     execFileSync("sips", ["-s", "format", "jpeg", "-s", "formatOptions", "84", png, "--out", join(OUT, `${shot.file}.jpg`)]);
     console.log("saved", `public/work/${shot.file}.jpg`);
+    if (shot.dark) {
+      await page.addStyleTag({ content: DARK_CSS });
+      await page.waitForTimeout(300);
+      const darkPng = join(TMP, `${shot.dark}.png`);
+      await page.screenshot({ path: darkPng, clip: shot.clip, fullPage: !!shot.clip });
+      execFileSync("sips", ["-s", "format", "jpeg", "-s", "formatOptions", "84", darkPng, "--out", join(OUT, `${shot.dark}.jpg`)]);
+      console.log("saved", `public/work/${shot.dark}.jpg`);
+    }
     await page.close();
     break;
   }

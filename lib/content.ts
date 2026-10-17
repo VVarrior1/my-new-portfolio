@@ -22,10 +22,12 @@ export const profile = {
   /** The same date, short: where the experience strip's axis ends. */
   availableFrom: "Jan 2027",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
-  /** The hero's mono fact strip: the same facts as above, in recruiter order, on two lines (who and where; when and status). */
-  facts: ["Software engineer", "Calgary, AB", "Grad Dec 2026", "Full-time Jan 2027", "Canadian, TN-eligible"],
-  /** The fact strip breaks after this many items. */
-  factsFirstLine: 2,
+  /** The hero's status line, under the intro: when, then the work authorization and where. The intro
+   * already says "software engineer", so the role isn't repeated here. */
+  status: "Available full-time from January 2027",
+  facts: ["Canadian, TN-eligible for US roles", "Calgary, open to relocation", "Grad Dec 2026"],
+  /** The same facts on the social card's three fixed lines. */
+  cardFacts: ["Full-time from Jan 2027", "Canadian, TN-eligible", "Calgary, AB \u00b7 Grad Dec 2026"],
   /** The personal line above, set as a small spec sheet. Same words, nothing added. */
   offTheClock: [
     { label: "Chess", value: "Bullet, rated\u00a02000" },
@@ -33,7 +35,7 @@ export const profile = {
     { label: "Collecting", value: "Fragrances" },
     { label: "Fuel", value: "Another Red Bull" },
   ],
-  /** The contact nameplate's spec block, restating workAuth and availability. */
+  /** The contact console's spec block, restating workAuth and availability. */
   plate: [
     { label: "Based", value: "Calgary, AB" },
     { label: "Available", value: "Jan 2027" },
@@ -52,8 +54,8 @@ export type Shot = {
   alt: string;
   /** Shown in the frame's address bar. */
   url: string;
-  /** A light capture is dimmed slightly in the dark theme so it isn't a white slab. */
-  tone?: "light" | "dark";
+  /** The same capture in a dark theme, at the same size; each theme shows only its own copy. */
+  darkSrc?: string;
 };
 
 export type FeaturedProject = {
@@ -67,6 +69,8 @@ export type FeaturedProject = {
   links: Link[];
   shot: Shot;
   phone?: Shot;
+  /** The figure caption under the screenshots: what they show, in one sentence. */
+  caption: string;
 };
 
 export const featured: FeaturedProject[] = [
@@ -79,7 +83,7 @@ export const featured: FeaturedProject[] = [
     facts: [
       { value: "70", label: "lessons in 12 chapters" },
       { value: "948", label: "tests" },
-      { value: "180K", label: "requests simulated in under 2 s" },
+      { value: "180K", label: "requests simulated in under 2\u00a0s" },
     ],
     hardPart: {
       title: "Answers that hold across seeds",
@@ -97,8 +101,9 @@ export const featured: FeaturedProject[] = [
       height: 1202,
       alt: "A Systemlab lesson after a run: incoming traffic at 300 requests per second, an API server at 100% utilization and a catalog database at 12%, with a p95 latency of 4,766 ms.",
       url: "system-design-playground-pi.vercel.app/learn",
-      tone: "light",
+      darkSrc: "/work/systemlab-canvas-dark.jpg",
     },
+    caption: "A lesson after a run: the API server is pinned at 100% while the database sits at 12%, so p95 climbs to 4.8\u00a0s.",
   },
   {
     slug: "cyd",
@@ -127,7 +132,6 @@ export const featured: FeaturedProject[] = [
       height: 1110,
       alt: "The CYD venue picker: venues are filtered by the child's age, so a full group and a venue with no group for that age are shown but can't be picked.",
       url: "cydsoccer.com/register",
-      tone: "dark",
     },
     phone: {
       src: "/work/cyd-register-phone.jpg",
@@ -136,8 +140,12 @@ export const featured: FeaturedProject[] = [
       alt: "Step one of the CYD registration flow on a phone: parent details and whether the child is new or returning.",
       url: "cydsoccer.com/register",
     },
-  }
+    caption: "Venues are filtered by the child's age, so a full group still shows but can't be picked. On the right, step one of registration on a phone.",
+  },
 ];
+
+/** The home page's Writing list: the most technical posts, in this order of preference. */
+export const pinnedPosts = ["writing-a-shell-in-c", "ai-with-api-function-calls", "machine-learning", "leetcode"];
 
 export const otherProjects: Array<{ name: string; summary: string; href?: string; note?: string; stack: string }> = [
   {

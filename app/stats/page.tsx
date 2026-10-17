@@ -102,6 +102,15 @@ export default async function StatsPage() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
 
+  // A fresh deploy (or a local run without the bucket) has nothing yet: say so calmly instead of
+  // showing four zeros over an empty chart.
+  const empty =
+    analytics.totalViews === 0 &&
+    analytics.totalUniqueViews === 0 &&
+    monthViews === 0 &&
+    resumeOpens === 0 &&
+    Object.keys(analytics.events).length === 0;
+
   const figures = [
     { value: analytics.totalViews, label: "page views, all time" },
     { value: analytics.totalUniqueViews, label: "distinct visitors" },
@@ -122,62 +131,80 @@ export default async function StatsPage() {
           </Suspense>
         </PageHeader>
 
-        {/* The headline numbers, between two hairlines on the paper. Only the chart below is a screen. */}
-        <dl className="mt-14 grid grid-cols-2 gap-x-6 border-y border-rule lg:grid-cols-4">
-          {figures.map((figure, i) => (
-            <div key={figure.label} className={`flex flex-col-reverse justify-end py-4 sm:py-5 ${i >= 2 ? "border-t border-rule lg:border-t-0" : ""}`}>
-              <dt className="t-mono mt-1.5 text-graphite">{figure.label}</dt>
-              <dd className="text-[2.5rem] font-[620] leading-none tracking-[-0.02em] tabular-nums [font-stretch:108%]">{fmt(figure.value)}</dd>
-            </div>
-          ))}
-        </dl>
+        {empty ? (
+          <section aria-labelledby="empty-title" className="panel mt-14 px-5 py-8 sm:px-8 sm:py-10">
+            <p className="t-mono flex items-center gap-2 text-graphite">
+              <span className="size-1.5 rounded-full bg-rule-strong" aria-hidden="true" />
+              waiting for the first visit
+            </p>
+            <h2 id="empty-title" className="t-item mt-3">
+              Nothing counted yet
+            </h2>
+            <p className="measure mt-2 text-ink-2">
+              Visits show up here about a minute after they happen: page views, distinct visitors, the posts people read and the
+              links they click. Until then there is nothing worth charting.
+            </p>
+          </section>
+        ) : (
+          <>
+            {/* The headline numbers, between two hairlines on the paper. Only the chart below is a screen. */}
+            <dl className="mt-14 grid grid-cols-2 gap-x-6 border-y border-rule lg:grid-cols-4">
+              {figures.map((figure, i) => (
+                <div key={figure.label} className={`flex flex-col-reverse justify-end py-4 sm:py-5 ${i >= 2 ? "border-t border-rule lg:border-t-0" : ""}`}>
+                  <dt className="t-mono mt-1.5 text-graphite">{figure.label}</dt>
+                  <dd className="text-[2.5rem] font-[620] leading-none tracking-[-0.02em] tabular-nums [font-stretch:108%]">{fmt(figure.value)}</dd>
+                </div>
+              ))}
+            </dl>
 
-        <section aria-labelledby="daily-title" className="mt-14">
-          <h2 id="daily-title" className="t-item">
-            Page views per day, last 30 days
-          </h2>
-          <p className="t-mono mt-1 text-graphite">
-            {historyStart
-              ? `Days are in UTC. Daily history starts ${formatDateLong(historyStart)}; totals above go back further.`
-              : "Daily history starts with the next visit; totals above go back further."}
-          </p>
-          <div className="screen mt-6 px-3 pb-3 pt-4 sm:px-5 sm:pt-5">
-            <DailyChart points={days} />
-          </div>
-          <details className="mt-4">
-            <summary className="t-mono cursor-pointer text-graphite hover:text-ink">Show these numbers as a table</summary>
-            <div className="mt-4 max-w-md">
+            <section aria-labelledby="daily-title" className="mt-14">
+              <h2 id="daily-title" className="t-item">
+                Page views per day, last 30 days
+              </h2>
+              <p className="t-mono mt-1 text-graphite">
+                {historyStart
+                  ? `Days are in UTC. Daily history starts ${formatDateLong(historyStart)}; totals above go back further.`
+                  : "Daily history starts with the next visit; totals above go back further."}
+              </p>
+              <div className="screen mt-6 px-3 pb-3 pt-4 sm:px-5 sm:pt-5">
+                <DailyChart points={days} />
+              </div>
+              <details className="mt-4">
+                <summary className="t-mono cursor-pointer text-graphite hover:text-ink">Show these numbers as a table</summary>
+                <div className="mt-4 max-w-md">
+                  <Table
+                    caption="Daily views"
+                    columns={["Day", "Views", "Visitors"]}
+                    rows={days.filter((d) => d.views > 0).reverse().map((d) => [d.day, d.views, d.visitors])}
+                  />
+                </div>
+              </details>
+            </section>
+
+            <div className="mt-16 grid gap-14 lg:grid-cols-2">
               <Table
-                caption="Daily views"
-                columns={["Day", "Views", "Visitors"]}
-                rows={days.filter((d) => d.views > 0).reverse().map((d) => [d.day, d.views, d.visitors])}
+                caption="Pages"
+                columns={["Page", "Views", "Visitors"]}
+                rows={top(analytics.pages, (p) => p.views).map((p) => [PAGE_NAMES[p.path] ?? p.path, p.views, p.uniqueViews])}
+              />
+              <Table
+                caption="Posts"
+                columns={["Post", "Reads", "Readers"]}
+                rows={top(analytics.blogs, (b) => b.views).map((b) => [titles.get(b.slug) ?? b.slug, b.views, b.uniqueViews])}
+              />
+              <Table
+                caption="Where visitors come from"
+                columns={["Source", "Visits"]}
+                rows={entries(analytics.referrers).map(([source, count]) => [source.startsWith("ref:") ? `Link tagged “${source.slice(4)}”` : source, count])}
+              />
+              <Table
+                caption="Links people click"
+                columns={["Link", "Clicks"]}
+                rows={entries(analytics.events).map(([name, count]) => [EVENT_NAMES[name] ?? name.replace(/^out:/, ""), count])}
               />
             </div>
-          </details>
-        </section>
-
-        <div className="mt-16 grid gap-14 lg:grid-cols-2">
-          <Table
-            caption="Pages"
-            columns={["Page", "Views", "Visitors"]}
-            rows={top(analytics.pages, (p) => p.views).map((p) => [PAGE_NAMES[p.path] ?? p.path, p.views, p.uniqueViews])}
-          />
-          <Table
-            caption="Posts"
-            columns={["Post", "Reads", "Readers"]}
-            rows={top(analytics.blogs, (b) => b.views).map((b) => [titles.get(b.slug) ?? b.slug, b.views, b.uniqueViews])}
-          />
-          <Table
-            caption="Where visitors come from"
-            columns={["Source", "Visits"]}
-            rows={entries(analytics.referrers).map(([source, count]) => [source.startsWith("ref:") ? `Link tagged “${source.slice(4)}”` : source, count])}
-          />
-          <Table
-            caption="Links people click"
-            columns={["Link", "Clicks"]}
-            rows={entries(analytics.events).map(([name, count]) => [EVENT_NAMES[name] ?? name.replace(/^out:/, ""), count])}
-          />
-        </div>
+          </>
+        )}
 
         <p className="measure mt-16 text-[0.9375rem] leading-relaxed text-ink-2">
           Don&apos;t want to be counted? Open{" "}

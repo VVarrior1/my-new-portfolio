@@ -60,10 +60,17 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
     });
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange} title="Command menu" description="Jump to a section or run an action">
+    <CommandDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Command menu"
+      description="Jump to a section or run an action"
+      className="top-[12vh]"
+    >
       <Command className="bg-paper">
         <CommandInput placeholder="Type a command or search" />
-        <CommandList>
+        {/* Tall enough for every command on a 900px-tall screen; shorter screens scroll. */}
+        <CommandList className="max-h-[min(36rem,calc(88vh-6rem))] scroll-pb-2 pb-1">
           <CommandEmpty>Nothing matches that.</CommandEmpty>
           <CommandGroup heading="Go to">
             <CommandItem keywords={["projects", "portfolio"]} onSelect={() => go("/#work")}>

@@ -84,10 +84,10 @@ export default async function OpenGraphImage() {
             <div style={{ display: "flex", flexDirection: "column", marginTop: 26, fontFamily: "Mono", fontSize: 18, color: INK, lineHeight: 1.55 }}>
               <div style={{ display: "flex", alignItems: "center" }}>
                 <div style={{ display: "flex", width: 8, height: 8, borderRadius: 8, background: GO, marginRight: 10 }} />
-                {profile.facts.slice(0, profile.factsFirstLine).join(" · ")}
+                {profile.cardFacts[0]}
               </div>
-              <span>{profile.facts.slice(profile.factsFirstLine, 4).join(" · ")}</span>
-              <span>{profile.facts.slice(4).join(" · ")}</span>
+              <span>{profile.cardFacts[1]}</span>
+              <span>{profile.cardFacts[2]}</span>
             </div>
           </div>
           <div style={{ display: "flex", fontSize: 25, lineHeight: 1.38, color: INK_2 }}>{profile.intro}</div>

@@ -16,7 +16,8 @@
 
 /* ------------------------------------------------------------------
    Tokens: the workbench. Warm grey paper, objects with a job, and one
-   colour, international orange, used only on things you press.
+   colour, international orange, used on things you press and on "now"
+   (the current role and the timeline's cursor), never on large areas.
 
    Every neutral sits on one warm hue (OKLCH h≈88) at chroma ≤ 0.006, so
    light and dark share one temperature. Status colours (--trace, --fail,
@@ -28,7 +29,7 @@
   /* Near-white paper with grey hardware on it, like a Braun on a white table: the page is the
      lightest surface but one, the panels sit a step darker, and keycaps are pure white. */
   --paper: #f8f7f4;
-  /* Device panel, project mats, the experience track, the contact nameplate. */
+  /* Device panel, project mats, the experience track, the tools board. */
   --paper-raised: #edebe7;
   /* Keycap faces. */
   --key-face: #ffffff;
@@ -39,7 +40,7 @@
   --graphite: #5c5a57;
   --rule: #dbd9d5;
   --rule-strong: #c8c6c2;
-  /* International orange: fills of actuators only. Never text, never tinted. */
+  /* International orange: fills of actuators and the "now" marks. Never text on paper, never tinted. */
   --signal: #ff4f00;
   --signal-edge: #c23b00;
   --signal-ink: #171614;
@@ -60,7 +61,6 @@
   --fail: #ff5c52;
   /* Page-level status: the available dot and the current job. */
   --go: #18723f;
-  --plate-engrave: rgb(23 22 20 / 0.1);
   --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -2px 0 rgb(23 22 20 / 0.1);
   --key-shadow-down: inset 0 1px 2px rgb(23 22 20 / 0.14);
   --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -2px 0 rgb(0 0 0 / 0.18);
@@ -71,7 +71,6 @@
   --screen-inset: inset 0 2px 6px rgb(0 0 0 / 0.35);
   /* The single elevation, for screenshot frames. */
   --elevation: 0 1px 0 rgb(23 22 20 / 0.05), 0 16px 32px -24px rgb(23 22 20 / 0.3);
-  --shot-filter: none;
   /* Behind dialogs: a flat scrim, no blur. */
   --scrim: rgb(23 22 20 / 0.42);
   color-scheme: light;
@@ -114,7 +113,6 @@
     --signal-text: #ff5f1f;
     --screen: #0b0b0a;
     --go: #4fc98a;
-    --plate-engrave: rgb(236 234 230 / 0.08);
     --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
     --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
     --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
@@ -124,8 +122,6 @@
     /* A faint inner ring, so the screen reads as recessed into the panel. */
     --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
     --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
-    /* Systemlab has no dark theme, so its white UI is dimmed to about 8:1 against the mat. */
-    --shot-filter: brightness(0.72);
     --scrim: rgb(0 0 0 / 0.62);
     --destructive: #ff6a55;
     color-scheme: dark;
@@ -147,7 +143,6 @@
   --signal-text: #ff5f1f;
   --screen: #0b0b0a;
   --go: #4fc98a;
-  --plate-engrave: rgb(236 234 230 / 0.08);
   --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
   --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
   --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
@@ -157,8 +152,6 @@
   /* A faint inner ring, so the screen reads as recessed into the panel. */
   --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
   --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
-  /* Systemlab has no dark theme, so its white UI is dimmed to about 8:1 against the mat. */
-  --shot-filter: brightness(0.72);
   --scrim: rgb(0 0 0 / 0.62);
   --destructive: #ff6a55;
   color-scheme: dark;
@@ -326,6 +319,7 @@ body {
   }
   .link:hover {
     text-decoration-color: var(--signal-text);
+    text-decoration-thickness: 2px;
   }
   .link-arrow {
     display: inline-block;
@@ -500,6 +494,29 @@ body {
     line-height: 1.4;
     color: var(--graphite);
   }
+  /* On a phone three columns leave the labels a word wide, so each number gets its own row with
+     its label beside it, on the same hairlines as a spec table. */
+  @media (max-width: 639px) {
+    .stat-row {
+      grid-template-columns: minmax(0, 1fr);
+      padding-block: 0;
+    }
+    .stat-row > div {
+      flex-direction: row-reverse;
+      align-items: baseline;
+      gap: 0.875rem;
+      padding-block: 0.625rem;
+    }
+    .stat-row > div + div {
+      border-top: 1px solid var(--rule);
+    }
+    .stat-row dd {
+      min-width: 3.25em;
+    }
+    .stat-row dt {
+      margin-top: 0;
+    }
+  }
 
   /* The little ⌘K-style keycap inside other controls. */
   .kbd {
@@ -519,7 +536,7 @@ body {
     color: var(--ink-2);
   }
 
-  /* Raised panels: the device, the project mats, the nameplate. */
+  /* Raised panels: the device, the project mats, the tools board. */
   .panel {
     border-radius: 1.25rem;
     border: 1px solid var(--rule);
@@ -527,21 +544,39 @@ body {
     box-shadow: var(--panel-highlight);
   }
 
-  /* The nameplate's engraved inner rule, inset 6px. */
-  .plate {
+  /* The contact console: the page closes on the simulator's material. A charcoal plate, dark in
+     both themes, with an engraved inner rule inset 6px. Inside it the page tokens are
+     re-pointed at the screen's, so text, hairlines, spec tables and keys all follow without
+     per-element colours. Its keys are dark caps; the orange "Email me" stays the one actuator. */
+  .console {
     position: relative;
+    border-radius: 1.25rem;
+    background: var(--screen);
+    color: var(--screen-ink);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), var(--elevation);
+    --ink: var(--screen-ink);
+    --ink-2: var(--screen-ink);
+    --graphite: var(--screen-graphite);
+    --rule: var(--screen-line);
+    --rule-strong: var(--screen-outline);
+    /* Dark caps, a step above the plate: light enough to read as keys, dark enough that the
+       graphite legends ("PDF") keep 4.5:1. */
+    --key-face: color-mix(in srgb, var(--screen-ink) 8%, var(--screen));
+    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
+    --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
+    /* On charcoal the fill orange is itself text-safe (5.7:1), so underlines and focus use it. */
+    --signal-text: var(--signal);
   }
-  .plate::before {
+  .console::before {
     content: "";
     position: absolute;
     inset: 6px;
     border-radius: calc(1.25rem - 6px);
-    border: 1px solid var(--plate-engrave);
+    border: 1px solid var(--screen-line);
     pointer-events: none;
   }
-  /* On a phone the double frame costs too much width. */
   @media (max-width: 639px) {
-    .plate::before {
+    .console::before {
       content: none;
     }
   }
@@ -559,7 +594,8 @@ body {
     background-position: 8px 8px;
   }
 
-  /* A screenshot sits on a mat inside a browser frame. Light captures dim a little in dark mode. */
+  /* A screenshot sits on a mat inside a browser frame. Captures with a dark copy swap by theme
+     (components/project-shot.tsx); nothing is dimmed with a filter. */
   .shot-frame {
     overflow: hidden;
     border-radius: 0.75rem;
@@ -567,8 +603,59 @@ body {
     background: var(--key-face);
     box-shadow: var(--elevation);
   }
-  .shot-img[data-tone="light"] {
-    filter: var(--shot-filter);
+
+  /* The live status strip above the name: a sliver of the simulator's screen. Its lamp is the
+     only status colour outside the device, and it sits on screen material, like the device's own. */
+  .sim-status {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border-radius: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--screen-graphite);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .sim-status > span + span:not(.sim-status-label)::before {
+    content: "·";
+    padding: 0 0.4375rem;
+    color: var(--screen-graphite);
+  }
+  .sim-status b {
+    color: var(--screen-ink);
+    font-weight: 500;
+  }
+  .sim-status-label {
+    color: var(--screen-ink);
+  }
+  .sim-status:hover .sim-status-label {
+    text-decoration: underline;
+    text-decoration-color: var(--signal);
+    text-underline-offset: 0.3em;
+  }
+  .sim-status-lamp {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    margin-right: 0.625rem;
+    border-radius: 999px;
+    background: var(--screen-graphite);
+    transition: background-color 200ms ease;
+  }
+  .sim-status-lamp[data-state="healthy"] {
+    background: var(--screen-go);
+  }
+  .sim-status-lamp[data-state="slow"] {
+    background: var(--trace);
+  }
+  .sim-status-lamp[data-state="failing"] {
+    background: var(--fail);
   }
 
   /* Spec tables: hairline rows of mono label and value. */

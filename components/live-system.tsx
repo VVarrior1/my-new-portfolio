@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Slider as SliderPrimitive } from "radix-ui";
 import { LiveSim, MAX_SERVERS, diagnose, type Finished, type Metrics, type SimConfig, type Stage } from "@/lib/live-sim";
+import { publishReadout, stateFrom } from "@/lib/sim-readout";
 import { trackEvent } from "./site-analytics";
 
 // The hero simulator, built as a small piece of hardware: a raised panel, a dark screen
@@ -136,6 +137,8 @@ export function LiveSystem() {
   const visible = useRef(true);
   const reduced = useRef(false);
   const touched = useRef(false);
+  /** Requests finished (and failed) since load or reset, for the status strip above the name. */
+  const totals = useRef({ requests: 0, errors: 0 });
 
   const layout = useMemo(() => computeLayout(size.w, size.h, config.servers), [size, config.servers]);
   const layoutRef = useRef(layout);
@@ -177,7 +180,9 @@ export function LiveSystem() {
     let frame = 0;
     let last = performance.now();
     let lastMetrics = 0;
+    let lastReadout = 0;
     let dotBudget = 0;
+    let paused = false;
     const colors = { ok: "#ecebe8", slow: "#ffc247", bad: "#ff5c52" };
     const readColors = () => {
       const styles = getComputedStyle(document.documentElement);
@@ -193,10 +198,21 @@ export function LiveSystem() {
       frame = requestAnimationFrame(loop);
       const dt = Math.min(64, now - last);
       last = now;
-      if (!visible.current || document.hidden) return;
-
       const s = sim.current!;
+      if (!visible.current || document.hidden) {
+        if (!paused) {
+          paused = true;
+          publishReadout({ state: "paused", ...totals.current, p99: s.metrics().p99 || null });
+        }
+        return;
+      }
+      paused = false;
+
       const finished = s.step(dt);
+      for (const f of finished) {
+        totals.current.requests++;
+        if (!f.ok) totals.current.errors++;
+      }
 
       // Draw a steady sample of requests, so 900 req/s doesn't become noise.
       dotBudget = Math.min(dotBudget + (DOTS_PER_SECOND * dt) / 1000, 4);
@@ -212,7 +228,14 @@ export function LiveSystem() {
 
       if (now - lastMetrics > 200) {
         lastMetrics = now;
-        setMetrics(s.metrics());
+        const m = s.metrics();
+        setMetrics(m);
+        // The status strip ticks with the readouts, from the same metrics (once a second under reduced motion).
+        if (!reduced.current || now - lastReadout > 1000) {
+          lastReadout = now;
+          const state = stateFrom(m.errorRate, m.p99, m.serverUp.some((up) => !up));
+          publishReadout({ state, ...totals.current, p99: m.p99 || null });
+        }
       }
 
       const c = canvas.current;
@@ -310,6 +333,8 @@ export function LiveSystem() {
   const reset = () => {
     sim.current = new LiveSim(INITIAL, 7);
     dots.current = [];
+    totals.current = { requests: 0, errors: 0 };
+    publishReadout({ state: "healthy", requests: 0, errors: 0, p99: null });
     setConfig(INITIAL);
     setMetrics(null);
   };

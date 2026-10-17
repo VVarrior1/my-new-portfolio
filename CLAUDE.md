@@ -21,22 +21,24 @@ Run all of them before pushing; `npm run ci` chains them.
 ## Design rules
 
 The design is "Workbench": near-white warm paper with grey hardware on it, objects with a job, and
-one colour, international orange, used only on things you press. Read the token comments at the
-top of `app/globals.css`.
+one colour, international orange, used on things you press and on "now". Read the token comments
+at the top of `app/globals.css`.
 
 - Colors only through the tokens in `app/globals.css` (`paper`, `paper-raised`, `key-face`, `ink`,
   `ink-2`, `graphite`, `rule`, `signal`, `signal-text`, `screen-*`, `trace`, `fail`, `go`). Every
   token has a dark value; check both themes. Every neutral sits on one warm hue at OKLCH chroma
   ≤ 0.006, so light and dark share one temperature. Check new neutrals with a script, not by eye.
-- Every color has one job. `--signal` (orange) is only the fill of actuators: the simulator's kill
-  key and fader cap, and the contact nameplate's "Email me". The hero's "Email me" is an ink key
-  (`.key-ink`) so the first viewport's only orange is on the device. Orange is never text (2.9:1);
-  use `--signal-text` for orange text or underlines. Never tint, blend or fade the orange. Status
-  colours (`--trace`, `--fail`, `--screen-go`) appear only on the dark screens (`.screen`: the
-  simulator and the /stats chart, nothing else); `--go` is the page's only status dot
-  (availability, current job).
-- Decoration is objects, never backgrounds: `.panel` (device, project mats, tools board,
-  nameplate), the experience span strip, `.screen` (the simulator and the /stats chart), `.key` /
+- Every color has one job. `--signal` (orange) fills actuators (the simulator's kill key and fader
+  cap, the contact console's "Email me") and marks the present: the current role's bar, dot and
+  the "now" cursor in Experience. `--signal-text` is for orange text, hover underlines and arrows
+  (links, Writing rows, the active nav item). The hero's "Email me" is an ink key (`.key-ink`) so
+  the first viewport's only orange is on the device. Orange is never large areas and never text on
+  paper (2.9:1). Never tint, blend or fade it. Status colours (`--trace`, `--fail`, `--screen-go`)
+  appear only on screen material (`.screen`: the simulator, the hero's live status strip and the
+  /stats chart); `--go` is the page's only status dot on paper (availability).
+- Decoration is objects, never backgrounds: `.panel` (device, project mats, tools board),
+  `.console` (the contact card: screen material, which re-points the page tokens at the screen's),
+  the experience span strip, `.screen` (the simulator, the status strip and the /stats chart), `.key` /
   `.key-signal` / `.key-ink` (anything pressable), `.keycap` (a legend key that labels, never
   presses), `.spec` (label/value tables), `.stat-row` (a project's numbers, on the paper).
   No glows, blur, gradients (other than the 1px key highlights), textures or ambient animation.
@@ -68,7 +70,8 @@ top of `app/globals.css`.
   ("the colors are off"). Don't bring back glows, colored section backgrounds or multiple accent hues.
 - Public counts under 50 (post reads) aren't shown; the visit total lives on `/stats` only.
 - Don't feature ApplyOps anywhere (the owner doesn't want it shown; the repo is private).
-- Product screenshots: `node scripts/capture-work-shots.mjs`. Don't submit forms on cydsoccer.com
+- Product screenshots: `node scripts/capture-work-shots.mjs` (it also writes the Systemlab dark copy,
+  `darkSrc` in `lib/content.ts`; never dim a light capture with a filter). Don't submit forms on cydsoccer.com
   while capturing, because it triggers real lead SMS and email. Avoid pages showing children or staff names.
 
 ## Analytics
