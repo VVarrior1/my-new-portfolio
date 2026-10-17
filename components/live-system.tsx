@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Slider as SliderPrimitive } from "radix-ui";
 import { LiveSim, MAX_SERVERS, diagnose, type Finished, type Metrics, type SimConfig, type Stage } from "@/lib/live-sim";
+import { emitFlow, setFlowState, strainFrom } from "@/lib/flow-bus";
 import { publishReadout, stateFrom } from "@/lib/sim-readout";
 import { trackEvent } from "./site-analytics";
 
-// The hero simulator, built as a small piece of hardware: a raised panel, a dark screen
-// that shows the system (and is the only place status colours appear), and a control deck
-// of keycaps. International orange marks the things you press, the biggest of which breaks it.
+// The hero simulator: a dark instrument floating on the liquid field. Its screen shows the system
+// (and is the only place status colours appear); the control deck under it holds the things you
+// press, in cobalt, the biggest of which breaks it. It also drives the field behind the page
+// (lib/flow-bus.ts): traffic sets the current, strain makes it turbulent, and a killed server
+// blooms the accent at the node, at the node's real position on screen.
 
 const INITIAL: SimConfig = { rate: 160, servers: 2, cache: false };
 const MAX_RATE = 900;
@@ -143,6 +146,16 @@ export function LiveSystem() {
   const layout = useMemo(() => computeLayout(size.w, size.h, config.servers), [size, config.servers]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
+  const rateRef = useRef(config.rate);
+  rateRef.current = config.rate;
+
+  /** A point in the diagram, in viewport pixels. */
+  const toViewport = (p: Point) => {
+    const r = box.current?.getBoundingClientRect();
+    return r ? { x: r.left + p.x, y: r.top + p.y } : null;
+  };
+  const toViewportRef = useRef(toViewport);
+  toViewportRef.current = toViewport;
 
   if (sim.current === null) sim.current = new LiveSim(INITIAL, 7);
 
@@ -209,9 +222,18 @@ export function LiveSystem() {
       paused = false;
 
       const finished = s.step(dt);
+      let failedAt = -1;
       for (const f of finished) {
         totals.current.requests++;
-        if (!f.ok) totals.current.errors++;
+        if (!f.ok) {
+          totals.current.errors++;
+          failedAt = f.server;
+        }
+      }
+      // One failure per frame is plenty for the field; it rate-limits further on its side.
+      if (failedAt >= 0 && !reduced.current) {
+        const at = toViewportRef.current(layoutRef.current.apps[failedAt] ?? layoutRef.current.apps[0]);
+        if (at) emitFlow({ kind: "fail", ...at });
       }
 
       // Draw a steady sample of requests, so 900 req/s doesn't become noise.
@@ -230,6 +252,12 @@ export function LiveSystem() {
         lastMetrics = now;
         const m = s.metrics();
         setMetrics(m);
+        const anyDown = m.serverUp.some((up) => !up);
+        setFlowState({
+          rate: rateRef.current,
+          strain: strainFrom(m.p99, m.errorRate, anyDown),
+          inlet: toViewportRef.current(layoutRef.current.entry),
+        });
         // The status strip ticks with the readouts, from the same metrics (once a second under reduced motion).
         if (!reduced.current || now - lastReadout > 1000) {
           lastReadout = now;
@@ -325,8 +353,17 @@ export function LiveSystem() {
   const down = downIndex >= 0;
   const toggleKill = () => {
     markTouched();
-    if (down) sim.current!.restartServer(downIndex);
-    else sim.current!.killServer(Math.floor(Math.random() * config.servers));
+    if (down) {
+      sim.current!.restartServer(downIndex);
+      const at = toViewport(layout.apps[downIndex]);
+      if (at) emitFlow({ kind: "restart", ...at });
+    } else {
+      const victim = Math.floor(Math.random() * config.servers);
+      sim.current!.killServer(victim);
+      const at = toViewport(layout.apps[victim]);
+      const device = box.current?.closest("figure")?.getBoundingClientRect();
+      if (at) emitFlow({ kind: "kill", ...at, device: device ? { top: device.top, bottom: device.bottom, left: device.left, right: device.right } : undefined });
+    }
     setMetrics(sim.current!.metrics());
   };
 
@@ -335,6 +372,7 @@ export function LiveSystem() {
     dots.current = [];
     totals.current = { requests: 0, errors: 0 };
     publishReadout({ state: "healthy", requests: 0, errors: 0, p99: null });
+    setFlowState({ rate: INITIAL.rate, strain: 0 });
     setConfig(INITIAL);
     setMetrics(null);
   };
@@ -362,9 +400,13 @@ export function LiveSystem() {
 
   return (
     <div>
-      <figure className="panel p-2" aria-labelledby="live-system-title">
-        <figcaption className="flex items-center justify-between gap-4 pb-2 pl-2.5 pr-0.5 pt-0.5">
-          <p id="live-system-title" className="t-mono text-ink-2">
+      <figure className="device p-2" aria-labelledby="live-system-title">
+        <figcaption className="flex items-center justify-between gap-4 pb-2 pl-3 pr-0.5 pt-0.5">
+          <p id="live-system-title" className="t-mono flex items-center gap-2 text-ink-2">
+            <span className="relative flex size-1.5" aria-hidden="true">
+              <span className="absolute inset-0 rounded-full motion-safe:animate-ping" style={{ background: status, opacity: 0.6 }} />
+              <span className="relative size-1.5 rounded-full" style={{ background: status }} />
+            </span>
             a small system you can break
           </p>
           <button type="button" onClick={reset} className="key key-sm">
@@ -470,7 +512,9 @@ export function LiveSystem() {
               <span className="text-graphite" aria-hidden="true">
                 traffic
               </span>
-              <span className="text-ink">{config.rate} requests/s</span>
+              <span className="text-ink">
+                <span className="tabular-nums">{config.rate}</span> requests/s
+              </span>
             </div>
             <Fader value={config.rate} onChange={(rate) => update({ rate })} />
           </div>
@@ -529,7 +573,7 @@ export function LiveSystem() {
             </div>
           </div>
 
-          {/* The signature: a blank orange cap, labelled on the panel the way hardware is. */}
+          {/* The signature: a cobalt button, labelled on the panel the way hardware is. */}
           <div className="col-start-2 row-start-2 flex flex-col items-end justify-start gap-1.5 sm:row-span-2 sm:row-start-1 sm:w-[9.5rem] sm:items-center sm:justify-center sm:gap-2.5 sm:border-l sm:border-rule sm:pl-6">
             <button
               type="button"
@@ -574,7 +618,7 @@ function RestartGlyph() {
   );
 }
 
-/** A long fader: a recessed groove, an ink fill, and an orange cap. */
+/** A long fader: a groove, a light fill, and a cobalt cap that springs when you grab it. */
 function Fader({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return (
     <SliderPrimitive.Root
@@ -585,8 +629,8 @@ function Fader({ value, onChange }: { value: number; onChange: (value: number) =
       value={[value]}
       onValueChange={([next]) => onChange(next)}
     >
-      <SliderPrimitive.Track className="relative h-1 grow overflow-hidden rounded-full bg-rule-strong shadow-[inset_0_1px_1px_rgb(0_0_0/0.18)]">
-        <SliderPrimitive.Range className="absolute h-full bg-ink" />
+      <SliderPrimitive.Track className="relative h-1 grow overflow-hidden rounded-full bg-rule-strong">
+        <SliderPrimitive.Range className="absolute h-full rounded-full bg-ink" />
       </SliderPrimitive.Track>
       <span aria-hidden="true" className="pointer-events-none absolute inset-x-[14px] top-[calc(50%+7px)] flex justify-between">
         {Array.from({ length: 10 }, (_, i) => (
