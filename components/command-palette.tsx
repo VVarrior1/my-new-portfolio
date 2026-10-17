@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner";
 import {
   Command,
-  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -30,18 +29,22 @@ import { RESUME_PATH, profile } from "@/lib/content";
 import { toggleTheme } from "@/lib/theme";
 import { GithubMark, LinkedinMark } from "./brand-icons";
 import { trackEvent } from "./site-analytics";
+import { navigate } from "./transition-link";
 
-/** The ⌘K dialog itself. Loaded on first use by CommandMenu, so cmdk stays out of the initial bundle. */
-export default function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+/**
+ * What the island morphs into on ⌘K: a search box and the commands. Loaded on first use (or when
+ * the pointer nears the button), so cmdk stays out of the initial bundle.
+ */
+export default function CommandPanel({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const { isPlaying, togglePlay } = useAudio();
 
   const run = (action: () => void) => {
-    onOpenChange(false);
+    onClose();
     action();
   };
 
-  const go = (href: string) => run(() => router.push(href));
+  const go = (href: string) => run(() => navigate(router, href));
   const visit = (href: string, event: string) =>
     run(() => {
       trackEvent(event);
@@ -60,17 +63,11 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
     });
 
   return (
-    <CommandDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Command menu"
-      description="Jump to a section or run an action"
-      className="top-[12vh]"
-    >
-      <Command className="bg-paper">
-        <CommandInput placeholder="Type a command or search" />
+    <div className="w-[min(36rem,calc(100vw-1.5rem))]">
+      <Command label="Command menu" className="rounded-none! bg-transparent p-2">
+        <CommandInput placeholder="Type a command or search" autoFocus />
         {/* Tall enough for every command on a 900px-tall screen; shorter screens scroll. */}
-        <CommandList className="max-h-[min(36rem,calc(88vh-6rem))] scroll-pb-2 pb-1">
+        <CommandList className="mt-1 max-h-[min(30rem,calc(80vh-6rem))] scroll-pb-2 pb-1">
           <CommandEmpty>Nothing matches that.</CommandEmpty>
           <CommandGroup heading="Go to">
             <CommandItem keywords={["projects", "portfolio"]} onSelect={() => go("/#work")}>
@@ -136,6 +133,6 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
           </CommandGroup>
         </CommandList>
       </Command>
-    </CommandDialog>
+    </div>
   );
 }

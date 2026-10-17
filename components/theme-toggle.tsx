@@ -24,9 +24,17 @@ export function ThemeToggle() {
       }}
       aria-label={label}
       title={label}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink-2 transition-colors hover:text-ink"
+      className="island-btn text-ink-2 hover:text-ink"
     >
-      <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+      {/* Half a disc that turns over with a spring when the theme flips. */}
+      <svg
+        viewBox="0 0 20 20"
+        width="18"
+        height="18"
+        aria-hidden="true"
+        className="transition-transform duration-[900ms] [transition-timing-function:var(--spring-bouncy)]"
+        style={{ transform: `rotate(${theme === "dark" ? 180 : 0}deg)` }}
+      >
         <circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
         <path d="M10 2.75a7.25 7.25 0 0 1 0 14.5Z" fill="currentColor" />
       </svg>
