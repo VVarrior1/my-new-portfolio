@@ -7,7 +7,7 @@ export function currentTheme(): Theme {
 }
 
 // --paper for each theme, so the browser chrome matches the page after a manual switch.
-const PAPER: Record<Theme, string> = { light: "#f3f2ef", dark: "#151412" };
+const PAPER: Record<Theme, string> = { light: "#f2f3ef", dark: "#0b0c0a" };
 
 function apply(next: Theme) {
   document.documentElement.dataset.theme = next;

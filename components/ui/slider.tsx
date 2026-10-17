@@ -41,11 +41,11 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className="relative grow overflow-hidden rounded-full bg-rule data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
+        className="relative grow overflow-hidden rounded-full bg-rule-strong data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1"
       >
         <SliderPrimitive.Range
           data-slot="slider-range"
-          className="absolute bg-signal select-none data-horizontal:h-full data-vertical:w-full"
+          className="absolute bg-ink select-none data-horizontal:h-full data-vertical:w-full"
         />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
@@ -53,7 +53,7 @@ function Slider({
           data-slot="slider-thumb"
           key={index}
           aria-label={thumbLabel}
-          className="relative block size-5 shrink-0 cursor-grab rounded-full border-2 border-signal bg-paper shadow-sm active:cursor-grabbing ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
+          className="relative block size-5 shrink-0 cursor-grab rounded-full border-2 border-ink bg-key-face shadow-sm transition-transform active:scale-110 active:cursor-grabbing ring-ring/50 transition-[color,box-shadow] select-none after:absolute after:-inset-2 hover:ring-3 focus-visible:ring-3 focus-visible:outline-hidden active:ring-3 disabled:pointer-events-none disabled:opacity-50"
         />
       ))}
     </SliderPrimitive.Root>

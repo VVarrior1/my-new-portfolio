@@ -1,31 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { playlist } from "@/lib/playlist";
+import { MotionProvider } from "@/components/motion-provider";
 import { SiteAnalytics } from "@/components/site-analytics";
+import { Spotlight } from "@/components/spotlight";
+import { RouteTransitions } from "@/components/transition-link";
 import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-// Archivo is variable on weight and width; its wide cuts carry the display voice (name, section
-// titles, big numbers). Below about 24px it reads generic, so text is Instrument Sans.
-const display = Archivo({
+// Bricolage Grotesque is variable on weight, width and optical size; narrowed and heavy it sets the
+// name and every display line. Geist sets the text and Geist Mono the data.
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
+  axes: ["wdth", "opsz"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
-const sans = Instrument_Sans({
+const sans = Geist({
   subsets: ["latin"],
-  variable: "--font-instrument",
+  variable: "--font-geist",
   display: "swap",
 });
 
-const mono = JetBrains_Mono({
+const mono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-jetbrains",
+  variable: "--font-geist-mono",
   display: "swap",
   weight: ["400", "500"],
 });
@@ -66,8 +69,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     // Equal to --paper in each scheme (app/globals.css).
-    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#151412" },
+    { media: "(prefers-color-scheme: light)", color: "#f2f3ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0c0a" },
   ],
 };
 
@@ -107,11 +110,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to content
         </a>
-        <AudioProvider tracks={playlist}>
-          {children}
-          <SiteAnalytics />
-          <Toaster position="bottom-center" />
-        </AudioProvider>
+        <MotionProvider>
+          <AudioProvider tracks={playlist}>
+            {children}
+            <SiteAnalytics />
+            <RouteTransitions />
+            <Spotlight />
+            <Toaster position="bottom-center" />
+          </AudioProvider>
+        </MotionProvider>
       </body>
     </html>
   );
