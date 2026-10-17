@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { GalleryWithPagination } from "@/components/gallery-with-pagination";
-import { PageIntro } from "@/components/page-intro";
+import { PageHeader } from "@/components/page-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getGalleryItemsPaginated } from "@/lib/gallery";
@@ -19,11 +19,12 @@ export default async function GalleryPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="wrap pb-24 pt-12 sm:pt-20">
-        <PageIntro path="/gallery" title="Gallery." muted="Pictures worth keeping.">
-          Notes I liked, screenshots, and the odd photo. Select one to see it full size.
-        </PageIntro>
-        <div className="mt-14 lg:mt-20">
+      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-20">
+        <PageHeader
+          title="Gallery"
+          lead="Pictures worth keeping: notes I liked, screenshots, and the odd photo. Select one to see it full size."
+        />
+        <div className="mt-14">
           <GalleryWithPagination initialItems={items} initialHasMore={hasMore} initialTotal={total} />
         </div>
       </main>

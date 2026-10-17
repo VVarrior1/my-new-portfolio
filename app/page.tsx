@@ -8,6 +8,7 @@ import { ProjectShot } from "@/components/project-shot";
 import { Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SpanStrip } from "@/components/span-strip";
 import { getAllBlogs } from "@/lib/blogs";
 import {
   RESUME_PATH,
@@ -24,17 +25,23 @@ import { excerpt } from "@/lib/text";
 
 export const revalidate = 300;
 
-const pad = (n: number) => String(n).padStart(2, "0");
+const formatMonth = (date: string) => new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
 
-/** Ink links with a quiet underline; external ones get ↗. */
+/** Tall captures are cropped from the top on wide screens, so the first project stays the larger one. */
+const SHOT_MAX_HEIGHT: Partial<Record<(typeof featured)[number]["slug"], number>> = { cyd: 360 };
+
 function ExternalLinks({ links }: { links: ContentLink[] }) {
   if (links.length === 0) return null;
   return (
-    <ul className="flex flex-wrap gap-x-6 gap-y-2 text-[0.875rem] font-medium">
+    <ul className="flex flex-wrap gap-x-6 gap-y-2">
       {links.map((link) => (
         <li key={link.href}>
-          <a href={link.href} target="_blank" rel="noreferrer" data-track={link.track} className="link">
-            {link.label} ↗<span className="sr-only"> (opens in a new tab)</span>
+          <a href={link.href} target="_blank" rel="noreferrer" data-track={link.track} className="link text-[0.9375rem] font-[550]">
+            {link.label}
+            <span className="link-arrow" aria-hidden="true">
+              ↗
+            </span>
+            <span className="sr-only"> (opens in a new tab)</span>
           </a>
         </li>
       ))}
@@ -42,224 +49,251 @@ function ExternalLinks({ links }: { links: ContentLink[] }) {
   );
 }
 
-/** A vertical hairline in the 24px gutter left of a grid cell, so dividers snap to the columns. */
-const mdRule = "md:relative md:before:absolute md:before:-left-3 md:before:inset-y-0 md:before:w-px md:before:bg-rule";
-const lgRule = "lg:relative lg:before:absolute lg:before:-left-3 lg:before:inset-y-0 lg:before:w-px lg:before:bg-rule";
+function ResumeLabel() {
+  return (
+    <>
+      Résumé
+      <span className="font-mono text-[0.8125rem] font-medium text-graphite">PDF</span>
+    </>
+  );
+}
+
+/** Mono label on the left three columns, content on the right nine: Experience, Background and Writing share it. */
+const ROW = "grid gap-x-6 gap-y-2 lg:grid-cols-12 lg:items-start";
+const ROW_LABEL = "t-mono text-graphite lg:col-span-3 lg:pt-[0.3rem]";
+const ROW_BODY = "min-w-0 lg:col-span-9";
 
 export default async function Home() {
   const posts = await getAllBlogs();
+  const toolCount = skills.reduce((sum, skill) => sum + skill.items.split(", ").length, 0);
 
   return (
     <>
       <SiteHeader />
       <main id="main">
-        {/* Hero. The simulator is the loudest thing on the first screen, on its heat plate. */}
-        <section aria-labelledby="hero-name" className="overflow-x-clip">
-          <div className="wrap pb-12 pt-8 sm:pt-12 lg:pb-32 lg:pt-12">
-            <h1 id="hero-name" className="t-name">
-              {profile.name}
-            </h1>
+        {/* Hero: the name and the facts on the left, the simulator (a small device) on the right. */}
+        <section aria-labelledby="hero-name">
+          <div className="mx-auto grid max-w-[76rem] gap-y-10 px-4 pb-16 pt-6 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6">
+            <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-1">
+              <h1 id="hero-name" className="t-display">
+                {profile.firstName}
+                <br />
+                {profile.lastName}
+              </h1>
+              {/* Two deliberate lines: who and where, then when and status. */}
+              <DotList
+                items={profile.facts}
+                label="At a glance"
+                breakAfter={profile.factsFirstLine}
+                lead={<span className="mr-2 inline-block size-1.5 -translate-y-px rounded-full bg-go align-middle" aria-hidden="true" />}
+                className="t-mono mt-4 text-ink"
+              />
+              <p className="measure mt-5 text-[1.0625rem] leading-[1.55] text-ink sm:text-[1.25rem] sm:leading-[1.45]">{profile.intro}</p>
 
-            <div className="mt-4 grid gap-y-4 lg:grid-cols-12 lg:gap-x-6">
-              <p className="max-w-[36rem] text-[1.125rem] leading-[1.5] text-ink-2 sm:text-[1.25rem] lg:col-span-6">{profile.tagline}</p>
-              <p className="hidden max-w-[28rem] pt-1 text-[1rem] leading-[1.6] text-graphite lg:col-span-5 lg:col-start-8 lg:block">
-                {profile.personal}
-              </p>
-            </div>
-
-            <div className="mt-7 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap items-center gap-2">
-                <a href={`mailto:${profile.email}`} className="btn btn-key" data-track="email">
+              {/* Ink, not orange: up here the only orange is on the device. */}
+              <div className="mt-7 flex flex-wrap gap-2.5">
+                <a href={`mailto:${profile.email}`} className="key key-ink" data-track="email">
                   Email me
                 </a>
-                <a href={RESUME_PATH} className="btn btn-ghost" data-track="resume-download">
-                  Résumé
+                <a href={RESUME_PATH} className="key" data-track="resume-download">
+                  <ResumeLabel />
                 </a>
                 <a
                   href={profile.github}
-                  className="btn btn-ghost btn-icon"
+                  className="key key-icon"
                   target="_blank"
                   rel="noreferrer"
                   data-track="github"
                   aria-label="GitHub (opens in a new tab)"
-                  title="GitHub"
                 >
                   <GithubMark className="size-[18px]" />
                 </a>
                 <a
                   href={profile.linkedin}
-                  className="btn btn-ghost btn-icon"
+                  className="key key-icon"
                   target="_blank"
                   rel="noreferrer"
                   data-track="linkedin"
                   aria-label="LinkedIn (opens in a new tab)"
-                  title="LinkedIn"
                 >
                   <LinkedinMark className="size-[17px]" />
                 </a>
               </div>
-              <p className="t-mono flex items-baseline gap-2.5 text-[0.75rem] text-ink sm:text-[0.8125rem]">
-                <span aria-hidden="true" className="size-1.5 shrink-0 -translate-y-px rounded-full bg-go" />
-                <DotList items={profile.facts} />
-              </p>
             </div>
 
-            <div id="play" className="mt-10 scroll-mt-24">
-              <LiveSystem className="-mx-2 sm:mx-0 xl:-mx-6" />
+            <div id="play" className="min-w-0 scroll-mt-20 lg:col-span-7 lg:col-start-6 lg:row-span-2 lg:row-start-1">
+              <LiveSystem />
             </div>
 
-            <p className="mt-28 max-w-[34rem] text-[1rem] leading-[1.6] text-graphite lg:hidden">{profile.personal}</p>
+            {/* The personal line, as a small spec sheet. */}
+            <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:self-start">
+              <h2 className="t-mono text-graphite">Off the clock</h2>
+              <dl className="spec mt-2">
+                {profile.offTheClock.map((row) => (
+                  <div key={row.label}>
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </section>
 
-        {/* Work */}
-        <Section id="work" title="Work." muted="Shipped, used, and measured." rule={false}>
-          <div className="space-y-24 lg:space-y-40">
-            {featured.map((project, index) => (
-              <article key={project.slug} aria-labelledby={`${project.slug}-title`}>
-                <div className="grid gap-y-5 lg:grid-cols-12 lg:items-end lg:gap-x-6">
-                  <div className="lg:col-span-7">
-                    <p className="t-mono text-graphite">
-                      {pad(index + 1)} <span aria-hidden="true">—</span> {project.role}
-                    </p>
-                    <h3 id={`${project.slug}-title`} className="t-title mt-3">
+        <Section id="work" index="01" title="Work" meta={`${featured.length} featured · ${otherProjects.length} more`}>
+          <div className="space-y-20 sm:space-y-28">
+            {featured.map((project, index) => {
+              const flip = index % 2 === 1;
+              const textCols = flip ? "lg:col-span-5 lg:col-start-8" : "lg:col-span-5 lg:col-start-1";
+              const matCols = flip ? "lg:col-span-7 lg:col-start-1" : "lg:col-span-7 lg:col-start-6";
+              return (
+                <article
+                  key={project.slug}
+                  aria-labelledby={`${project.slug}-title`}
+                  className="grid gap-y-8 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6 lg:gap-y-0"
+                >
+                  {/* On a phone the screenshot comes straight after the summary. */}
+                  <div className={`min-w-0 lg:row-start-1 ${textCols}`}>
+                    <h3 id={`${project.slug}-title`} className="t-title">
                       {project.name}
                     </h3>
-                    <p className="measure mt-3 text-ink-2">{project.summary}</p>
+                    <p className="t-mono mt-2 text-graphite">{project.role}</p>
+                    <p className="mt-4 text-ink">{project.summary}</p>
                   </div>
-                  <div className="lg:col-span-5 lg:flex lg:justify-end lg:pb-1">
-                    <ExternalLinks links={project.links} />
+
+                  {/* The mat: a raised surface the screenshot sits on. It stays in view while the text scrolls. */}
+                  <div className={`min-w-0 lg:sticky lg:top-24 lg:row-span-2 lg:row-start-1 lg:self-start ${matCols}`}>
+                    <div className="panel p-3 sm:p-7">
+                      <ProjectShot name={project.name} shot={project.shot} phone={project.phone} maxHeight={SHOT_MAX_HEIGHT[project.slug]} />
+                    </div>
                   </div>
-                </div>
 
-                <div className="frame mt-8 p-2.5 sm:p-6">
-                  <ProjectShot name={project.name} shot={project.shot} phone={project.phone} />
-                </div>
-
-                <div className="mt-8 grid gap-y-8 md:grid-cols-12 md:gap-x-6 lg:mt-10">
-                  <div className="md:col-span-4">
-                    <p className="t-mono text-graphite">In numbers</p>
-                    <dl className="mt-4 grid grid-cols-3 gap-4 md:grid-cols-1">
+                  <div className={`min-w-0 lg:row-start-2 lg:pt-6 ${textCols}`}>
+                    <dl className="stat-row">
                       {project.facts.map((fact) => (
                         <div key={fact.label}>
-                          <dt className="sr-only">{fact.label}</dt>
-                          <dd>
-                            <span className="readout block text-ink">{fact.value}</span>
-                            <span className="t-mono mt-1 block text-[0.75rem] text-graphite">{fact.label}</span>
-                          </dd>
+                          <dt>{fact.label}</dt>
+                          <dd>{fact.value}</dd>
                         </div>
                       ))}
                     </dl>
+
+                    <div className="mt-7 border-l-2 border-rule-strong pl-4">
+                      <h4 className="font-semibold text-ink">{project.hardPart.title}</h4>
+                      <p className="mt-1.5 text-ink-2">{project.hardPart.body}</p>
+                    </div>
+
+                    <DotList items={project.stack} label="Stack" className="t-mono mt-6 text-graphite" />
+                    <div className="mt-5">
+                      <ExternalLinks links={project.links} />
+                    </div>
                   </div>
-                  <div className={`md:col-span-4 ${mdRule}`}>
-                    <p className="t-mono text-graphite">The hard part</p>
-                    <h4 className="mt-4 text-[1rem] font-medium leading-snug text-ink">{project.hardPart.title}</h4>
-                    <p className="mt-2 text-ink-2">{project.hardPart.body}</p>
-                  </div>
-                  <div className={`md:col-span-4 ${mdRule}`}>
-                    <p className="t-mono text-graphite">Built with</p>
-                    <ul className="t-mono mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-ink-2 md:block md:space-y-1.5">
-                      {project.stack.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
 
-          <div className="mt-24 lg:mt-40">
-            <h3 className="t-title">More projects</h3>
-            <ul className="mt-8 grid border-t border-rule md:grid-cols-12 md:gap-x-6">
-              {otherProjects.map((project, index) => (
-                <li
-                  key={project.name}
-                  className={`border-b border-rule py-6 md:col-span-6 lg:col-span-3 lg:border-b-0 ${index % 2 === 1 ? mdRule : ""} ${
-                    index > 0 ? lgRule : ""
-                  }`}
-                >
-                  <p className="t-mono text-graphite">{pad(index + featured.length + 1)}</p>
-                  <h4 className="mt-3 text-[1rem] font-medium leading-snug">
+          <div className={`${ROW} mt-20 border-t border-rule pt-10 sm:mt-28`}>
+            <h3 className={ROW_LABEL}>More projects</h3>
+            <ul className={`${ROW_BODY} mt-4 grid gap-x-6 gap-y-9 md:grid-cols-2 lg:mt-0`}>
+              {otherProjects.map((project) => (
+                <li key={project.name}>
+                  <h4 className="font-semibold">
                     {project.href ? (
-                      <a href={project.href} target="_blank" rel="noreferrer" className="hover:underline hover:decoration-1 hover:underline-offset-[0.25em]">
-                        {project.name} <span aria-hidden="true" className="text-graphite">↗</span>
+                      <a href={project.href} target="_blank" rel="noreferrer" className="link">
+                        {project.name}
+                        <span className="link-arrow" aria-hidden="true">
+                          ↗
+                        </span>
                         <span className="sr-only"> (opens in a new tab)</span>
                       </a>
                     ) : (
                       project.name
                     )}
+                    {project.note && <span className="t-mono ml-2.5 font-normal text-graphite">{project.note}</span>}
                   </h4>
-                  <p className="mt-2 text-[0.875rem] leading-[1.6] text-ink-2">{project.summary}</p>
-                  <p className="t-mono mt-3 text-graphite">
-                    <DotList items={project.stack.split(", ")} />
-                  </p>
+                  <p className="measure mt-1.5 text-[0.9375rem] leading-relaxed text-ink-2">{project.summary}</p>
+                  <DotList items={project.stack.split(", ")} label="Stack" className="t-mono mt-2 text-graphite" />
                 </li>
               ))}
             </ul>
           </div>
         </Section>
 
-        {/* Experience, with education and tools as a compact background row. */}
-        <Section id="experience" title="Experience." muted="Where I did it for real.">
-          <ol className="dim-list -mx-4">
+        <Section
+          id="experience"
+          index="02"
+          title="Experience"
+          meta={`${experience.length} roles · ${experience[experience.length - 1].start} – now`}
+        >
+          <SpanStrip jobs={experience} until={profile.availableFrom} />
+          <ol className="mt-12 sm:mt-14">
             {experience.map((job) => {
               const current = job.end === "Now";
               return (
-                <li key={`${job.company}-${job.start}`} className="dim-row grid gap-y-2 rounded-[10px] px-4 py-5 lg:grid-cols-12 lg:gap-x-6">
-                  <p className={`t-mono flex items-center gap-2 self-start tabular-nums lg:col-span-3 lg:pt-0.5 ${current ? "text-ink" : "text-graphite"}`}>
-                    {current && <span aria-hidden="true" className="size-1.5 rounded-full bg-go" />}
-                    {job.start} – {job.end}
-                  </p>
-                  <div className="lg:col-span-9">
-                    <h3 className="text-[1rem] leading-snug">
-                      <span className="font-medium text-ink">
-                        {job.link ? (
-                          <a href={job.link} target="_blank" rel="noreferrer" className="hover:underline hover:underline-offset-[0.25em]">
-                            {job.company} <span aria-hidden="true" className="text-graphite">↗</span>
-                            <span className="sr-only"> (opens in a new tab)</span>
-                          </a>
-                        ) : (
-                          job.company
-                        )}
+                <li key={`${job.company}-${job.start}`} className={`${ROW} border-b border-rule py-7 first:pt-0`}>
+                  <div className={`${ROW_LABEL} flex flex-wrap gap-x-2 lg:block`}>
+                    <p className="flex items-center gap-2">
+                      {current && <span className="size-1.5 rounded-full bg-go" aria-hidden="true" />}
+                      <span className={current ? "text-ink" : undefined}>
+                        {job.start} – {current ? "now" : job.end}
                       </span>
-                      <span className="text-[0.875rem] text-graphite">
-                        {" "}
-                        · {job.role}, {job.place}
+                    </p>
+                    <p>
+                      <span className="lg:hidden" aria-hidden="true">
+                        ·{" "}
                       </span>
+                      {job.place}
+                    </p>
+                  </div>
+                  <div className={ROW_BODY}>
+                    <h3 className="t-item">
+                      {job.link ? (
+                        <a href={job.link} target="_blank" rel="noreferrer" className="link">
+                          {job.company}
+                          <span className="link-arrow text-[0.85em]" aria-hidden="true">
+                            ↗
+                          </span>
+                          <span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        job.company
+                      )}
                     </h3>
-                    <p className="measure mt-2 text-ink-2">{job.summary}</p>
+                    <p className="mt-0.5 text-[0.9375rem] text-graphite">{job.role}</p>
+                    <p className="measure mt-3 text-ink-2">{job.summary}</p>
                   </div>
                 </li>
               );
             })}
           </ol>
+        </Section>
 
-          <div className="mt-14 grid gap-y-4 border-t border-rule pt-10 lg:mt-20 lg:grid-cols-12 lg:gap-x-6 lg:gap-y-12">
-            <h3 className="t-mono text-graphite lg:col-span-3 lg:pt-0.5">Education</h3>
-            <div className="lg:col-span-9">
-              <p className="leading-snug">
-                <span className="font-medium text-ink">{education.school}</span>
-                <span className="text-[0.875rem] text-graphite">
-                  {" "}
-                  · {education.degree}, graduating {education.graduation}
-                </span>
+        <Section id="background" index="03" title="Background" meta={`${skills.length} toolkits · ${toolCount} tools`}>
+          <div className={ROW}>
+            <h3 className={ROW_LABEL}>Education</h3>
+            <div className={ROW_BODY}>
+              <p className="t-item">{education.school}</p>
+              <p className="mt-0.5 text-[0.9375rem] text-graphite">
+                {education.degree}, graduating {education.graduation} · {education.honours}
               </p>
-              <p className="mt-2 text-[0.875rem] text-ink-2">{education.honours}</p>
-              <p className="t-mono measure mt-3 text-graphite">
-                <DotList items={education.coursework} />
-              </p>
+              <p className="measure mt-3 text-ink-2">Courses I&apos;d point to: {education.coursework.join(", ").toLowerCase()}.</p>
             </div>
-
-            <h3 className="t-mono mt-8 text-graphite lg:col-span-3 lg:mt-0 lg:pt-0.5">Tools</h3>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-8 lg:col-span-9 xl:grid-cols-4">
+          </div>
+          {/* A keyboard of what I use: one row of keycaps per toolkit, on one panel. The panel's rows sit on
+              the page grid, so the keys start on the same edge as the text above. */}
+          <div className="panel mt-8 py-4">
+            <h3 className="t-mono px-4 pb-3 text-ink-2">Tools</h3>
+            <dl className="space-y-3 sm:space-y-2.5">
               {skills.map((skill) => (
-                <div key={skill.group}>
-                  <dt className="text-[0.875rem] font-medium text-ink">{skill.group}</dt>
-                  <dd className="t-mono mt-2 text-ink-2">
-                    <ul className="space-y-1">
+                <div key={skill.group} className="grid gap-y-2 px-4 lg:grid-cols-12 lg:items-start lg:gap-x-6 lg:px-0">
+                  <dt className="t-mono text-graphite lg:col-span-3 lg:pl-4 lg:pt-[0.3rem]">{skill.group}</dt>
+                  <dd className="min-w-0 lg:col-span-9 lg:pr-4">
+                    <ul className="flex flex-wrap gap-1.5">
                       {skill.items.split(", ").map((item) => (
-                        <li key={item}>{item}</li>
+                        <li key={item} className="keycap">
+                          {item}
+                        </li>
                       ))}
                     </ul>
                   </dd>
@@ -269,22 +303,20 @@ export default async function Home() {
           </div>
         </Section>
 
-        {/* Writing */}
-        <Section id="writing" title="Writing." muted="Notes from building.">
+        <Section id="writing" index="04" title="Writing" meta={posts.length > 0 ? `${posts.length} posts · since ${formatMonth(posts[posts.length - 1].date)}` : undefined}>
           {posts.length > 0 ? (
-            <ul className="dim-list -mx-4">
+            <ul>
               {posts.slice(0, 4).map((post) => {
-                const summary = excerpt(post.excerpt, post.title, 140);
+                const summary = excerpt(post.excerpt, post.title, 92);
                 return (
-                  <li
-                    key={post.slug}
-                    className="dim-row relative rounded-[10px] before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-rule last:after:absolute last:after:inset-x-4 last:after:bottom-0 last:after:h-px last:after:bg-rule"
-                  >
-                    <Link href={`/blogs/${post.slug}`} className="grid gap-y-1 rounded-[10px] px-4 py-5 lg:grid-cols-12 lg:gap-x-6">
-                      <span className="t-mono tabular-nums text-graphite lg:col-span-3 lg:pt-0.5">{formatDate(post.date)}</span>
-                      <span className="min-w-0 lg:col-span-9">
-                        <span className="block font-medium leading-snug text-ink">{post.title.trim()}</span>
-                        {summary && <span className="mt-1 block truncate text-[0.875rem] text-graphite">{summary}</span>}
+                  <li key={post.slug} className="border-b border-rule first:[&>a]:pt-0">
+                    <Link href={`/blogs/${post.slug}`} className={`${ROW} group py-6`}>
+                      <span className={ROW_LABEL}>{formatDate(post.date)}</span>
+                      <span className={ROW_BODY}>
+                        <span className="t-item block underline decoration-transparent decoration-1 underline-offset-[0.25em] transition-[text-decoration-color] duration-200 group-hover:decoration-signal-text">
+                          {post.title.trim()}
+                        </span>
+                        {summary && <span className="measure mt-1 line-clamp-2 text-ink-2 lg:line-clamp-1 lg:max-w-none">{summary}</span>}
                       </span>
                     </Link>
                   </li>
@@ -292,56 +324,83 @@ export default async function Home() {
               })}
             </ul>
           ) : (
-            <p className="text-graphite">No posts yet.</p>
+            <p className="text-ink-2">No posts yet.</p>
           )}
-          <p className="mt-8 lg:grid lg:grid-cols-12 lg:gap-x-6">
-            <Link href="/blogs" className="link text-[0.875rem] font-medium lg:col-span-9 lg:col-start-4 lg:justify-self-start">
-              All {posts.length} posts →
-            </Link>
+          <p className={`${ROW} mt-6`}>
+            <span className="lg:col-span-9 lg:col-start-4">
+              <Link href="/blogs" className="link text-[0.9375rem] font-[550]">
+                All {posts.length} posts
+                <span className="link-arrow" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+            </span>
           </p>
         </Section>
 
-        {/* Contact. No band: a rule, generous space, and a faint copy of the plate so the page ends lit. */}
-        <section id="contact" aria-labelledby="contact-title" className="relative isolate scroll-mt-16 overflow-hidden border-t border-rule">
-          <div aria-hidden="true" className="end-plate" />
-          <div className="wrap py-20 lg:py-32">
-            <div className="max-w-[52rem]">
-              <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-6">
-                <Image
-                  src="/abdelrahman.jpg"
-                  width={460}
-                  height={460}
-                  alt="Abdelrahman Mohamed"
-                  sizes="64px"
-                  className="size-16 shrink-0 rounded-full border border-rule-strong object-cover sm:mt-1"
-                />
-                <h2 id="contact-title" className="t-section">
-                  Hiring for 2027?{" "}
-                  <span className="muted">I start full-time in January. Calgary, remote, or relocating.</span>
-                </h2>
-              </div>
-              <p className="t-mono mt-6 text-ink-2 sm:ml-[5.5rem]">
-                <DotList items={profile.workFacts} />
-              </p>
-
-              <div className="sm:ml-[5.5rem]">
-                <a
-                  href={`mailto:${profile.email}`}
-                  data-track="email"
-                  className="mt-10 inline-block text-[clamp(1.25rem,0.6rem+3.2vw,2.25rem)] font-medium leading-[1.15] tracking-[-0.02em] underline decoration-[color-mix(in_srgb,var(--ink)_30%,transparent)] decoration-1 underline-offset-[0.2em] transition-[text-decoration-color] duration-[240ms] hover:decoration-[var(--ink)]"
-                >
-                  {profile.email.split("@")[0]}
-                  <wbr />@{profile.email.split("@")[1]}
-                </a>
-                <div className="mt-8 flex flex-wrap gap-2">
-                  <CopyEmail email={profile.email} className="btn btn-key" />
-                  <a href={RESUME_PATH} className="btn btn-ghost" data-track="resume-download">
-                    Résumé
-                  </a>
-                  <a href={profile.linkedin} className="btn btn-ghost" target="_blank" rel="noreferrer" data-track="linkedin">
-                    LinkedIn ↗<span className="sr-only"> (opens in a new tab)</span>
-                  </a>
+        {/* Contact: the nameplate. */}
+        <section id="contact" aria-labelledby="contact-title" className="scroll-mt-16 border-t border-rule">
+          <div className="mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
+            <div className="panel plate grid gap-x-12 gap-y-8 p-5 sm:p-12 lg:grid-cols-[minmax(0,1fr)_16.875rem]">
+              {/* Title and pitch at the top, the address and keys level with the last spec row. */}
+              <div className="flex min-w-0 flex-col justify-between gap-y-8">
+                <div>
+                  <p className="t-mono mb-2 text-graphite" aria-hidden="true">
+                    05
+                  </p>
+                  <h2 id="contact-title" className="t-section">
+                    Hiring for 2027?
+                  </h2>
+                  <p className="measure mt-5 text-[1.0625rem] leading-relaxed text-ink-2 sm:text-[1.25rem]">
+                    I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or
+                    somewhere I can move to. {profile.workAuth}
+                  </p>
                 </div>
+                <div>
+                  <a
+                    href={`mailto:${profile.email}`}
+                    data-track="email"
+                    className="block text-[clamp(1.0625rem,4.6vw,2.5rem)] font-semibold leading-[1.15] tracking-[-0.02em] text-ink underline decoration-ink decoration-2 underline-offset-[0.22em] transition-[text-decoration-color] duration-200 hover:decoration-signal-text"
+                  >
+                    {profile.email.split("@")[0]}
+                    <wbr />@{profile.email.split("@")[1]}
+                  </a>
+                  <div className="mt-7 flex flex-wrap gap-2.5">
+                    <a href={`mailto:${profile.email}`} className="key key-signal" data-track="email">
+                      Email me
+                    </a>
+                    <CopyEmail email={profile.email} className="key" />
+                    <a href={RESUME_PATH} className="key" data-track="resume-download">
+                      <ResumeLabel />
+                    </a>
+                    <a href={profile.linkedin} className="key" target="_blank" rel="noreferrer" data-track="linkedin">
+                      LinkedIn
+                      <span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-start gap-x-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-x-8 lg:block">
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl border border-rule-strong bg-paper lg:aspect-square">
+                  {/* Head and shoulders, cropped from the square original. */}
+                  <Image
+                    src="/abdelrahman.jpg"
+                    width={460}
+                    height={460}
+                    alt="Abdelrahman Mohamed in a suit, standing outdoors by a river on a sunny day"
+                    sizes="(min-width: 1024px) 570px, (min-width: 640px) 340px, 190px"
+                    className="absolute left-[-50%] top-[-14.5%] h-auto w-[209%] max-w-none"
+                  />
+                </div>
+                <dl className="spec lg:mt-6">
+                  {profile.plate.map((row) => (
+                    <div key={row.label}>
+                      <dt>{row.label}</dt>
+                      <dd>{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             </div>
           </div>

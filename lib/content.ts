@@ -15,17 +15,31 @@ export const profile = {
   linkedin: "https://www.linkedin.com/in/abdelrahman-mohamed-080488197/",
   intro:
     "I'm a software engineer who likes building things people actually use, then finding out exactly where they break.",
-  /** The hero's two-line sub, under the name. */
-  tagline: "Software engineer in Calgary. I build things people actually use, then find exactly where they break.",
   personal:
-    "Off the clock: bullet chess (rated\u00a02000), the gym, a growing fragrance collection, and another Red Bull.",
-  /** The hero's fact line, in mono: what a recruiter needs in one glance. */
-  facts: ["Graduating Dec 2026", "Full-time from Jan 2027", "Canadian, TN-eligible"],
+    "When I'm not coding, I'm playing bullet chess (rated\u00a02000), at the gym, adding to a fragrance collection, or opening another Red Bull.",
   graduation: "Graduating December 2026.",
   availability: "Available full-time from January 2027",
+  /** The same date, short: where the experience strip's axis ends. */
+  availableFrom: "Jan 2027",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
-  /** The contact block's fact line. */
-  workFacts: ["Canadian citizen", "TN-eligible, no H-1B needed", "Open to relocation"],
+  /** The hero's mono fact strip: the same facts as above, in recruiter order, on two lines (who and where; when and status). */
+  facts: ["Software engineer", "Calgary, AB", "Grad Dec 2026", "Full-time Jan 2027", "Canadian, TN-eligible"],
+  /** The fact strip breaks after this many items. */
+  factsFirstLine: 2,
+  /** The personal line above, set as a small spec sheet. Same words, nothing added. */
+  offTheClock: [
+    { label: "Chess", value: "Bullet, rated\u00a02000" },
+    { label: "Training", value: "At the gym" },
+    { label: "Collecting", value: "Fragrances" },
+    { label: "Fuel", value: "Another Red Bull" },
+  ],
+  /** The contact nameplate's spec block, restating workAuth and availability. */
+  plate: [
+    { label: "Based", value: "Calgary, AB" },
+    { label: "Available", value: "Jan 2027" },
+    { label: "Works in", value: "Canada \u00b7 US (TN)" },
+    { label: "Relocation", value: "Open" },
+  ],
 };
 
 export type Link = { label: string; href: string; track?: string };
@@ -38,6 +52,8 @@ export type Shot = {
   alt: string;
   /** Shown in the frame's address bar. */
   url: string;
+  /** A light capture is dimmed slightly in the dark theme so it isn't a white slab. */
+  tone?: "light" | "dark";
 };
 
 export type FeaturedProject = {
@@ -53,7 +69,6 @@ export type FeaturedProject = {
   phone?: Shot;
 };
 
-// Systemlab first: it is the work the hero simulator comes from. CYD is one project among several.
 export const featured: FeaturedProject[] = [
   {
     slug: "systemlab",
@@ -77,11 +92,12 @@ export const featured: FeaturedProject[] = [
       { label: "Code", href: "https://github.com/VVarrior1/systemlab", track: "project:systemlab-code" },
     ],
     shot: {
-      src: "/work/systemlab-lesson.jpg",
-      width: 2400,
-      height: 1560,
-      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
+      src: "/work/systemlab-canvas.jpg",
+      width: 1480,
+      height: 1202,
+      alt: "A Systemlab lesson after a run: incoming traffic at 300 requests per second, an API server at 100% utilization and a catalog database at 12%, with a p95 latency of 4,766 ms.",
       url: "system-design-playground-pi.vercel.app/learn",
+      tone: "light",
     },
   },
   {
@@ -111,6 +127,7 @@ export const featured: FeaturedProject[] = [
       height: 1110,
       alt: "The CYD venue picker: venues are filtered by the child's age, so a full group and a venue with no group for that age are shown but can't be picked.",
       url: "cydsoccer.com/register",
+      tone: "dark",
     },
     phone: {
       src: "/work/cyd-register-phone.jpg",
@@ -119,12 +136,14 @@ export const featured: FeaturedProject[] = [
       alt: "Step one of the CYD registration flow on a phone: parent details and whether the child is new or returning.",
       url: "cydsoccer.com/register",
     },
-  },
+  }
 ];
 
-export const otherProjects: Array<{ name: string; summary: string; href?: string; stack: string }> = [
+export const otherProjects: Array<{ name: string; summary: string; href?: string; note?: string; stack: string }> = [
   {
     name: "Road object detection",
+    /** No public repository, so the title says why it isn't a link. */
+    note: "team project",
     summary:
       "Fine-tuned YOLOv8 and YOLOv11 on a 12-class Egyptian traffic dataset, with tuk-tuks and street banners that Western benchmarks don't have. I owned the v11 training and the accuracy-versus-cost comparison.",
     stack: "Python, PyTorch, Ultralytics",

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DailyChart, type DayPoint } from "@/components/daily-chart";
-import { PageIntro } from "@/components/page-intro";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { PageHeader } from "@/components/page-header";
 import { TrackingNotice } from "@/components/tracking-notice";
 import { compactIfDue, getFreshAnalytics } from "@/lib/analytics";
 import { getAllBlogs } from "@/lib/blogs";
@@ -52,13 +52,13 @@ const fmt = (n: number) => n.toLocaleString("en-US");
 function Table({ caption, columns, rows }: { caption: string; columns: string[]; rows: Array<[string, ...number[]]> }) {
   return (
     <div>
-      <h2 className="text-[1.25rem] font-medium tracking-[-0.01em]">{caption}</h2>
+      <h2 className="t-item">{caption}</h2>
       {rows.length === 0 ? (
-        <p className="mt-3 text-graphite">Nothing recorded yet.</p>
+        <p className="mt-3 text-ink-2">Nothing recorded yet.</p>
       ) : (
-        <table className="mt-4 w-full table-fixed text-left text-[0.875rem]">
+        <table className="mt-3 w-full table-fixed text-left text-[0.9375rem]">
           <thead>
-            <tr className="t-mono border-b border-rule-strong text-graphite">
+            <tr className="t-mono border-b border-rule text-graphite">
               {columns.map((column, i) => (
                 <th key={column} scope="col" className={`py-2 font-normal ${i > 0 ? "w-[5.5rem] text-right" : ""}`}>
                   {column}
@@ -69,11 +69,11 @@ function Table({ caption, columns, rows }: { caption: string; columns: string[];
           <tbody>
             {rows.map(([name, ...values]) => (
               <tr key={name} className="border-b border-rule">
-                <th scope="row" className="truncate py-2.5 pr-4 font-normal text-ink-2" title={name}>
+                <th scope="row" className="truncate py-2.5 pr-4 font-normal" title={name}>
                   {name}
                 </th>
                 {values.map((value, i) => (
-                  <td key={i} className="t-mono py-2.5 pl-4 text-right tabular-nums text-ink">
+                  <td key={i} className="py-2.5 pl-4 text-right font-mono text-[0.875rem] tabular-nums">
                     {fmt(value)}
                   </td>
                 ))}
@@ -112,37 +112,36 @@ export default async function StatsPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="wrap pb-24 pt-12 sm:pt-20">
-        <PageIntro path="/stats" title="Site stats." muted="No trackers.">
-          Counted by this site itself. Crawlers and link previews are left out, and a visitor is a browser,
-          identified by a first-party cookie. Numbers update about once a minute.
-        </PageIntro>
-        <Suspense fallback={null}>
-          <TrackingNotice />
-        </Suspense>
+      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-12 sm:px-8 sm:pt-20">
+        <PageHeader
+          title="Site stats"
+          lead="Counted by this site itself, with no third-party trackers. Crawlers and link previews are left out, and a visitor is a browser, identified by a first-party cookie. Numbers update about once a minute."
+        >
+          <Suspense fallback={null}>
+            <TrackingNotice />
+          </Suspense>
+        </PageHeader>
 
-        <dl className="mt-14 grid grid-cols-2 gap-2 lg:mt-20 lg:grid-cols-4">
-          {figures.map((figure) => (
-            <div key={figure.label} className="rounded-[10px] border border-rule-strong bg-paper-raised px-4 py-4 sm:px-5">
-              <dt className="sr-only">{figure.label}</dt>
-              <dd>
-                <span className="readout block text-ink">{fmt(figure.value)}</span>
-                <span className="t-mono mt-2 block text-[0.75rem] text-graphite">{figure.label}</span>
-              </dd>
+        {/* The headline numbers, between two hairlines on the paper. Only the chart below is a screen. */}
+        <dl className="mt-14 grid grid-cols-2 gap-x-6 border-y border-rule lg:grid-cols-4">
+          {figures.map((figure, i) => (
+            <div key={figure.label} className={`flex flex-col-reverse justify-end py-4 sm:py-5 ${i >= 2 ? "border-t border-rule lg:border-t-0" : ""}`}>
+              <dt className="t-mono mt-1.5 text-graphite">{figure.label}</dt>
+              <dd className="text-[2.5rem] font-[620] leading-none tracking-[-0.02em] tabular-nums [font-stretch:108%]">{fmt(figure.value)}</dd>
             </div>
           ))}
         </dl>
 
         <section aria-labelledby="daily-title" className="mt-14">
-          <h2 id="daily-title" className="text-[1.25rem] font-medium tracking-[-0.01em]">
+          <h2 id="daily-title" className="t-item">
             Page views per day, last 30 days
           </h2>
-          <p className="mt-1 text-[0.875rem] text-graphite">
+          <p className="t-mono mt-1 text-graphite">
             {historyStart
               ? `Days are in UTC. Daily history starts ${formatDateLong(historyStart)}; totals above go back further.`
               : "Daily history starts with the next visit; totals above go back further."}
           </p>
-          <div className="mt-6">
+          <div className="screen mt-6 px-3 pb-3 pt-4 sm:px-5 sm:pt-5">
             <DailyChart points={days} />
           </div>
           <details className="mt-4">
@@ -180,7 +179,7 @@ export default async function StatsPage() {
           />
         </div>
 
-        <p className="measure mt-16 text-[0.875rem] leading-relaxed text-graphite">
+        <p className="measure mt-16 text-[0.9375rem] leading-relaxed text-ink-2">
           Don&apos;t want to be counted? Open{" "}
           <a href="/api/analytics/optout" className="link">
             this link

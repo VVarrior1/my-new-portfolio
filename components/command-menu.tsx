@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { Kbd } from "@/components/ui/kbd";
 import { trackEvent } from "./site-analytics";
 
 const CommandPalette = dynamic(() => import("./command-palette"), { ssr: false });
@@ -43,12 +42,12 @@ export function CommandMenu() {
         type="button"
         onClick={() => show(true)}
         onPointerEnter={() => setLoaded(true)}
-        className="mr-1 hidden h-8 items-center gap-2.5 rounded-lg border border-rule-strong pl-3 pr-1.5 text-[0.8125rem] font-medium text-graphite transition-colors hover:border-[color-mix(in_srgb,var(--ink)_40%,transparent)] hover:text-ink lg:inline-flex"
+        className="group hidden h-9 items-center gap-2 rounded-lg px-2.5 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink lg:inline-flex"
         aria-label="Open the command menu"
         aria-keyshortcuts="Meta+K Control+K"
       >
         Jump to
-        <Kbd>{mac ? "⌘" : "Ctrl"} K</Kbd>
+        <kbd className="kbd transition-transform group-active:translate-y-px">{mac ? "⌘K" : "Ctrl K"}</kbd>
       </button>
       {loaded && <CommandPalette open={open} onOpenChange={show} />}
     </>

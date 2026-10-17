@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { profile } from "@/lib/content";
 import { CommandMenu } from "./command-menu";
 import { MusicPlayer } from "./music-player";
 import { ThemeToggle } from "./theme-toggle";
@@ -18,11 +17,11 @@ const links = [
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const home = pathname === "/";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  // On the home page the h1 already says the name, so the wordmark waits until it scrolls away.
-  const [nameVisible, setNameVisible] = useState(!home);
+  // On the home page the name is already the h1, so the wordmark's text waits until the h1 scrolls
+  // away. The AM keycap is always there, so the header never looks half-loaded.
+  const [nameInView, setNameInView] = useState(pathname === "/");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -32,19 +31,15 @@ export function SiteHeader() {
   }, []);
 
   useEffect(() => {
-    if (!home) {
-      setNameVisible(true);
+    const name = pathname === "/" ? document.getElementById("hero-name") : null;
+    if (!name) {
+      setNameInView(false);
       return;
     }
-    const heading = document.getElementById("hero-name");
-    if (!heading) {
-      setNameVisible(true);
-      return;
-    }
-    const io = new IntersectionObserver(([entry]) => setNameVisible(!entry.isIntersecting), { rootMargin: "-64px 0px 0px 0px" });
-    io.observe(heading);
+    const io = new IntersectionObserver(([entry]) => setNameInView(entry.isIntersecting), { rootMargin: "-64px 0px 0px 0px" });
+    io.observe(name);
     return () => io.disconnect();
-  }, [home]);
+  }, [pathname]);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -56,50 +51,50 @@ export function SiteHeader() {
   }, [open]);
 
   const isCurrent = (href: string) => !href.includes("#") && pathname.startsWith(href);
-  const solid = scrolled || open;
+  const hideMark = nameInView && !open;
 
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        solid ? "border-rule bg-[var(--header-bg)] backdrop-blur-[16px]" : "border-transparent bg-transparent"
+        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-paper"
       }`}
     >
-      <div className="wrap flex h-16 items-center justify-between gap-4">
-        <Link href="/" aria-label={`${profile.name}, home`} className="-ml-1 flex items-center gap-3 rounded-md p-1">
+      <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
+        <Link href="/" className="group flex items-center gap-2.5" aria-label="A. Mohamed, home">
           <span
             aria-hidden="true"
-            className="t-mono grid size-7 place-items-center rounded-[8px] border border-rule-strong bg-surface-2 text-[0.6875rem] font-medium tracking-[0.02em] text-ink"
+            className="inline-flex size-7 items-center justify-center rounded-lg border border-rule-strong bg-key-face font-mono text-[0.75rem] font-medium tracking-[-0.02em] text-ink shadow-[var(--key-shadow)] transition-transform group-active:translate-y-px"
           >
             AM
           </span>
           <span
             aria-hidden="true"
-            className={`text-[0.875rem] font-medium tracking-[-0.005em] transition-[opacity,transform] duration-300 ${
-              nameVisible ? "translate-y-0 opacity-100" : "invisible translate-y-1 opacity-0"
+            className={`t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
+              hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
             }`}
           >
-            {profile.name}
+            A. Mohamed
           </span>
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-0.5 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              className="rounded-md px-3 py-2 text-[0.875rem] font-medium text-graphite transition-colors hover:text-ink aria-[current=page]:text-ink"
+              className="rounded-lg px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-ink aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
             >
               {link.label}
             </Link>
           ))}
-          <span className="mx-2 h-4 w-px bg-rule-strong" aria-hidden="true" />
+          <span className="mx-2 h-5 w-px bg-rule" aria-hidden="true" />
           <CommandMenu />
           <MusicPlayer />
           <ThemeToggle />
         </nav>
 
-        <div className="flex items-center gap-0.5 md:hidden">
+        <div className="flex items-center md:hidden">
           <MusicPlayer />
           <ThemeToggle />
           <button
@@ -107,7 +102,7 @@ export function SiteHeader() {
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            className="ml-1 inline-flex h-10 items-center rounded-md px-3 text-[0.875rem] font-medium"
+            className="key key-sm ml-1.5 h-9 font-sans text-[0.9375rem] font-[550]"
           >
             {open ? "Close" : "Menu"}
           </button>
@@ -115,19 +110,14 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <nav id="mobile-nav" aria-label="Main" className="wrap pb-6 md:hidden">
-          <ul className="border-t border-rule">
+        <nav id="mobile-nav" aria-label="Main" className="border-t border-rule px-4 pb-6 pt-2 md:hidden">
+          <ul>
             {links.map((link) => (
               <li key={link.href} className="border-b border-rule">
-                <Link
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  aria-current={isCurrent(link.href) ? "page" : undefined}
-                  className="flex items-center justify-between py-4 text-[1.25rem] font-medium tracking-[-0.01em]"
-                >
-                  {link.label}
-                  <span aria-hidden="true" className="t-mono text-graphite">
-                    →
+                <Link href={link.href} onClick={() => setOpen(false)} className="flex items-baseline justify-between py-4">
+                  <span className="t-wide text-2xl font-semibold tracking-[-0.015em]">{link.label}</span>
+                  <span className="t-mono text-graphite" aria-hidden="true">
+                    {link.href.startsWith("/#") ? "↓" : "→"}
                   </span>
                 </Link>
               </li>

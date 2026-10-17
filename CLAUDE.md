@@ -20,17 +20,53 @@ Run all of them before pushing; `npm run ci` chains them.
 
 ## Design rules
 
-- Colors only through the tokens in `app/globals.css` (`paper`, `ink`, `graphite`, `rule`,
-  `signal`, `trace`, `chart`). Every token has a dark value; check both themes.
+The design is "Workbench": near-white warm paper with grey hardware on it, objects with a job, and
+one colour, international orange, used only on things you press. Read the token comments at the
+top of `app/globals.css`.
+
+- Colors only through the tokens in `app/globals.css` (`paper`, `paper-raised`, `key-face`, `ink`,
+  `ink-2`, `graphite`, `rule`, `signal`, `signal-text`, `screen-*`, `trace`, `fail`, `go`). Every
+  token has a dark value; check both themes. Every neutral sits on one warm hue at OKLCH chroma
+  ≤ 0.006, so light and dark share one temperature. Check new neutrals with a script, not by eye.
+- Every color has one job. `--signal` (orange) is only the fill of actuators: the simulator's kill
+  key and fader cap, and the contact nameplate's "Email me". The hero's "Email me" is an ink key
+  (`.key-ink`) so the first viewport's only orange is on the device. Orange is never text (2.9:1);
+  use `--signal-text` for orange text or underlines. Never tint, blend or fade the orange. Status
+  colours (`--trace`, `--fail`, `--screen-go`) appear only on the dark screens (`.screen`: the
+  simulator and the /stats chart, nothing else); `--go` is the page's only status dot
+  (availability, current job).
+- Decoration is objects, never backgrounds: `.panel` (device, project mats, tools board,
+  nameplate), the experience span strip, `.screen` (the simulator and the /stats chart), `.key` /
+  `.key-signal` / `.key-ink` (anything pressable), `.keycap` (a legend key that labels, never
+  presses), `.spec` (label/value tables), `.stat-row` (a project's numbers, on the paper).
+  No glows, blur, gradients (other than the 1px key highlights), textures or ambient animation.
+  `backdrop-filter` only on the sticky header.
+- Type: Archivo (variable, the width axis carries the display voice via `font-stretch`) and
+  JetBrains Mono for data only: dates, numbers, stacks, URLs and everything on a screen. Words
+  (spec values, captions) are Archivo. Seven sizes (13/15/17/20/26/40/56), weights 400–650; mono
+  is 13px off-screen, 12px only on screens. Body prose is `ink` or `ink-2`; `graphite` is metadata only.
+- "A · B · C" lists use `DotList` (`.sep-list`), which never leaves a separator dangling at a line end.
+- Layout: one 12-column grid (74px columns, 24px gutters) in a 72rem container. Section titles sit
+  on the content edge with the mono index on its own line above. Hero and Systemlab: text in
+  cols 1-5, object in 6-12 (CYD mirrors it). Experience, Background, Writing and More projects
+  share the 3/9 split, and the span strip and tools board put their content on the same col-4
+  edge. Three radii: 8px (controls, nodes), 12px (inner frames, screens), 20px (panels, mats).
+- The name is never printed twice in one viewport: the header wordmark waits on `/` until the h1
+  scrolls out. The simulator stays the loudest object in the first viewport.
 - No all-caps eyebrow labels, chips or card grids. Hierarchy comes from type size, weight and rules.
 - The hero simulator is the only motion that isn't triggered by the user. Keep it that way,
   keep it starting on idle (it blocked first paint when it started on hydration: Lighthouse 72 → 97),
-  and respect `prefers-reduced-motion`.
+  and respect `prefers-reduced-motion`. The status line and diagram share a fixed height
+  (`DISPLAY_HEIGHT`) so controls never move under the pointer, and the diagram flows top to bottom
+  when the screen is narrower than 560px.
 - shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
   `globals.css`, not per-component colors. cmdk separators inside the list break ARIA, so don't add them.
-- The owner found the purely typographic version "bland" three times, and then rejected stock photos
-  of Calgary as "forced and irrelevant". What landed: background design elements (grid + soft color
-  glows), colored project stages, the blue contact band, and a crisp near-white light theme. No stock photos.
+  Object classes live in `@layer components` so Tailwind utilities can still override them; keep
+  element resets (`a`, `:focus-visible`) in `@layer base` for the same reason.
+- History: the owner called the purely typographic versions "bland", rejected stock photos of
+  Calgary as "forced and irrelevant", and scored the grid + blue/green/violet glows version 4/10
+  ("the colors are off"). Don't bring back glows, colored section backgrounds or multiple accent hues.
+- Public counts under 50 (post reads) aren't shown; the visit total lives on `/stats` only.
 - Don't feature ApplyOps anywhere (the owner doesn't want it shown; the repo is private).
 - Product screenshots: `node scripts/capture-work-shots.mjs`. Don't submit forms on cydsoccer.com
   while capturing, because it triggers real lead SMS and email. Avoid pages showing children or staff names.

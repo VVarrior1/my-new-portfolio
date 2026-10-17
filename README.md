@@ -40,40 +40,33 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 ## Design
 
-Light by default, with a dark theme that follows the OS or the header toggle (both are authored,
-not inverted). The toggle reveals the new theme as a circle using the View Transitions API, and
-switches instantly where that API isn't available or the visitor prefers reduced motion.
-IBM Plex Sans (400-600) for prose and headings, IBM Plex Mono for every date, stack, number, URL
-and readout. Colors are CSS variables on `:root` (`--paper`, `--paper-raised`, `--surface-2`,
-`--ink`, `--ink-2`, `--graphite`, `--rule`, `--rule-strong`, `--signal`, `--trace`, `--go`,
-`--plate-*`) exposed to Tailwind as `bg-paper`, `text-graphite` and so on. Every neutral sits at
-OKLCH hue 258-274 with chroma at or below 0.017, so paper, ink and rules share one temperature.
-The UI accent (`--signal`) is ink itself; the only hues are status colors (`--trace` strained,
-`--destructive` failing, `--go` up), and they appear only in the simulator, its readouts and status dots.
-Component classes (`.btn-key`, `.btn-ghost`, `.t-section`, `.frame`, `.device`…) live in
-`@layer components`, so Tailwind utilities can still override them.
+"Workbench": near-white paper with grey hardware on it, where every decoration is an object with a
+job. The hero simulator is a small device (raised panel, dark screen, keycap controls), project
+screenshots sit on mats, Experience opens with a span strip of every role, the tools are a board of
+keycaps, and the contact block is a nameplate. International orange (`--signal`) appears only on
+things you press, and in the first viewport only on the device. Light by default, with a dark
+theme at the same temperature that follows the OS or the header toggle. The toggle reveals the new
+theme as a circle using the View Transitions API, and switches instantly where that API isn't
+available or the visitor prefers reduced motion.
+
+Type is Archivo (variable; the width axis is the display voice) with JetBrains Mono for dates,
+stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--ink-2`,
+`--graphite`, `--rule`, `--signal`, `--screen`…) exposed to Tailwind as `bg-paper`, `text-graphite`
+and so on. The object classes (`.panel`, `.screen`, `.key`, `.key-signal`, `.key-ink`, `.keycap`,
+`.spec`, `.stat-row`, `.sep-list`, `.plate`) are in `app/globals.css`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
-command (⌘K menu), slider, switch, sonner (toasts) and kbd. Its tokens (`--background`,
+command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,
 `--primary`, `--border`…) are mapped onto ours in `app/globals.css`, and its `dark:` variant
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
-
-**The heat plate** is the one decoration, and it is data. Slatted, grained light sits under the
-simulator (`.heat-plate` in `globals.css`): steel blue when the system is healthy, amber when a
-component passes 70% busy or the p99 passes 150 ms, red when requests fail or a server is down.
-`assessHealth()` in `lib/live-sim.ts` decides the state (with hysteresis, so it doesn't flicker),
-the simulator sets `data-health` on `.sim-stage`, and CSS crossfades the matching layer's opacity:
-no extra JavaScript, compositor-only, instant under reduced motion. The grain is one inline SVG
-used as a mask. A faint stateless copy (`.end-plate`) sits under the contact block. The footer shows
-the simulator's last-known state (`lib/sim-status.ts`). Project screenshots sit in edge-lit
-`.frame` panels; light captures are dimmed in dark mode (`--shot-filter`).
 
 **The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
-and in background tabs, and draws no request dots under reduced motion. `diagnose()` writes the
+and in background tabs, and draws no request dots under reduced motion. Status colours appear only
+on its screen; failed requests are drawn as × marks so they read without colour. `diagnose()` writes the
 hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { playlist } from "@/lib/playlist";
@@ -8,17 +8,17 @@ import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-// IBM Plex Sans (variable, 400-600 used) for prose and headings, Plex Mono for every date,
-// stack, number, URL and readout: one engineered family, two voices.
-const sans = IBM_Plex_Sans({
+// Archivo is variable on weight and width; the width axis (wdth 62-125) carries the display voice.
+const sans = Archivo({
   subsets: ["latin"],
-  variable: "--font-plex-sans",
+  axes: ["wdth"],
+  variable: "--font-archivo",
   display: "swap",
 });
 
-const mono = IBM_Plex_Mono({
+const mono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-plex-mono",
+  variable: "--font-jetbrains",
   display: "swap",
   weight: ["400", "500"],
 });
@@ -58,9 +58,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    // Equal to --paper in each scheme (lib/theme.ts keeps them in step with the toggle).
-    { media: "(prefers-color-scheme: light)", color: "#f7f8fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0b0e" },
+    // Equal to --paper in each scheme (app/globals.css).
+    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#151412" },
   ],
 };
 
@@ -93,10 +93,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-paper text-ink antialiased">
+      <body className="flex min-h-screen flex-col bg-paper text-ink antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
         >
           Skip to content
         </a>

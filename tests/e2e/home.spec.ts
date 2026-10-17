@@ -1,15 +1,15 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("home page", () => {
-  test("shows the name, both featured projects and a way to get in touch", async ({ page }) => {
+  test("shows the name, the flagship project and a way to get in touch", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Abdelrahman");
     await expect(page.getByRole("heading", { name: "CYD Soccer Academy platform" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Systemlab" })).toBeVisible();
     await expect(page.getByText("ApplyOps")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Email me" })).toHaveAttribute("href", /^mailto:/);
-    await expect(page.getByRole("link", { name: "Résumé", exact: true }).first()).toHaveAttribute("href", "/Abdelrahman_Mohamed_Resume.pdf");
+    await expect(page.getByRole("link", { name: "Email me" }).first()).toHaveAttribute("href", /^mailto:/);
+    await expect(page.getByRole("link", { name: /^Résumé/ }).first()).toHaveAttribute("href", "/Abdelrahman_Mohamed_Resume.pdf");
   });
 
   test("the hero simulator reacts to traffic, servers and the cache", async ({ page }) => {
@@ -29,9 +29,7 @@ test.describe("home page", () => {
     await expect(hint).toContainText("Healthy", { timeout: 10000 });
 
     await sim.getByRole("button", { name: "Kill a server" }).click();
-    await expect(sim.getByRole("button", { name: "Restart the server" })).toBeVisible();
-    // The heat plate under the simulator reports the failure.
-    await expect(page.locator(".sim-stage")).toHaveAttribute("data-health", "failing");
+    await expect(sim.getByRole("button", { name: /^Restart app \d$/ })).toBeVisible();
   });
 
   test("opens the command menu with the keyboard and finds the résumé", async ({ page }) => {

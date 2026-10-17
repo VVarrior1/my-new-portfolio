@@ -1,17 +1,18 @@
 import Link from "next/link";
-import { PageIntro } from "@/components/page-intro";
 import { SiteHeader } from "@/components/site-header";
 
 export default function NotFound() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="wrap pb-24 pt-12 sm:pt-20">
-        <PageIntro path="404" title="Nothing here.">
+      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-16 sm:px-8 sm:pt-24">
+        <p className="t-mono mb-5 text-graphite">404</p>
+        <h1 className="t-display">Nothing here</h1>
+        <p className="measure mt-6 text-[1.25rem] leading-relaxed text-ink-2">
           This page doesn&apos;t exist, or it moved. The home page has everything.
-        </PageIntro>
-        <p className="mt-10">
-          <Link href="/" className="btn btn-key">
+        </p>
+        <p className="mt-8">
+          <Link href="/" className="key key-signal">
             Go to the home page
           </Link>
         </p>

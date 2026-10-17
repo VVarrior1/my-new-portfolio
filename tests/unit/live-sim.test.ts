@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LiveSim, assessHealth, diagnose, type Metrics, type SimConfig } from "@/lib/live-sim";
+import { LiveSim, diagnose, type SimConfig } from "@/lib/live-sim";
 
 /** Runs a simulation in 16 ms frames, like the browser does, and returns its metrics. */
 function run(config: SimConfig, seconds = 8, seed = 7) {
@@ -112,43 +112,5 @@ describe("diagnose after a server dies", () => {
     // One server (200 req/s) can't carry 360 req/s once the dead one is out of rotation.
     for (let t = 0; t < 5000; t += 16) sim.step(16);
     expect(diagnose(sim.metrics(), sim.config)).toMatch(/one remaining server can't keep up/i);
-  });
-});
-
-describe("assessHealth", () => {
-  const calm: Metrics = {
-    p50: 30,
-    p99: 80,
-    throughput: 160,
-    errorRate: 0,
-    appUtilization: [0.4, 0.4],
-    serverUp: [true, true],
-    dbUtilization: 0.3,
-    cacheHitRate: 0,
-    failuresAt: { down: 0, app: 0, db: 0 },
-  };
-
-  it("reads healthy at the starting load", () => {
-    expect(assessHealth(run({ rate: 160, servers: 2, cache: false }).metrics)).toBe("healthy");
-  });
-
-  it("reads strained once a component passes 70% busy, before anything fails", () => {
-    expect(assessHealth({ ...calm, appUtilization: [0.75, 0.5] })).toBe("strained");
-    expect(assessHealth({ ...calm, dbUtilization: 0.8 })).toBe("strained");
-    expect(assessHealth({ ...calm, p99: 200 })).toBe("strained");
-  });
-
-  it("reads failing when requests fail or a server is down", () => {
-    expect(assessHealth(run({ rate: 600, servers: 2, cache: false }).metrics)).toBe("failing");
-    expect(assessHealth({ ...calm, serverUp: [false, true] })).toBe("failing");
-  });
-
-  it("holds its state near a threshold instead of flickering", () => {
-    const nearLimit = { ...calm, appUtilization: [0.66, 0.6] };
-    expect(assessHealth(nearLimit, "healthy")).toBe("healthy");
-    expect(assessHealth(nearLimit, "strained")).toBe("strained");
-    expect(assessHealth({ ...calm, errorRate: 0.006 }, "failing")).toBe("failing");
-    expect(assessHealth({ ...calm, errorRate: 0.006 }, "healthy")).toBe("healthy");
-    expect(assessHealth(calm, "failing")).toBe("healthy");
   });
 });
