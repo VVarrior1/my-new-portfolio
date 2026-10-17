@@ -178,7 +178,8 @@
   --color-trace: var(--trace);
   --color-fail: var(--fail);
   --color-go: var(--go);
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), var(--font-instrument), ui-sans-serif, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -253,12 +254,14 @@ body {
      titles), 56 (display). Weights 400/500/600, and 650 for the display.
      Mono is for data only (dates, numbers, stacks, URLs, everything on a
      screen) and is 13px off-screen; 12px exists only on the screens.
-     Archivo's width axis does the expressive work: wider means louder.
+     Display steps (26 and up) are Archivo, whose width axis does the expressive work: wider
+     means louder. Everything smaller is Instrument Sans.
      ------------------------------------------------------------------ */
   .t-display {
+    font-family: var(--font-display);
     font-size: clamp(2.5rem, 3.9vw, 3.5rem);
-    font-weight: 650;
-    font-stretch: 112%;
+    font-weight: 720;
+    font-stretch: 118%;
     line-height: 0.95;
     letter-spacing: -0.025em;
   }
@@ -269,6 +272,7 @@ body {
   }
 
   .t-section {
+    font-family: var(--font-display);
     font-size: clamp(2rem, 3vw, 2.5rem);
     font-weight: 620;
     font-stretch: 108%;
@@ -277,6 +281,7 @@ body {
   }
 
   .t-title {
+    font-family: var(--font-display);
     font-size: 1.625rem;
     font-weight: 600;
     font-stretch: 104%;
@@ -292,6 +297,7 @@ body {
   }
 
   .t-wide {
+    font-family: var(--font-display);
     font-stretch: 112%;
   }
 
@@ -304,8 +310,9 @@ body {
     font-variant-numeric: tabular-nums;
   }
 
+  /* About 70 characters of Instrument Sans (ch is the width of "0", which runs wide in it). */
   .measure {
-    max-width: 62ch;
+    max-width: 34em;
   }
 
   /* Text links: ink with a quiet underline that turns orange on hover. */
@@ -479,6 +486,7 @@ body {
     justify-content: flex-end;
   }
   .stat-row dd {
+    font-family: var(--font-display);
     font-size: 1.625rem;
     font-weight: 600;
     font-stretch: 104%;
@@ -687,6 +695,7 @@ body {
   margin-top: 1.15em;
 }
 .prose-post h2 {
+  font-family: var(--font-display);
   margin-top: 2.2em;
   color: var(--ink);
   font-size: 1.625rem;
