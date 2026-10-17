@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { MatMarks, MatScale } from "./mat";
 
 /**
  * A home-page section: a mono index on its own line, the title under it, and the content below,
  * on the shared 12-column grid. Titles start on the content edge. `meta` is a short mono line on
- * the right (counts, a date range), like the label strip on a front panel.
+ * the right (counts, a date range), like the label strip on a front panel. Each section is a
+ * stretch of the cutting mat (components/mat.tsx), measured from its top edge.
  */
 export function Section({
   id,
@@ -19,8 +21,10 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-16 border-t border-rule">
-      <div className="mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
+    <section id={id} aria-labelledby={`${id}-title`} className="mat scroll-mt-16 border-t border-rule">
+      <MatScale index={index} />
+      <div className="relative mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
+        <MatMarks />
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <div>
             <p className="t-mono mb-2 text-graphite" aria-hidden="true">

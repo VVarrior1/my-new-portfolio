@@ -73,6 +73,12 @@
   --elevation: 0 1px 0 rgb(23 22 20 / 0.05), 0 16px 32px -24px rgb(23 22 20 / 0.3);
   /* Behind dialogs: a flat scrim, no blur. */
   --scrim: rgb(23 22 20 / 0.42);
+  /* The cutting mat under the home page: ink at low alpha, so it keeps the paper's hue. */
+  --mat-minor: rgb(23 22 20 / 0.035);
+  --mat-major: rgb(23 22 20 / 0.07);
+  --mat-tick: rgb(23 22 20 / 0.28);
+  --mat-mark: rgb(23 22 20 / 0.42);
+  --mat-label: rgb(23 22 20 / 0.5);
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -124,6 +130,11 @@
     --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
     --scrim: rgb(0 0 0 / 0.62);
     --destructive: #ff6a55;
+    --mat-minor: rgb(236 234 230 / 0.026);
+    --mat-major: rgb(236 234 230 / 0.052);
+    --mat-tick: rgb(236 234 230 / 0.26);
+    --mat-mark: rgb(236 234 230 / 0.4);
+    --mat-label: rgb(236 234 230 / 0.45);
     color-scheme: dark;
   }
 }
@@ -154,6 +165,11 @@
   --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
   --scrim: rgb(0 0 0 / 0.62);
   --destructive: #ff6a55;
+  --mat-minor: rgb(236 234 230 / 0.026);
+  --mat-major: rgb(236 234 230 / 0.052);
+  --mat-tick: rgb(236 234 230 / 0.26);
+  --mat-mark: rgb(236 234 230 / 0.4);
+  --mat-label: rgb(236 234 230 / 0.45);
   color-scheme: dark;
 }
 
@@ -672,6 +688,274 @@ body {
   .fader-cap:active {
     cursor: grabbing;
     transform: translateY(1px);
+  }
+
+  /* ------------------------------------------------------------------
+     The cutting mat. The home page lies on a self-healing mat: a grid in
+     ink at low alpha, a scale printed down its left edge, and registration
+     targets where each section's edge crosses the content edges. One unit is
+     one column pitch (98px = 74 + 24), anchored to the content edge, so text
+     and objects land on its lines. Each section restarts the grid and the
+     scale at its top edge, so every section edge is a mat line. Printed
+     decoration only: aria-hidden, no pointer events, no motion of its own.
+     ------------------------------------------------------------------ */
+  .mat {
+    position: relative;
+    --mat-x: 1rem;
+    background-image:
+      linear-gradient(to right, var(--mat-major) 1px, transparent 1px),
+      linear-gradient(to right, transparent 49px, var(--mat-minor) 49px, var(--mat-minor) 50px, transparent 50px),
+      linear-gradient(to bottom, transparent 97px, var(--mat-major) 97px),
+      linear-gradient(to bottom, transparent 48px, var(--mat-minor) 48px, var(--mat-minor) 49px, transparent 49px);
+    background-size: 98px 98px;
+    background-position: var(--mat-x) 0;
+  }
+  @media (min-width: 640px) {
+    .mat {
+      --mat-x: 2rem;
+    }
+  }
+  /* Past the 76rem container the content edge is centred: 50% of (width - 98) + 49 - 576. */
+  @media (min-width: 76rem) {
+    .mat {
+      --mat-x: calc(50% - 527px);
+    }
+  }
+
+  /* The scale: a band down the left edge of the window, wide screens only. Ticks every quarter
+     unit, a longer one at the half, a numbered one at each unit. */
+  .mat-scale {
+    display: none;
+  }
+  @media (min-width: 80rem) {
+    .mat-scale {
+      position: absolute;
+      top: -1px;
+      bottom: 0;
+      left: 0;
+      z-index: 1;
+      display: block;
+      width: 3.5rem;
+      pointer-events: none;
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(to bottom, var(--mat-tick) 1px, transparent 1px),
+        linear-gradient(to bottom, transparent 49px, var(--mat-tick) 49px, var(--mat-tick) 50px, transparent 50px),
+        linear-gradient(
+          to bottom,
+          transparent 24.5px,
+          var(--mat-tick) 24.5px,
+          var(--mat-tick) 25.5px,
+          transparent 25.5px,
+          transparent 73.5px,
+          var(--mat-tick) 73.5px,
+          var(--mat-tick) 74.5px,
+          transparent 74.5px
+        );
+      background-size: 0.875rem 98px, 0.5625rem 98px, 0.3125rem 98px;
+      background-repeat: repeat-y;
+      box-shadow: inset -1px 0 0 var(--mat-major);
+    }
+  }
+  .mat-scale-units {
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+  }
+  .mat-scale-units > span,
+  .mat-cursor > span,
+  .mat-origin > span {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transform: translateY(-50%);
+  }
+  .mat-scale-units > span {
+    left: 1.125rem;
+    color: var(--mat-label);
+  }
+  /* The cursor: an orange hairline across the scale, holding the section's number in view. */
+  .mat-cursor {
+    position: sticky;
+    /* Just under the 64px header, so the printed origin and the held cursor overlap for only a
+       few pixels of scrolling at each section edge. */
+    top: 4.75rem;
+    display: block;
+    width: 2rem;
+    height: 2px;
+    margin-top: -0.5px;
+    background: var(--signal);
+  }
+  .mat-cursor > span,
+  .mat-origin > span {
+    left: 2.25rem;
+    top: 1px;
+    padding: 0.125rem 0.25rem 0.125rem 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 0.8125rem;
+  }
+  /* The printed origin covers the resting cursor, so orange shows only once the cursor holds. */
+  .mat-origin {
+    position: absolute;
+    top: -0.5rem;
+    left: 0;
+    z-index: 1;
+    width: 3.5rem;
+    height: 1rem;
+    background:
+      linear-gradient(var(--mat-tick), var(--mat-tick)) 0 calc(0.5rem - 0.5px) / 2rem 1px no-repeat,
+      var(--paper);
+  }
+  .mat-origin > span {
+    top: 50%;
+    color: var(--graphite);
+  }
+
+  /* The bottom edge: ticks rising from the mat's last line, on the same columns as the grid. */
+  .mat-edge {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 0.875rem;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, var(--mat-tick) 1px, transparent 1px),
+      linear-gradient(to right, transparent 49px, var(--mat-tick) 49px, var(--mat-tick) 50px, transparent 50px),
+      linear-gradient(
+        to right,
+        transparent 24.5px,
+        var(--mat-tick) 24.5px,
+        var(--mat-tick) 25.5px,
+        transparent 25.5px,
+        transparent 73.5px,
+        var(--mat-tick) 73.5px,
+        var(--mat-tick) 74.5px,
+        transparent 74.5px
+      );
+    background-size: 98px 0.875rem, 98px 0.5625rem, 98px 0.3125rem;
+    background-position: var(--mat-x) bottom, var(--mat-x) bottom, var(--mat-x) bottom;
+    background-repeat: repeat-x;
+    /* Clip sideways only: the label sits above the ticks. */
+    overflow-x: clip;
+  }
+  .mat-edge-col,
+  .mat-edge-label {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    color: var(--mat-label);
+    white-space: nowrap;
+  }
+  .mat-edge-col {
+    display: none;
+    bottom: 0.25rem;
+    margin-left: 0.25rem;
+  }
+  /* The columns are 98px apart only once the container is at its full 76rem. */
+  @media (min-width: 76rem) {
+    .mat-edge-col {
+      display: block;
+    }
+  }
+  .mat-edge-label {
+    right: 0;
+    bottom: 1.5rem;
+  }
+
+  /* Angle guides from the mat's bottom-right corner; the console covers most of them. */
+  .mat-corner {
+    display: none;
+  }
+  @media (min-width: 80rem) {
+    .mat-corner {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      display: block;
+      color: var(--mat-major);
+      pointer-events: none;
+    }
+  }
+  .mat-corner-label {
+    fill: var(--mat-label);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-anchor: end;
+  }
+
+  /* Registration targets on a section's top edge, centred on the content edges. */
+  .mat-reg {
+    position: absolute;
+    top: -7px;
+    display: block;
+    width: 13px;
+    height: 13px;
+    color: var(--mat-mark);
+    pointer-events: none;
+  }
+  .mat-reg > svg {
+    display: block;
+  }
+  .mat-reg-l {
+    left: 10px;
+  }
+  .mat-reg-r {
+    right: 10px;
+  }
+  @media (min-width: 640px) {
+    .mat-reg-l {
+      left: 26px;
+    }
+    .mat-reg-r {
+      right: 26px;
+    }
+  }
+
+  /* Crop marks: an object placed on the mat (the hero device, the contact console) gets the
+     printer's corner marks, on the extension of its edges, 6px clear of it. */
+  .mat-crop {
+    position: relative;
+  }
+  .mat-crop::after,
+  #play .panel::after {
+    content: "";
+    position: absolute;
+    inset: -1rem;
+    pointer-events: none;
+    --c: var(--mat-mark);
+    background:
+      linear-gradient(var(--c), var(--c)) left 0 top 1rem / 0.625rem 1px no-repeat,
+      linear-gradient(var(--c), var(--c)) left 1rem top 0 / 1px 0.625rem no-repeat,
+      linear-gradient(var(--c), var(--c)) right 0 top 1rem / 0.625rem 1px no-repeat,
+      linear-gradient(var(--c), var(--c)) right 1rem top 0 / 1px 0.625rem no-repeat,
+      linear-gradient(var(--c), var(--c)) left 0 bottom 1rem / 0.625rem 1px no-repeat,
+      linear-gradient(var(--c), var(--c)) left 1rem bottom 0 / 1px 0.625rem no-repeat,
+      linear-gradient(var(--c), var(--c)) right 0 bottom 1rem / 0.625rem 1px no-repeat,
+      linear-gradient(var(--c), var(--c)) right 1rem bottom 0 / 1px 0.625rem no-repeat;
+  }
+  /* On a phone the gutter is 16px, so the marks come in to stay on screen. */
+  @media (max-width: 639px) {
+    .mat-crop::after,
+    #play .panel::after {
+      inset: -0.75rem;
+      background:
+        linear-gradient(var(--c), var(--c)) left 0 top 0.75rem / 0.375rem 1px no-repeat,
+        linear-gradient(var(--c), var(--c)) left 0.75rem top 0 / 1px 0.375rem no-repeat,
+        linear-gradient(var(--c), var(--c)) right 0 top 0.75rem / 0.375rem 1px no-repeat,
+        linear-gradient(var(--c), var(--c)) right 0.75rem top 0 / 1px 0.375rem no-repeat,
+        linear-gradient(var(--c), var(--c)) left 0 bottom 0.75rem / 0.375rem 1px no-repeat,
+        linear-gradient(var(--c), var(--c)) left 0.75rem bottom 0 / 1px 0.375rem no-repeat,
+        linear-gradient(var(--c), var(--c)) right 0 bottom 0.75rem / 0.375rem 1px no-repeat,
+        linear-gradient(var(--c), var(--c)) right 0.75rem bottom 0 / 1px 0.375rem no-repeat;
+    }
+  }
+  #play .panel {
+    position: relative;
   }
 }
 

@@ -30,7 +30,7 @@ at the top of `app/globals.css`.
   ≤ 0.006, so light and dark share one temperature. Check new neutrals with a script, not by eye.
 - Every color has one job. `--signal` (orange) fills actuators (the simulator's kill key and fader
   cap, the contact console's "Email me") and marks the present: the current role's bar, dot and
-  the "now" cursor in Experience. `--signal-text` is for orange text, hover underlines and arrows
+  the "now" cursor in Experience, and the mat's section cursor. `--signal-text` is for orange text, hover underlines and arrows
   (links, Writing rows, the active nav item). The hero's "Email me" is an ink key (`.key-ink`) so
   the first viewport's only orange is on the device. Orange is never large areas and never text on
   paper (2.9:1). Never tint, blend or fade it. Status colours (`--trace`, `--fail`, `--screen-go`)
@@ -43,6 +43,15 @@ at the top of `app/globals.css`.
   presses), `.spec` (label/value tables), `.stat-row` (a project's numbers, on the paper).
   No glows, blur, gradients (other than the 1px key highlights), textures or ambient animation.
   `backdrop-filter` only on the sticky header.
+- The one background is the cutting mat under the home page (`components/mat.tsx`, `.mat*` in
+  `globals.css`), because "bland" kept coming back. It is printed, never lit: a grid in ink at low
+  alpha (`--mat-*` tokens) whose unit is one column pitch (98px) anchored to the content edge, so
+  each section edge is a mat line; a scale down the left edge (≥1280px) whose orange cursor holds
+  the current section's number (plain `position: sticky`, no script); registration targets where
+  section edges cross the content edges; crop marks around the hero device and the console; and
+  angle guides, column numbers and a printed label at the bottom edge. Its numerals are 11px mono,
+  the only size outside the type scale. If a mat line ever competes with content, lower its alpha;
+  don't add more mat. The header is transparent at the top so the mat runs under it.
 - Type: Archivo (variable, the width axis carries the display voice via `font-stretch`) and
   JetBrains Mono for data only: dates, numbers, stacks, URLs and everything on a screen. Words
   (spec values, captions) are Archivo. Seven sizes (13/15/17/20/26/40/56), weights 400–650; mono

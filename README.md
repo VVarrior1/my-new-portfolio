@@ -44,7 +44,10 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 job. The hero simulator is a small device (raised panel, dark screen, keycap controls) that also
 feeds a live status strip above the name, project screenshots sit on mats with numbered captions,
 Experience opens with a span strip of every role, the tools are a board of keycaps, and the page
-closes on a charcoal contact console in the simulator's screen material. International orange
+closes on a charcoal contact console in the simulator's screen material. The home page lies on a
+cutting mat (`components/mat.tsx`): a faint grid one column pitch wide, a scale down the left edge
+whose cursor holds the section you're reading, registration targets on section edges, and angle
+guides at the bottom corner. International orange
 (`--signal`) appears on things you press and on "now" (the current role and the timeline cursor),
 and in the first viewport only on the device. Light by default, with a dark
 theme at the same temperature that follows the OS or the header toggle. The toggle reveals the new

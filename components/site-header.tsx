@@ -56,7 +56,7 @@ export function SiteHeader() {
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-paper"
+        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
