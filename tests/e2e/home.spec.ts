@@ -22,8 +22,6 @@ test.describe("home page", () => {
     for (let i = 0; i < 44; i++) await page.keyboard.press("ArrowRight"); // 160 -> 600 req/s
     await expect(sim.getByText("600 requests/s")).toBeVisible();
     await expect(hint).toContainText("app servers are saturated", { timeout: 8000 });
-    // The status strip above the name follows the simulator: its lamp leaves "healthy".
-    await expect(page.locator(".sim-status-lamp")).toHaveAttribute("data-state", /slow|failing/);
 
     await sim.getByRole("button", { name: "Add a server" }).click();
     await sim.getByRole("button", { name: "Add a server" }).click();

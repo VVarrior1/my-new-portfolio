@@ -6,7 +6,6 @@ import { DotList } from "@/components/dot-list";
 import { LiveSystem } from "@/components/live-system";
 import { ProjectShot } from "@/components/project-shot";
 import { Section } from "@/components/section";
-import { SimStatus } from "@/components/sim-status";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SpanStrip } from "@/components/span-strip";
@@ -78,9 +77,7 @@ export default async function Home() {
         <section aria-labelledby="hero-name">
           <div className="mx-auto grid max-w-[76rem] gap-y-10 px-4 pb-16 pt-6 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6">
             <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-1">
-              {/* Level with the device's top edge: a sliver of its screen, live. */}
-              <SimStatus />
-              <h1 id="hero-name" className="t-display mt-7 sm:mt-9">
+              <h1 id="hero-name" className="t-display sm:mt-4">
                 {profile.firstName}
                 <br />
                 {profile.lastName}

@@ -604,60 +604,6 @@ body {
     box-shadow: var(--elevation);
   }
 
-  /* The live status strip above the name: a sliver of the simulator's screen. Its lamp is the
-     only status colour outside the device, and it sits on screen material, like the device's own. */
-  .sim-status {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    height: 2rem;
-    padding: 0 0.75rem;
-    border-radius: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    color: var(--screen-graphite);
-    text-decoration: none;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-  .sim-status > span + span:not(.sim-status-label)::before {
-    content: "·";
-    padding: 0 0.4375rem;
-    color: var(--screen-graphite);
-  }
-  .sim-status b {
-    color: var(--screen-ink);
-    font-weight: 500;
-  }
-  .sim-status-label {
-    color: var(--screen-ink);
-  }
-  .sim-status:hover .sim-status-label {
-    text-decoration: underline;
-    text-decoration-color: var(--signal);
-    text-underline-offset: 0.3em;
-  }
-  .sim-status-lamp {
-    flex: none;
-    width: 6px;
-    height: 6px;
-    margin-right: 0.625rem;
-    border-radius: 999px;
-    background: var(--screen-graphite);
-    transition: background-color 200ms ease;
-  }
-  .sim-status-lamp[data-state="healthy"] {
-    background: var(--screen-go);
-  }
-  .sim-status-lamp[data-state="slow"] {
-    background: var(--trace);
-  }
-  .sim-status-lamp[data-state="failing"] {
-    background: var(--fail);
-  }
-
   /* Spec tables: hairline rows of mono label and value. */
   .spec {
     display: grid;
