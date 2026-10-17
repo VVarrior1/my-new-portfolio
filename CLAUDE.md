@@ -36,20 +36,29 @@ at the top of `app/globals.css`.
   paper (2.9:1). Never tint, blend or fade it. Status colours (`--trace`, `--fail`, `--screen-go`)
   appear only on screen material (`.screen`: the simulator, the hero's live status strip and the
   /stats chart); `--go` is the page's only status dot on paper (availability).
-- Decoration is objects, never backgrounds: `.panel` (device, project mats, tools board),
+- Decoration is objects: `.panel` (device, project mats, tools board),
   `.console` (the contact card: screen material, which re-points the page tokens at the screen's),
   the experience span strip, `.screen` (the simulator, the status strip and the /stats chart), `.key` /
   `.key-signal` / `.key-ink` (anything pressable), `.keycap` (a legend key that labels, never
   presses), `.spec` (label/value tables), `.stat-row` (a project's numbers, on the paper).
-  No glows, blur, gradients (other than the 1px key highlights), textures or ambient animation.
-  `backdrop-filter` only on the sticky header.
+  No glows, blur, gradients (other than the 1px key highlights and the hard-edged patterns below)
+  or ambient animation. `backdrop-filter` only on the sticky header.
+- Bench hardware is the one background layer, and it comes from the bench, not from photos or new
+  hues ("Bench hardware" in `globals.css`, `components/bench-hardware.tsx`): a faint grain in the
+  paper (`--grain` on body; panels and screens stay smooth), the `.pegboard` band behind
+  alternate sections (Experience and Writing, `<Section board>`), slotted `Screws` in the
+  project mats and the console, `.dymo` label tape for the section numbers and the hero's and tools
+  board's labels, and one `HazardTape` strip on the seam in front of the console, the only
+  decorative orange. The tape only restyles text that was already there; the rest is aria-hidden.
+  All of it is static and takes no layout. Don't add more pieces of tape or more boards; the
+  restraint is the point.
 - Type: Archivo (variable, the width axis carries the display voice via `font-stretch`) and
   JetBrains Mono for data only: dates, numbers, stacks, URLs and everything on a screen. Words
   (spec values, captions) are Archivo. Seven sizes (13/15/17/20/26/40/56), weights 400–650; mono
   is 13px off-screen, 12px only on screens. Body prose is `ink` or `ink-2`; `graphite` is metadata only.
 - "A · B · C" lists use `DotList` (`.sep-list`), which never leaves a separator dangling at a line end.
 - Layout: one 12-column grid (74px columns, 24px gutters) in a 72rem container. Section titles sit
-  on the content edge with the mono index on its own line above. Hero and Systemlab: text in
+  on the content edge with the index on label tape on its own line above. Hero and Systemlab: text in
   cols 1-5, object in 6-12 (CYD mirrors it). Experience, Background, Writing and More projects
   share the 3/9 split, and the span strip and tools board put their content on the same col-4
   edge. Three radii: 8px (controls, nodes), 12px (inner frames, screens), 20px (panels, mats).

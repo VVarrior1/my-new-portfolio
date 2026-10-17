@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { GithubMark, LinkedinMark } from "@/components/brand-icons";
@@ -5,7 +6,8 @@ import { CopyEmail } from "@/components/copy-email";
 import { DotList } from "@/components/dot-list";
 import { LiveSystem } from "@/components/live-system";
 import { ProjectShot } from "@/components/project-shot";
-import { Section } from "@/components/section";
+import { HazardTape, Screws } from "@/components/bench-hardware";
+import { Section, tiltFor } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SpanStrip } from "@/components/span-strip";
@@ -131,8 +133,12 @@ export default async function Home() {
 
             {/* The personal line, as a small spec sheet. */}
             <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-2 lg:self-start">
-              <h2 className="t-mono text-graphite">Off the clock</h2>
-              <dl className="spec mt-2">
+              <h2>
+                <span className="dymo" style={{ "--tilt": "-1.25deg" } as CSSProperties}>
+                  Off the clock
+                </span>
+              </h2>
+              <dl className="spec mt-3">
                 {profile.offTheClock.map((row) => (
                   <div key={row.label}>
                     <dt>{row.label}</dt>
@@ -167,7 +173,8 @@ export default async function Home() {
 
                   {/* The mat: a raised surface the screenshot sits on. It stays in view while the text scrolls. */}
                   <div className={`min-w-0 lg:sticky lg:top-24 lg:row-span-2 lg:row-start-1 lg:self-start ${matCols}`}>
-                    <div className="panel p-3 pb-4 sm:p-7">
+                    <div className="panel relative p-3 pb-4 sm:p-7">
+                      <Screws className="max-sm:hidden" />
                       <ProjectShot name={project.name} shot={project.shot} phone={project.phone} figure={index + 1} caption={project.caption} />
                     </div>
                   </div>
@@ -228,6 +235,7 @@ export default async function Home() {
           id="experience"
           index="02"
           title="Experience"
+          board
           meta={`${experience.length} roles · ${experience[experience.length - 1].start} – now`}
         >
           <SpanStrip jobs={experience} until={profile.availableFrom} />
@@ -287,7 +295,12 @@ export default async function Home() {
           {/* A keyboard of what I use: one row of keycaps per toolkit, on one panel. The panel's rows sit on
               the page grid, so the keys start on the same edge as the text above. */}
           <div className="panel mt-8 py-4">
-            <h3 className="t-mono px-4 pb-3 text-ink-2">Tools</h3>
+            {/* The board's own label, punched on the same tape as the section numbers. */}
+            <h3 className="px-4 pb-3">
+              <span className="dymo" style={{ "--tilt": "-1deg" } as CSSProperties}>
+                Tools
+              </span>
+            </h3>
             <dl className="space-y-3 sm:space-y-2.5">
               {skills.map((skill) => (
                 <div key={skill.group} className="grid gap-y-2 px-4 lg:grid-cols-12 lg:items-start lg:gap-x-6 lg:px-0">
@@ -307,7 +320,7 @@ export default async function Home() {
           </div>
         </Section>
 
-        <Section id="writing" index="04" title="Writing" meta={posts.length > 0 ? `${posts.length} posts · since ${formatMonth(posts[posts.length - 1].date)}` : undefined}>
+        <Section id="writing" index="04" title="Writing" board meta={posts.length > 0 ? `${posts.length} posts · since ${formatMonth(posts[posts.length - 1].date)}` : undefined}>
           {shown.length > 0 ? (
             <ul>
               {shown.map((post) => (
@@ -348,14 +361,18 @@ export default async function Home() {
         </Section>
 
         {/* Contact: the console. The page closes on the simulator's charcoal, with the orange key. */}
-        <section id="contact" aria-labelledby="contact-title" className="scroll-mt-16 border-t border-rule">
+        <section id="contact" aria-labelledby="contact-title" className="relative scroll-mt-16 border-t border-rule">
+          <HazardTape />
           <div className="mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
             <div className="console grid gap-x-12 gap-y-8 p-5 sm:p-12 lg:grid-cols-[minmax(0,1fr)_16.875rem]">
+              <Screws className="[--screw-inset:8px] sm:[--screw-inset:15px]" />
               {/* Title and pitch at the top, the address and keys level with the last spec row. */}
               <div className="flex min-w-0 flex-col justify-between gap-y-8">
                 <div>
-                  <p className="t-mono mb-2 text-graphite" aria-hidden="true">
-                    05
+                  <p className="mb-3" aria-hidden="true">
+                    <span className="dymo" style={{ "--tilt": tiltFor("05") } as CSSProperties}>
+                      05
+                    </span>
                   </p>
                   <h2 id="contact-title" className="t-section">
                     Hiring for 2027?

@@ -73,6 +73,24 @@
   --elevation: 0 1px 0 rgb(23 22 20 / 0.05), 0 16px 32px -24px rgb(23 22 20 / 0.3);
   /* Behind dialogs: a flat scrim, no blur. */
   --scrim: rgb(23 22 20 / 0.42);
+  /* Bench hardware: decoration that comes from the workbench itself (see "Bench hardware" in the
+     components layer). The paper has a grain; alternate sections hang on a perforated board; panels
+     are screwed down; section indices are printed on label-maker tape. All neutrals on the same
+     warm hue at chroma ≤ 0.006; the only colour is the orange in the hazard tape. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.09 0 0 0 0 0.086 0 0 0 0 0.078 1.6 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='0.075'/%3E%3C/svg%3E");
+  --board: #f0efeb;
+  /* What sits on the board (the span strip) is a lighter sheet. */
+  --board-sheet: #f8f7f4;
+  --hole: #d8d6d2;
+  --hole-lip: rgb(255 255 255 / 0.95);
+  --tape: #252421;
+  --tape-ink: #f2f1ee;
+  --tape-emboss: 0 1px 0 rgb(0 0 0 / 0.9), 0 -1px 0 rgb(255 255 255 / 0.18);
+  --tape-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 7px 6px -6px rgb(255 255 255 / 0.12), inset 0 -1px 0 rgb(0 0 0 / 0.45), 0 1px 1.5px rgb(23 22 20 / 0.25);
+  --screw-face: #f8f7f4;
+  --screw-ring: #a09e9b;
+  --screw-slot: #6f6d6a;
+  --screw-lip: drop-shadow(0 1px 0 rgb(255 255 255 / 0.9));
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -124,6 +142,19 @@
     --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
     --scrim: rgb(0 0 0 / 0.62);
     --destructive: #ff6a55;
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 0.97 1.6 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E");
+    --board: #1d1c19;
+    --board-sheet: #262522;
+    --hole: #141311;
+    --hole-lip: rgb(255 255 255 / 0.055);
+    --tape: #3e3d3a;
+    --tape-ink: #eceae6;
+    --tape-emboss: 0 1px 0 rgb(0 0 0 / 0.75), 0 -1px 0 rgb(255 255 255 / 0.16);
+    --tape-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 7px 6px -6px rgb(255 255 255 / 0.1), inset 0 -1px 0 rgb(0 0 0 / 0.4), 0 1px 1.5px rgb(0 0 0 / 0.55);
+    --screw-face: #3e3d3a;
+    --screw-ring: #0b0a09;
+    --screw-slot: #0b0a09;
+    --screw-lip: drop-shadow(0 1px 0 rgb(255 255 255 / 0.06));
     color-scheme: dark;
   }
 }
@@ -154,6 +185,19 @@
   --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
   --scrim: rgb(0 0 0 / 0.62);
   --destructive: #ff6a55;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 0.97 1.6 0 0 0 -0.55'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E");
+  --board: #1d1c19;
+  --board-sheet: #262522;
+  --hole: #141311;
+  --hole-lip: rgb(255 255 255 / 0.055);
+  --tape: #3e3d3a;
+  --tape-ink: #eceae6;
+  --tape-emboss: 0 1px 0 rgb(0 0 0 / 0.75), 0 -1px 0 rgb(255 255 255 / 0.16);
+  --tape-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 7px 6px -6px rgb(255 255 255 / 0.1), inset 0 -1px 0 rgb(0 0 0 / 0.4), 0 1px 1.5px rgb(0 0 0 / 0.55);
+  --screw-face: #3e3d3a;
+  --screw-ring: #0b0a09;
+  --screw-slot: #0b0a09;
+  --screw-lip: drop-shadow(0 1px 0 rgb(255 255 255 / 0.06));
   color-scheme: dark;
 }
 
@@ -218,7 +262,11 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
+  /* The paper's grain: a tile of fractal noise a few percent strong, so the long stretches of
+     paper read as a surface rather than an empty screen. Panels and screens are opaque and smooth. */
+  background-color: var(--paper);
+  background-image: var(--grain);
+  background-size: 200px 200px;
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 1.0625rem;
@@ -566,6 +614,13 @@ body {
     --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
     /* On charcoal the fill orange is itself text-safe (5.7:1), so underlines and focus use it. */
     --signal-text: var(--signal);
+    /* Hardware on the plate: grey label tape and dark screws, a step off the charcoal. */
+    --tape: #3e3d3a;
+    --tape-ink: #ecebe8;
+    --screw-face: #2b2a27;
+    --screw-ring: #050403;
+    --screw-slot: #050403;
+    --screw-lip: drop-shadow(0 1px 0 rgb(255 255 255 / 0.07));
   }
   .console::before {
     content: "";
@@ -672,6 +727,128 @@ body {
   .fader-cap:active {
     cursor: grabbing;
     transform: translateY(1px);
+  }
+
+  /* ------------------------------------------------------------------
+     Bench hardware. The owner found the long stretches of paper bland, so the
+     page borrows from the bench it sits on: grain in the paper (on body), a
+     perforated board behind alternate sections, screws in the panels, label
+     tape for the section numbers and one strip of hazard tape before the
+     console. Nothing here carries content: it is all aria-hidden, ignores the
+     pointer, never moves and takes no space the layout didn't already have.
+     ------------------------------------------------------------------ */
+
+  /* Pegboard: a full-bleed band of painted, perforated hardboard (smooth, so no grain). Holes on
+     a 24px pitch, centred on the page; each is a shallow punch with a lit lower lip. What hangs on it (the span strip) becomes a
+     lighter sheet by re-pointing --paper-raised. */
+  .pegboard {
+    background-color: var(--board);
+    background-image:
+      radial-gradient(circle at 12px 11.5px, var(--hole) 1.9px, transparent 2.4px),
+      radial-gradient(circle at 12px 12.75px, var(--hole-lip) 1.9px, transparent 2.4px);
+    background-size: 24px 24px;
+    background-position: 50% 0;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --paper-raised: var(--board-sheet);
+  }
+
+  /* Label-maker tape: the section numbers are punched into a strip of embossed tape stuck on
+     slightly crooked. The letters stand out of the tape (a dark shadow under, a light edge over). */
+  .dymo {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 1.5rem;
+    padding: 0 0.6875rem 0 calc(0.6875rem + 0.16em);
+    border-radius: 2px;
+    background: var(--tape);
+    box-shadow: var(--tape-shadow);
+    color: var(--tape-ink);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: var(--tape-emboss);
+    transform: rotate(var(--tilt, -1.5deg));
+    transform-origin: 0 50%;
+  }
+  /* The two faint ridges the embossing wheel leaves along the tape. */
+  .dymo::before {
+    content: "";
+    position: absolute;
+    inset: 3px 0;
+    border-block: 1px solid rgb(255 255 255 / 0.06);
+    pointer-events: none;
+  }
+
+  /* Screws: four slotted heads in a panel's corners (components/bench-hardware.tsx). */
+  .screws {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    --screw-inset: 10px;
+  }
+  .screw {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    filter: var(--screw-lip);
+  }
+  .screw-tl {
+    left: var(--screw-inset);
+    top: var(--screw-inset);
+  }
+  .screw-tr {
+    right: var(--screw-inset);
+    top: var(--screw-inset);
+  }
+  .screw-bl {
+    left: var(--screw-inset);
+    bottom: var(--screw-inset);
+  }
+  .screw-br {
+    right: var(--screw-inset);
+    bottom: var(--screw-inset);
+  }
+  .screw-head {
+    fill: var(--screw-face);
+    stroke: var(--screw-ring);
+    stroke-width: 1.3;
+  }
+  .screw-slot {
+    stroke: var(--screw-slot);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+  }
+
+  /* Hazard tape: one torn strip across a section's top rule, on the content's right edge. It is
+     the page's only decorative orange, and it sits in front of the console, where the orange key is. */
+  .hazard-tape {
+    position: absolute;
+    top: 0;
+    right: max(1rem, calc(50% - 36rem));
+    width: 8.5rem;
+    height: 0.875rem;
+    translate: 0 -50%;
+    rotate: -2deg;
+    background: repeating-linear-gradient(-45deg, var(--signal) 0 7px, var(--tape) 7px 14px);
+    clip-path: polygon(
+      2px 0,
+      calc(100% - 2px) 0,
+      calc(100% - 4px) 18%,
+      calc(100% - 0.5px) 36%,
+      calc(100% - 3px) 58%,
+      100% 78%,
+      calc(100% - 1px) 100%,
+      1px 100%,
+      4px 80%,
+      1px 62%,
+      3px 40%,
+      0 22%
+    );
+    pointer-events: none;
   }
 }
 
