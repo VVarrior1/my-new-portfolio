@@ -1,7 +1,8 @@
 // The site's background playlist. Every track is by HoliznaCC0 and dedicated to the
 // public domain (CC0), from https://opengameart.org/content/chill-beats-collection and its
 // sister "Happy Lo-Fi" and "Sad Lo-Fi" packs. The files in public/music were loudness-matched
-// to -16 LUFS with a -1.5 dBTP peak ceiling, so no track jumps in volume or clips.
+// to -16 LUFS with a -1.5 dBTP peak ceiling, so no track jumps in volume or clips, and their
+// near-silent heads and tails were cut so each track starts on the music.
 
 export type Track = {
   title: string;
@@ -18,16 +19,16 @@ export const PLAYLIST_CREDIT = "Music by HoliznaCC0, public domain (CC0)";
 export const PLAYLIST_SOURCE = "https://holiznacc0.bandcamp.com";
 
 export const playlist: Track[] = [
-  { title: "City in the Rearview", artist, src: "/music/01-city-in-the-rearview.mp3", duration: 175 },
-  { title: "Old Age", artist, src: "/music/02-old-age.mp3", duration: 213 },
-  { title: "Blue Skies", artist, src: "/music/03-blue-skies.mp3", duration: 175 },
-  { title: "Winter Blues", artist, src: "/music/04-winter-blues.mp3", duration: 223 },
-  { title: "Clouds", artist, src: "/music/05-clouds.mp3", duration: 229 },
-  { title: "Dream Pop", artist, src: "/music/06-dream-pop.mp3", duration: 241 },
-  { title: "Opinions", artist, src: "/music/07-opinions.mp3", duration: 167 },
-  { title: "Autumn", artist, src: "/music/08-autumn.mp3", duration: 169 },
-  { title: "Yesterday", artist, src: "/music/09-yesterday.mp3", duration: 150 },
-  { title: "Fire Place", artist, src: "/music/10-fire-place.mp3", duration: 170 },
+  { title: "City in the Rearview", artist, src: "/music/01-city-in-the-rearview.mp3", duration: 167 },
+  { title: "Old Age", artist, src: "/music/02-old-age.mp3", duration: 211 },
+  { title: "Blue Skies", artist, src: "/music/03-blue-skies.mp3", duration: 173 },
+  { title: "Winter Blues", artist, src: "/music/04-winter-blues.mp3", duration: 221 },
+  { title: "Clouds", artist, src: "/music/05-clouds.mp3", duration: 227 },
+  { title: "Dream Pop", artist, src: "/music/06-dream-pop.mp3", duration: 238 },
+  { title: "Opinions", artist, src: "/music/07-opinions.mp3", duration: 168 },
+  { title: "Autumn", artist, src: "/music/08-autumn.mp3", duration: 165 },
+  { title: "Yesterday", artist, src: "/music/09-yesterday.mp3", duration: 149 },
+  { title: "Fire Place", artist, src: "/music/10-fire-place.mp3", duration: 167 },
 ];
 
 export function formatTime(seconds: number): string {
