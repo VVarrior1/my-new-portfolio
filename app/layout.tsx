@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, JetBrains_Mono } from "next/font/google";
+import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { playlist } from "@/lib/playlist";
@@ -8,11 +8,18 @@ import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-// Archivo is variable on weight and width; the width axis (wdth 62-125) carries the display voice.
-const sans = Archivo({
+// Archivo is variable on weight and width; its wide cuts carry the display voice (name, section
+// titles, big numbers). Below about 24px it reads generic, so text is Instrument Sans.
+const display = Archivo({
   subsets: ["latin"],
   axes: ["wdth"],
   variable: "--font-archivo",
+  display: "swap",
+});
+
+const sans = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-instrument",
   display: "swap",
 });
 
@@ -85,7 +92,7 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn(sans.variable, mono.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn(display.variable, sans.variable, mono.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: headScript }} />
         <script

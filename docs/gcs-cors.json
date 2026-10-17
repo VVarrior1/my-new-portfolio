@@ -1,10 +1,16 @@
 [
   {
     "origin": [
+      "https://abdelrahmanm.dev",
       "https://abdelrahmanmohamed1.netlify.app",
       "http://localhost:3000"
     ],
-    "method": ["GET", "PUT", "POST", "HEAD"],
+    "method": [
+      "GET",
+      "PUT",
+      "POST",
+      "HEAD"
+    ],
     "responseHeader": [
       "Content-Type",
       "x-goog-content-sha256",

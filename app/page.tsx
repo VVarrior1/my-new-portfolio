@@ -398,14 +398,14 @@ export default async function Home() {
 
               <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-start gap-x-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-x-8 lg:block">
                 <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl border border-rule-strong bg-paper lg:aspect-square">
-                  {/* Head and shoulders, cropped from the square original. */}
+                  {/* Head and shoulders at 4:5; the square desktop frame trims the shoulders. */}
                   <Image
-                    src="/abdelrahman.jpg"
-                    width={460}
-                    height={460}
-                    alt="Abdelrahman Mohamed in a suit, standing outdoors by a river on a sunny day"
-                    sizes="(min-width: 1024px) 570px, (min-width: 640px) 340px, 190px"
-                    className="absolute left-[-50%] top-[-14.5%] h-auto w-[209%] max-w-none"
+                    src="/portrait-snow.jpg"
+                    width={1200}
+                    height={1500}
+                    alt="Abdelrahman Mohamed smiling outdoors in the snow"
+                    sizes="(min-width: 1024px) 300px, (min-width: 640px) 160px, 88px"
+                    className="absolute inset-0 size-full object-cover object-top"
                   />
                 </div>
                 <dl className="spec lg:mt-6">
