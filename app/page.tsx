@@ -9,6 +9,7 @@ import { Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SpanStrip } from "@/components/span-strip";
+import { CircuitOrigin, CircuitRun, CircuitTap } from "@/components/circuit";
 import { getAllBlogs } from "@/lib/blogs";
 import {
   RESUME_PATH,
@@ -75,7 +76,9 @@ export default async function Home() {
       <main id="main">
         {/* Hero: the name and the facts on the left, the simulator (a small device) on the right. */}
         <section aria-labelledby="hero-name">
-          <div className="mx-auto grid max-w-[76rem] gap-y-10 px-4 pb-16 pt-6 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6">
+          <div className="relative mx-auto grid max-w-[76rem] gap-y-10 px-4 pb-16 pt-6 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6">
+            {/* The signal trace leaves the simulator here and runs down the page to the contact console. */}
+            <CircuitOrigin />
             <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-start-1">
               <h1 id="hero-name" className="t-display sm:mt-4">
                 {profile.firstName}
@@ -154,8 +157,10 @@ export default async function Home() {
                 <article
                   key={project.slug}
                   aria-labelledby={`${project.slug}-title`}
-                  className="grid gap-y-8 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6 lg:gap-y-0"
+                  className="relative grid gap-y-8 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-6 lg:gap-y-0"
                 >
+                  {/* A mat on the content edge gets a tap, level with its browser bar (on the article, so it stays put while the mat sticks). */}
+                  {!flip && <CircuitTap className="top-[44px] max-lg:hidden" />}
                   {/* On a phone the screenshot comes straight after the summary. */}
                   <div className={`min-w-0 lg:row-start-1 ${textCols}`}>
                     <h3 id={`${project.slug}-title`} className="t-title">
@@ -230,7 +235,11 @@ export default async function Home() {
           title="Experience"
           meta={`${experience.length} roles · ${experience[experience.length - 1].start} – now`}
         >
-          <SpanStrip jobs={experience} until={profile.availableFrom} />
+          <div className="relative">
+            <SpanStrip jobs={experience} until={profile.availableFrom} />
+            {/* Level with the first lane, the current role. */}
+            <CircuitTap className="top-[26px] max-lg:hidden" />
+          </div>
           <ol className="mt-12 sm:mt-14">
             {experience.map((job) => {
               const current = job.end === "Now";
@@ -286,7 +295,8 @@ export default async function Home() {
           </div>
           {/* A keyboard of what I use: one row of keycaps per toolkit, on one panel. The panel's rows sit on
               the page grid, so the keys start on the same edge as the text above. */}
-          <div className="panel mt-8 py-4">
+          <div className="panel relative mt-8 py-4">
+            <CircuitTap className="top-[26px] max-lg:hidden" />
             <h3 className="t-mono px-4 pb-3 text-ink-2">Tools</h3>
             <dl className="space-y-3 sm:space-y-2.5">
               {skills.map((skill) => (
@@ -347,10 +357,13 @@ export default async function Home() {
           </p>
         </Section>
 
-        {/* Contact: the console. The page closes on the simulator's charcoal, with the orange key. */}
-        <section id="contact" aria-labelledby="contact-title" className="scroll-mt-16 border-t border-rule">
+        {/* Contact: the console. The page closes on the simulator's charcoal, with the orange key, and the trace ends in it. */}
+        <section id="contact" aria-labelledby="contact-title" className="circuit-host scroll-mt-16 border-t border-rule">
+          {/* The trace ends here: it turns into the console and its pad stays lit. */}
+          <CircuitRun end />
           <div className="mx-auto max-w-[76rem] px-4 py-16 sm:px-8 sm:py-24">
             <div className="console grid gap-x-12 gap-y-8 p-5 sm:p-12 lg:grid-cols-[minmax(0,1fr)_16.875rem]">
+              <CircuitTap kind="end" />
               {/* Title and pitch at the top, the address and keys level with the last spec row. */}
               <div className="flex min-w-0 flex-col justify-between gap-y-8">
                 <div>

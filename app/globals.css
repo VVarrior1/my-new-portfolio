@@ -673,6 +673,354 @@ body {
     cursor: grabbing;
     transform: translateY(1px);
   }
+
+  /* ------------------------------------------------------------------
+     Signal circuit (components/circuit.tsx): the simulator's wire, carried
+     down the page. One 2px neutral track with 90° and 45° turns, ring pads
+     where it meets an object and vias where it crosses a section rule. It
+     runs in the right gutter from lg and in the left gutter below it.
+     Internal geometry is drawn for the right side; below lg a tap is
+     mirrored with `scale: -1 1`. Under 1280px the gutter is too narrow
+     for bends, so pads sit on the trunk like stations on a line.
+     ------------------------------------------------------------------ */
+  .circuit-host {
+    position: relative;
+  }
+
+  .circuit-run,
+  .circuit-via,
+  .circuit-tap,
+  .circuit-origin,
+  .circuit-origin-run {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* A section's stretch of trunk, top rule to bottom rule. */
+  .circuit-run {
+    top: 0;
+    bottom: 0;
+    left: calc(var(--circuit-edge) - var(--circuit-off) - 6px);
+    width: 12px;
+    overflow: clip;
+  }
+  .circuit-run::before,
+  .circuit-fill {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 5px;
+    width: 2px;
+    background: var(--circuit-line);
+  }
+  /* The stretch the packet has already passed (scroll-driven, below). */
+  .circuit-fill {
+    display: none;
+    background: var(--circuit-lit);
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+  /* The packet: a full-height carrier moved down by its own height, with the capsule on its top edge. */
+  .circuit-packet {
+    display: none;
+    position: absolute;
+    inset: 0;
+    visibility: hidden;
+  }
+  .circuit-packet::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 3px;
+    width: 6px;
+    height: 16px;
+    border-radius: 3px;
+    background: var(--signal);
+    box-shadow: 0 0 0 2px var(--paper);
+  }
+  /* In the contact section the trunk stops where it turns into the console. */
+  .circuit-run-end {
+    bottom: auto;
+    height: calc(var(--circuit-console-top) + var(--circuit-term-y) - var(--circuit-bend));
+  }
+
+  /* A via, centred on the section's 1px top rule. */
+  .circuit-via {
+    top: -4.5px;
+    left: calc(var(--circuit-edge) - var(--circuit-off) - 4px);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--circuit-line);
+    background: var(--paper);
+  }
+
+  @media (min-width: 1024px) {
+    .circuit-run {
+      left: calc(min(50% + 36rem, 100% - 2rem) + var(--circuit-off) - 6px);
+    }
+    .circuit-via {
+      left: calc(min(50% + 36rem, 100% - 2rem) + var(--circuit-off) - 4px);
+    }
+  }
+
+  /* A branch from the trunk into the box it sits in, on that box's content edge. */
+  .circuit-tap {
+    right: 100%;
+    width: var(--circuit-off);
+    height: 0;
+    color: var(--circuit-line);
+    scale: -1 1;
+  }
+  .circuit-wire {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: currentColor;
+  }
+  .circuit-bend {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .circuit-pad {
+    position: absolute;
+    top: -4px;
+    left: calc(100% - 4px);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    background: var(--paper);
+  }
+  /* A section header's node: level with the mono index on the left, with no wire to it. */
+  .circuit-tap-node {
+    top: calc(0.8125rem * 0.75);
+  }
+  .circuit-tap-node .circuit-wire {
+    display: none;
+  }
+  .circuit-tap-end {
+    top: var(--circuit-term-y);
+  }
+  @media (min-width: 1024px) {
+    .circuit-tap {
+      right: auto;
+      left: 100%;
+      scale: none;
+    }
+    /* On the right the node meets the meta line (counts, a date range) at the end of the header. */
+    .circuit-tap-node {
+      top: auto;
+      bottom: calc(0.3rem + 0.8125rem * 0.75);
+    }
+  }
+  @media (min-width: 1280px) {
+    .circuit-wire,
+    .circuit-tap-node .circuit-wire {
+      display: block;
+      left: 17px;
+      right: 8px;
+    }
+    .circuit-bend {
+      display: block;
+    }
+    .circuit-pad {
+      top: -5px;
+      left: 7px;
+      width: 10px;
+      height: 10px;
+    }
+    /* On an object (the simulator, the strip, the tools board, the console) the pad sits on its edge,
+       like a pin; only the header node keeps clear of its text. */
+    .circuit-tap:not(.circuit-tap-node) .circuit-pad {
+      left: -5px;
+    }
+    .circuit-tap:not(.circuit-tap-node) .circuit-wire {
+      left: 5px;
+    }
+    /* The connector leaves the simulator and bends down into the trunk. */
+    .circuit-tap-origin .circuit-bend {
+      top: 0;
+      bottom: auto;
+    }
+  }
+
+  /* The hero's piece fills the simulator's grid area (and below lg, the rows under it too), down to
+     the bottom of the hero, so the connector sits level with the diagram at every width. */
+  .circuit-origin {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -4rem;
+    grid-row: 2 / span 2;
+    grid-column: 1;
+  }
+  .circuit-origin .circuit-tap {
+    top: var(--circuit-origin-y);
+  }
+  .circuit-origin-run {
+    top: calc(var(--circuit-origin-y) + var(--circuit-bend));
+    bottom: 0;
+    right: calc(100% + var(--circuit-off) - 1px);
+    width: 2px;
+    background: var(--circuit-line);
+  }
+  @media (min-width: 640px) {
+    .circuit-origin {
+      bottom: -5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .circuit-origin {
+      grid-row: 1 / span 2;
+      grid-column: 6 / span 7;
+    }
+    .circuit-origin-run {
+      right: auto;
+      left: calc(100% + var(--circuit-off) - 1px);
+    }
+  }
+}
+
+/* Signal circuit geometry. No new colours: the track is rule-strong and lights to graphite. */
+:root {
+  --circuit-line: var(--rule-strong);
+  --circuit-lit: var(--graphite);
+  /* From the viewport edge to the content edge, on the trace's side (the containers' padding). */
+  --circuit-edge: 1rem;
+  /* From the content edge to the trunk's centre. */
+  --circuit-off: 0.5rem;
+  /* Height of a 45° bend (none where the gutter is too narrow for one). */
+  --circuit-bend: 0px;
+  /* The connector leaves the simulator level with the middle of its diagram. */
+  --circuit-origin-y: 219px;
+  /* The contact console's offset in its section (the section's top padding), and where the trace enters it. */
+  --circuit-console-top: 4rem;
+  --circuit-term-y: 3.5rem;
+}
+@media (min-width: 640px) {
+  :root {
+    --circuit-edge: 2rem;
+    --circuit-off: 1rem;
+    --circuit-console-top: 6rem;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --circuit-off: 2rem;
+    --circuit-bend: 8px;
+  }
+}
+@media (min-width: 1400px) {
+  :root {
+    --circuit-off: 2.5rem;
+  }
+}
+
+/* The packet rides the trunk at the middle of the screen: each section's stretch is driven by that
+   section's view timeline, so the stretch ends exactly where the next one starts. The first viewport
+   has no packet (the device keeps the only orange there); the hero's stretch is lit from the start,
+   because it carries the simulator's traffic. Static under reduced motion and without support. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .circuit-host {
+      view-timeline: --circuit block;
+    }
+    .circuit-fill,
+    .circuit-packet {
+      display: block;
+    }
+    .circuit-fill {
+      animation: circuit-fill linear both;
+      animation-timeline: --circuit;
+      animation-range: cover 50vh cover calc(100% - 50vh);
+    }
+    .circuit-packet {
+      animation: circuit-packet linear none;
+      animation-timeline: --circuit;
+      animation-range: cover 50vh cover calc(100% - 50vh);
+    }
+    .circuit-run-end .circuit-fill,
+    .circuit-run-end .circuit-packet {
+      animation-range: cover 50vh cover calc(50vh + var(--circuit-console-top) + var(--circuit-term-y) - var(--circuit-bend));
+    }
+    .circuit-origin {
+      --circuit-line: var(--circuit-lit);
+    }
+    /* Junctions and vias light once the packet reaches them; pads flash orange as it passes. */
+    .circuit-via,
+    .circuit-tap {
+      animation: circuit-lit linear forwards;
+      animation-timeline: view();
+      animation-range: cover 50vh cover calc(50vh + 1px);
+    }
+    .circuit-pad {
+      animation: circuit-flash linear forwards;
+      animation-timeline: view();
+      animation-range: cover calc(50vh - 12px) cover calc(50vh + 20px);
+    }
+    /* The console is where the packet ends up, so its pad stays lit. */
+    .circuit-tap-end .circuit-pad {
+      animation-name: circuit-arrive;
+    }
+    .circuit-origin .circuit-tap,
+    .circuit-origin .circuit-pad {
+      animation: none;
+    }
+  }
+}
+@keyframes circuit-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes circuit-packet {
+  from {
+    visibility: visible;
+    transform: translateY(0);
+  }
+  to {
+    visibility: visible;
+    transform: translateY(100%);
+  }
+}
+@keyframes circuit-lit {
+  from,
+  to {
+    color: var(--circuit-lit);
+    border-color: var(--circuit-lit);
+  }
+}
+@keyframes circuit-flash {
+  0%,
+  99% {
+    background: var(--signal);
+    border-color: var(--signal);
+  }
+  100% {
+    background: var(--paper);
+    border-color: var(--circuit-lit);
+  }
+}
+@keyframes circuit-arrive {
+  from,
+  to {
+    background: var(--signal);
+    border-color: var(--signal);
+  }
 }
 
 /* ------------------------------------------------------------------

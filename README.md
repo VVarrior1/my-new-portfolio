@@ -44,9 +44,12 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 job. The hero simulator is a small device (raised panel, dark screen, keycap controls) that also
 feeds a live status strip above the name, project screenshots sit on mats with numbered captions,
 Experience opens with a span strip of every role, the tools are a board of keycaps, and the page
-closes on a charcoal contact console in the simulator's screen material. International orange
-(`--signal`) appears on things you press and on "now" (the current role and the timeline cursor),
-and in the first viewport only on the device. Light by default, with a dark
+closes on a charcoal contact console in the simulator's screen material. A signal circuit ties them
+together: one neutral PCB trace leaves the simulator, runs down the gutter, taps each section and
+object on the content edge and ends in the console, and as you scroll an orange packet rides it
+(scroll-driven CSS, no JavaScript). International orange (`--signal`) appears on things you press
+and on "now" (the current role, the timeline cursor, the packet), and in the first viewport only on
+the device. Light by default, with a dark
 theme at the same temperature that follows the OS or the header toggle. The toggle reveals the new
 theme as a circle using the View Transitions API, and switches instantly where that API isn't
 available or the visitor prefers reduced motion.
@@ -55,7 +58,8 @@ Type is Archivo (variable; the width axis is the display voice) with JetBrains M
 stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--ink-2`,
 `--graphite`, `--rule`, `--signal`, `--screen`…) exposed to Tailwind as `bg-paper`, `text-graphite`
 and so on. The object classes (`.panel`, `.screen`, `.key`, `.key-signal`, `.key-ink`, `.keycap`,
-`.spec`, `.stat-row`, `.sep-list`, `.console`, `.sim-status`) are in `app/globals.css`.
+`.spec`, `.stat-row`, `.sep-list`, `.console`, `.sim-status`, and the `.circuit-*` pieces drawn by
+`components/circuit.tsx`) are in `app/globals.css`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,

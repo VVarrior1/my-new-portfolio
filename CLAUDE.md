@@ -30,7 +30,8 @@ at the top of `app/globals.css`.
   ≤ 0.006, so light and dark share one temperature. Check new neutrals with a script, not by eye.
 - Every color has one job. `--signal` (orange) fills actuators (the simulator's kill key and fader
   cap, the contact console's "Email me") and marks the present: the current role's bar, dot and
-  the "now" cursor in Experience. `--signal-text` is for orange text, hover underlines and arrows
+  the "now" cursor in Experience, plus the circuit's packet, the pad it is passing and the console's
+  terminus pad. `--signal-text` is for orange text, hover underlines and arrows
   (links, Writing rows, the active nav item). The hero's "Email me" is an ink key (`.key-ink`) so
   the first viewport's only orange is on the device. Orange is never large areas and never text on
   paper (2.9:1). Never tint, blend or fade it. Status colours (`--trace`, `--fail`, `--screen-go`)
@@ -40,7 +41,11 @@ at the top of `app/globals.css`.
   `.console` (the contact card: screen material, which re-points the page tokens at the screen's),
   the experience span strip, `.screen` (the simulator, the status strip and the /stats chart), `.key` /
   `.key-signal` / `.key-ink` (anything pressable), `.keycap` (a legend key that labels, never
-  presses), `.spec` (label/value tables), `.stat-row` (a project's numbers, on the paper).
+  presses), `.spec` (label/value tables), `.stat-row` (a project's numbers, on the paper), and the
+  signal circuit (`components/circuit.tsx`): one 2px `rule-strong` trace with 45° bends, ring pads and
+  vias that leaves the simulator level with its diagram, runs in the right gutter (left below lg),
+  taps each section header's meta line and the objects on the content edge, and ends in the console.
+  It is the only thing in the gutters; add a tap only where an object meets the content edge.
   No glows, blur, gradients (other than the 1px key highlights), textures or ambient animation.
   `backdrop-filter` only on the sticky header.
 - Type: Archivo (variable, the width axis carries the display voice via `font-stretch`) and
@@ -56,8 +61,10 @@ at the top of `app/globals.css`.
 - The name is never printed twice in one viewport: the header wordmark waits on `/` until the h1
   scrolls out. The simulator stays the loudest object in the first viewport.
 - No all-caps eyebrow labels, chips or card grids. Hierarchy comes from type size, weight and rules.
-- The hero simulator is the only motion that isn't triggered by the user. Keep it that way,
-  keep it starting on idle (it blocked first paint when it started on hydration: Lighthouse 72 → 97),
+- The hero simulator is the only motion that isn't triggered by the user. The circuit's packet moves
+  only with scrolling (CSS view timelines, no JavaScript, no timers), sits at mid-screen, never shows
+  in the first viewport, and is static under reduced motion. Keep it that way, and keep the simulator
+  starting on idle (it blocked first paint when it started on hydration: Lighthouse 72 → 97),
   and respect `prefers-reduced-motion`. The status line and diagram share a fixed height
   (`DISPLAY_HEIGHT`) so controls never move under the pointer, and the diagram flows top to bottom
   when the screen is narrower than 560px.
