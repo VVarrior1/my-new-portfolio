@@ -15,6 +15,8 @@ test.describe("home page", () => {
   test("the hero simulator reacts to traffic, servers and the cache", async ({ page }) => {
     await page.goto("/");
     const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
+    // The simulator runs only while it's on screen, and on a 720px-tall screen it starts below the fold.
+    await sim.locator("canvas").scrollIntoViewIfNeeded();
     const hint = sim.locator("p[aria-live]");
     await expect(hint).toContainText("Healthy");
 
@@ -70,6 +72,51 @@ test.describe("home page", () => {
     await page.goto("/?ref=resume");
     const body = JSON.parse((await sent).postData() ?? "{}");
     expect(body).toEqual({ type: "view", path: "/", referrer: "ref:resume" });
+  });
+});
+
+test.describe("scroll choreography", () => {
+  test("loads after the page, and in-page links glide to their section", async ({ page }) => {
+    await page.goto("/");
+    // GSAP and Lenis arrive after the load event; the page marks itself once they're running.
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "", { timeout: 15000 });
+    await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Contact" }).click();
+    await expect(page).toHaveURL(/#contact$/);
+    await expect(page.getByRole("heading", { name: "Hiring for 2027?" })).toBeInViewport({ timeout: 5000 });
+  });
+
+  test("the packet on the spine carries the simulator's health", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "", { timeout: 15000 });
+    const packet = page.locator("[data-packet]");
+    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
+    await sim.locator("canvas").scrollIntoViewIfNeeded();
+    await expect(packet).toHaveAttribute("data-state", "healthy", { timeout: 8000 });
+    await sim.getByRole("slider").focus();
+    await page.keyboard.press("End"); // 900 req/s on two servers
+    await expect(packet).toHaveAttribute("data-state", "failing", { timeout: 10000 });
+    await expect(packet).toContainText("503");
+  });
+});
+
+test.describe("reduced motion", () => {
+  test("the page is complete and static", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.waitForTimeout(1500);
+    const html = page.locator("html");
+    await expect(html).not.toHaveAttribute("data-motion");
+    await expect(html).not.toHaveClass(/lenis/);
+    for (const name of ["Work", "Experience", "Background", "Writing", "Hiring for 2027?"]) {
+      await expect(page.getByRole("heading", { level: 2, name })).toBeVisible();
+    }
+    // Nothing waits for a script: the console's volt key is lit and every figure shows its value.
+    await expect(page.locator("[data-await]")).toHaveCount(0);
+    await expect(page.locator("[data-counting]")).toHaveCount(0);
+    await page.getByRole("link", { name: "Contact" }).first().click();
+    await expect(page).toHaveURL(/#contact$/);
+    await expect(page.getByRole("heading", { name: "Hiring for 2027?" })).toBeInViewport();
   });
 });
 

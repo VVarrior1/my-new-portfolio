@@ -35,27 +35,40 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 | `app/globals.css` | Design tokens (light and dark), shadcn token mapping, post typography |
 | `lib/analytics-core.ts` | Pure analytics logic, unit tested |
 | `lib/analytics.ts` | Analytics storage on GCS |
-| `lib/live-sim.ts` | The hero's simulation engine, unit tested |
+| `lib/live-sim.ts` | The simulator's engine, unit tested |
+| `components/choreography.tsx` | The scroll choreography (GSAP, ScrollTrigger, Lenis) and the spine's packet |
+| `components/spine.tsx`, `components/split.tsx`, `components/count.tsx` | The spine's wire and stations, split display type, counters |
 | `components/ui` | shadcn/ui primitives (generated, then themed) |
 
 ## Design
 
-"Workbench": near-white paper with grey hardware on it, where every decoration is an object with a
-job. The hero simulator is a small device (raised panel, dark screen, keycap controls) that also
-feeds a live status strip above the name, project screenshots sit on mats with numbered captions,
-Experience opens with a span strip of every role, the tools are a board of keycaps, and the page
-closes on a charcoal contact console in the simulator's screen material. International orange
-(`--signal`) appears on things you press and on "now" (the current role and the timeline cursor),
-and in the first viewport only on the device. Light by default, with a dark
-theme at the same temperature that follows the OS or the header toggle. The toggle reveals the new
-theme as a circle using the View Transitions API, and switches instantly where that API isn't
-available or the visitor prefers reduced motion.
+"Signal": scroll is the timeline. The page opens on a title card where the name is a poster (Archivo
+at its condensed end, in capitals, sized so ABDELRAHMAN fills the line) and its letters rise into
+place on load. As you scroll, the title card sinks back and a sheet carrying the live simulator
+slides over it. From the simulator one wire, the spine, runs down the left lane past every section,
+project and role to the contact console. A volt packet rides it at the middle of the screen; the
+wire behind it is inked, each station lights as the packet reaches it (a project's frame then
+"loads" and unfolds), and a tag on the wire names the route it's on and the simulator's p99, or 503
+if you left the simulator failing. Figures count up, the experience strip draws itself and, pinned
+on a laptop, lights the role you're reading, and the contact console assembles from its parts as
+the packet reaches the end of the line.
 
-Type is Archivo (variable; the width axis is the display voice) with JetBrains Mono for dates,
-stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--ink-2`,
-`--graphite`, `--rule`, `--signal`, `--screen`…) exposed to Tailwind as `bg-paper`, `text-graphite`
-and so on. The object classes (`.panel`, `.screen`, `.key`, `.key-signal`, `.key-ink`, `.keycap`,
-`.spec`, `.stat-row`, `.sep-list`, `.console`, `.sim-status`) are in `app/globals.css`.
+One accent, volt (`--signal`), means "live": the packet and lit stations, the simulator's kill key
+and fader, the hero's marker stroke and the console's "Email me". Light by default, with a dark theme
+that follows the OS or the header toggle (a circular reveal through the View Transitions API, instant
+under reduced motion). Colors are CSS variables on `:root` (`--stage`, `--paper`, `--ink`,
+`--graphite`, `--rule`, `--signal`, `--spine`, `--screen`…) exposed to Tailwind as `bg-paper`,
+`text-graphite` and so on. Object classes (`.panel`, `.sheet`, `.console`, `.screen`, `.key`,
+`.key-signal`, `.key-ink`, `.keycap`, `.spec`, `.stat-row`, `.station`, `.spine-trunk`) are in
+`app/globals.css`.
+
+**Motion** is in two places. The load intro is CSS only (`.intro-*`), so it starts with the first
+paint. Everything tied to scrolling is `components/choreography.tsx`: GSAP 3 with ScrollTrigger, and
+Lenis for smooth wheel scrolling (touch stays native). They are imported only after the page's load
+event, once the intro has finished (about 50 KB gzipped, in their own chunk, so the first-load bundle
+doesn't grow), and not at all under `prefers-reduced-motion: reduce`, where the page is complete and
+static. All content is readable without JavaScript; the script only adds "from" states it then
+animates out of. In-page links and the ⌘K menu glide through `lib/smooth-scroll.ts`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,
@@ -63,7 +76,7 @@ command (⌘K menu), slider (the simulator's fader is built on its Radix primiti
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
 
-**The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
+**The simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
