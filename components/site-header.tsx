@@ -65,17 +65,18 @@ export function SiteHeader() {
       }`}
     >
       <div className="wrap flex h-16 items-center justify-between gap-4">
-        <Link href="/" aria-label={`${profile.name}, home`} className="-ml-1 flex items-center gap-3 rounded-md p-1">
+        <Link href="/" aria-label={`${profile.name}, home`} className="-ml-1 flex items-center rounded-md p-1">
           <span
             aria-hidden="true"
-            className="t-mono grid size-7 place-items-center rounded-[8px] border border-rule-strong bg-surface-2 text-[0.6875rem] font-medium tracking-[0.02em] text-ink"
+            className="t-mono grid size-7 place-items-center rounded-[8px] border border-rule-strong bg-surface-2 text-[0.75rem] font-medium tracking-[0.02em] text-ink"
           >
             AM
           </span>
           <span
             aria-hidden="true"
+            // While the h1 shows the name, the wordmark takes no space, so the link (and its focus ring) is just the chip.
             className={`text-[0.875rem] font-medium tracking-[-0.005em] transition-[opacity,transform] duration-300 ${
-              nameVisible ? "translate-y-0 opacity-100" : "invisible translate-y-1 opacity-0"
+              nameVisible ? "ml-3 translate-y-0 opacity-100" : "invisible w-0 translate-y-1 overflow-hidden opacity-0"
             }`}
           >
             {profile.name}

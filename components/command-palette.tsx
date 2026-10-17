@@ -60,7 +60,7 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
     <CommandDialog open={open} onOpenChange={onOpenChange} title="Command menu" description="Jump to a section or run an action">
       <Command className="bg-paper">
         <CommandInput placeholder="Type a command or search" />
-        <CommandList>
+        <CommandList className="max-h-[min(31rem,64vh)] scroll-pb-2 pb-2">
           <CommandEmpty>Nothing matches that.</CommandEmpty>
           <CommandGroup heading="Go to">
             <CommandItem keywords={["projects", "portfolio"]} onSelect={() => go("/#work")}>

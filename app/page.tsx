@@ -55,65 +55,65 @@ export default async function Home() {
       <main id="main">
         {/* Hero. The simulator is the loudest thing on the first screen, on its heat plate. */}
         <section aria-labelledby="hero-name" className="overflow-x-clip">
-          <div className="wrap pb-12 pt-8 sm:pt-12 lg:pb-32 lg:pt-12">
+          <div className="wrap pb-12 pt-8 sm:pt-12 lg:pb-16 lg:pt-12">
             <h1 id="hero-name" className="t-name">
               {profile.name}
             </h1>
 
-            <div className="mt-4 grid gap-y-4 lg:grid-cols-12 lg:gap-x-6">
-              <p className="max-w-[36rem] text-[1.125rem] leading-[1.5] text-ink-2 sm:text-[1.25rem] lg:col-span-6">{profile.tagline}</p>
+            {/* Left: what I do, the recruiter facts, then the actions. Right: the personal line, alone. */}
+            <div className="mt-4 grid lg:grid-cols-12 lg:gap-x-6">
+              <div className="lg:col-span-6">
+                <p className="max-w-[36rem] text-[1.125rem] leading-[1.5] text-ink-2 sm:text-[1.25rem]">{profile.tagline}</p>
+                <p className="t-mono mt-4 flex items-baseline gap-2.5 text-ink">
+                  <span aria-hidden="true" className="size-1.5 shrink-0 -translate-y-px rounded-full bg-go" />
+                  <DotList items={profile.facts} />
+                </p>
+                <div className="mt-6 flex flex-wrap items-center gap-2">
+                  <a href={`mailto:${profile.email}`} className="btn btn-key" data-track="email">
+                    Email me
+                  </a>
+                  <a href={RESUME_PATH} className="btn btn-ghost bg-paper" data-track="resume-download">
+                    Résumé
+                  </a>
+                  <a
+                    href={profile.github}
+                    className="btn btn-ghost btn-icon bg-paper"
+                  target="_blank"
+                  rel="noreferrer"
+                    data-track="github"
+                    aria-label="GitHub (opens in a new tab)"
+                    title="GitHub"
+                  >
+                    <GithubMark className="size-[18px]" />
+                  </a>
+                  <a
+                    href={profile.linkedin}
+                    className="btn btn-ghost btn-icon bg-paper"
+                    target="_blank"
+                    rel="noreferrer"
+                    data-track="linkedin"
+                    aria-label="LinkedIn (opens in a new tab)"
+                    title="LinkedIn"
+                  >
+                    <LinkedinMark className="size-[17px]" />
+                  </a>
+                </div>
+              </div>
               <p className="hidden max-w-[28rem] pt-1 text-[1rem] leading-[1.6] text-graphite lg:col-span-5 lg:col-start-8 lg:block">
                 {profile.personal}
               </p>
             </div>
 
-            <div className="mt-7 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap items-center gap-2">
-                <a href={`mailto:${profile.email}`} className="btn btn-key" data-track="email">
-                  Email me
-                </a>
-                <a href={RESUME_PATH} className="btn btn-ghost" data-track="resume-download">
-                  Résumé
-                </a>
-                <a
-                  href={profile.github}
-                  className="btn btn-ghost btn-icon"
-                  target="_blank"
-                  rel="noreferrer"
-                  data-track="github"
-                  aria-label="GitHub (opens in a new tab)"
-                  title="GitHub"
-                >
-                  <GithubMark className="size-[18px]" />
-                </a>
-                <a
-                  href={profile.linkedin}
-                  className="btn btn-ghost btn-icon"
-                  target="_blank"
-                  rel="noreferrer"
-                  data-track="linkedin"
-                  aria-label="LinkedIn (opens in a new tab)"
-                  title="LinkedIn"
-                >
-                  <LinkedinMark className="size-[17px]" />
-                </a>
-              </div>
-              <p className="t-mono flex items-baseline gap-2.5 text-[0.75rem] text-ink sm:text-[0.8125rem]">
-                <span aria-hidden="true" className="size-1.5 shrink-0 -translate-y-px rounded-full bg-go" />
-                <DotList items={profile.facts} />
-              </p>
-            </div>
-
-            <div id="play" className="mt-10 scroll-mt-24">
+            <div id="play" className="mt-10 scroll-mt-24 lg:mt-12">
               <LiveSystem className="-mx-2 sm:mx-0 xl:-mx-6" />
             </div>
 
-            <p className="mt-28 max-w-[34rem] text-[1rem] leading-[1.6] text-graphite lg:hidden">{profile.personal}</p>
+            <p className="mt-20 max-w-[34rem] text-[1rem] leading-[1.6] text-graphite lg:hidden">{profile.personal}</p>
           </div>
         </section>
 
         {/* Work */}
-        <Section id="work" title="Work." muted="Shipped, used, and measured." rule={false}>
+        <Section id="work" title="Work." muted="Shipped, used, and measured." rule={false} tight>
           <div className="space-y-24 lg:space-y-40">
             {featured.map((project, index) => (
               <article key={project.slug} aria-labelledby={`${project.slug}-title`}>
@@ -132,11 +132,15 @@ export default async function Home() {
                   </div>
                 </div>
 
-                <div className="frame mt-8 p-2.5 sm:p-6">
-                  <ProjectShot name={project.name} shot={project.shot} phone={project.phone} />
+                {/* The frame sits on a faint copy of the hero's light. CYD's own UI is dark, so its frame is a dark stage in both themes. */}
+                <div className="project-stage mt-8">
+                  <div aria-hidden="true" className="frame-plate beams" />
+                  <div className={`frame p-2.5 sm:p-6 ${project.phone ? "stage-dark" : ""}`}>
+                    <ProjectShot name={project.name} shot={project.shot} phone={project.phone} />
+                  </div>
                 </div>
 
-                <div className="mt-8 grid gap-y-8 md:grid-cols-12 md:gap-x-6 lg:mt-10">
+                <div className="mt-14 grid gap-y-8 md:grid-cols-12 md:gap-x-6 lg:mt-20">
                   <div className="md:col-span-4">
                     <p className="t-mono text-graphite">In numbers</p>
                     <dl className="mt-4 grid grid-cols-3 gap-4 md:grid-cols-1">
@@ -169,7 +173,7 @@ export default async function Home() {
             ))}
           </div>
 
-          <div className="mt-24 lg:mt-40">
+          <div className="mt-24">
             <h3 className="t-title">More projects</h3>
             <ul className="mt-8 grid border-t border-rule md:grid-cols-12 md:gap-x-6">
               {otherProjects.map((project, index) => (
@@ -187,7 +191,10 @@ export default async function Home() {
                         <span className="sr-only"> (opens in a new tab)</span>
                       </a>
                     ) : (
-                      project.name
+                      <>
+                        {project.name}{" "}
+                        <span className="t-mono ml-1 align-[0.05em] text-[0.75rem] font-normal text-graphite">team project</span>
+                      </>
                     )}
                   </h4>
                   <p className="mt-2 text-[0.875rem] leading-[1.6] text-ink-2">{project.summary}</p>
@@ -206,12 +213,14 @@ export default async function Home() {
             {experience.map((job) => {
               const current = job.end === "Now";
               return (
-                <li key={`${job.company}-${job.start}`} className="dim-row grid gap-y-2 rounded-[10px] px-4 py-5 lg:grid-cols-12 lg:gap-x-6">
+                <li key={`${job.company}-${job.start}`} className="dim-row grid gap-y-2 px-4 py-5 lg:grid-cols-12 lg:gap-x-6">
                   <p className={`t-mono flex items-center gap-2 self-start tabular-nums lg:col-span-3 lg:pt-0.5 ${current ? "text-ink" : "text-graphite"}`}>
                     {current && <span aria-hidden="true" className="size-1.5 rounded-full bg-go" />}
-                    {job.start} – {job.end}
+                    <span className="dim-item">
+                      {job.start} – {job.end}
+                    </span>
                   </p>
-                  <div className="lg:col-span-9">
+                  <div className="dim-item lg:col-span-9">
                     <h3 className="text-[1rem] leading-snug">
                       <span className="font-medium text-ink">
                         {job.link ? (
@@ -278,9 +287,9 @@ export default async function Home() {
                 return (
                   <li
                     key={post.slug}
-                    className="dim-row relative rounded-[10px] before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-rule last:after:absolute last:after:inset-x-4 last:after:bottom-0 last:after:h-px last:after:bg-rule"
+                    className="dim-row relative before:absolute before:inset-x-4 before:top-0 before:h-px before:bg-rule last:after:absolute last:after:inset-x-4 last:after:bottom-0 last:after:h-px last:after:bg-rule"
                   >
-                    <Link href={`/blogs/${post.slug}`} className="grid gap-y-1 rounded-[10px] px-4 py-5 lg:grid-cols-12 lg:gap-x-6">
+                    <Link href={`/blogs/${post.slug}`} className="dim-item grid gap-y-1 rounded-[10px] px-4 py-5 lg:grid-cols-12 lg:gap-x-6">
                       <span className="t-mono tabular-nums text-graphite lg:col-span-3 lg:pt-0.5">{formatDate(post.date)}</span>
                       <span className="min-w-0 lg:col-span-9">
                         <span className="block font-medium leading-snug text-ink">{post.title.trim()}</span>
@@ -303,7 +312,7 @@ export default async function Home() {
 
         {/* Contact. No band: a rule, generous space, and a faint copy of the plate so the page ends lit. */}
         <section id="contact" aria-labelledby="contact-title" className="relative isolate scroll-mt-16 overflow-hidden border-t border-rule">
-          <div aria-hidden="true" className="end-plate" />
+          <div aria-hidden="true" className="end-plate beams" />
           <div className="wrap py-20 lg:py-32">
             <div className="max-w-[52rem]">
               <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-6">
@@ -317,7 +326,7 @@ export default async function Home() {
                 />
                 <h2 id="contact-title" className="t-section">
                   Hiring for 2027?{" "}
-                  <span className="muted">I start full-time in January. Calgary, remote, or relocating.</span>
+                  <span className="muted">I start full‑time in January. Calgary, remote, or relocating.</span>
                 </h2>
               </div>
               <p className="t-mono mt-6 text-ink-2 sm:ml-[5.5rem]">
@@ -328,7 +337,7 @@ export default async function Home() {
                 <a
                   href={`mailto:${profile.email}`}
                   data-track="email"
-                  className="mt-10 inline-block text-[clamp(1.25rem,0.6rem+3.2vw,2.25rem)] font-medium leading-[1.15] tracking-[-0.02em] underline decoration-[color-mix(in_srgb,var(--ink)_30%,transparent)] decoration-1 underline-offset-[0.2em] transition-[text-decoration-color] duration-[240ms] hover:decoration-[var(--ink)]"
+                  className="mt-10 inline-block text-[1.5rem] font-medium leading-[1.2] tracking-[-0.02em] sm:text-[clamp(1.5rem,0.4rem+2.6vw,2.5rem)] sm:leading-[1.1] underline decoration-[color-mix(in_srgb,var(--ink)_30%,transparent)] decoration-1 underline-offset-[0.2em] transition-[text-decoration-color] duration-[240ms] hover:decoration-[var(--ink)]"
                 >
                   {profile.email.split("@")[0]}
                   <wbr />@{profile.email.split("@")[1]}

@@ -5,10 +5,10 @@ import { DatabaseIcon, NetworkIcon, ServerIcon, ZapIcon, type LucideIcon } from 
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import {
+  HealthMonitor,
   LiveSim,
   MAX_SERVERS,
   STRAIN_UTIL,
-  assessHealth,
   diagnose,
   type Finished,
   type Health,
@@ -20,13 +20,21 @@ import { publishSimStatus } from "@/lib/sim-status";
 import { trackEvent } from "./site-analytics";
 
 const INITIAL: SimConfig = { rate: 160, servers: 2, cache: false };
+const SEED = 7;
 const MAX_RATE = 900;
-const DOTS_PER_SECOND = 36;
+const DOTS_PER_SECOND = 32;
+/** Never start two requests closer than this, so packets on an edge stay at least ~10px apart. */
+const MIN_DOT_GAP_MS = 32;
 const SEGMENT_MS = 240;
 const SLOW_MS = 150;
 /** Below this canvas width the diagram flows top to bottom. */
 const VERTICAL_BELOW = 560;
-const NODE_H = 52;
+/** Below this canvas width (left to right) there's no room for the clients box, so traffic enters from the edge. */
+const CLIENTS_FROM = 640;
+/** Nothing is drawn closer than this to the well's edge. */
+const INSET = 12;
+const CLIENTS = { w: 76, h: 48 };
+const CLIENTS_PILL_H = 26;
 
 type Point = { x: number; y: number };
 type Size = { w: number; h: number };
@@ -36,6 +44,8 @@ type Layout = {
   vertical: boolean;
   node: Size;
   appNode: Size;
+  /** The clients box traffic comes from, if there is room for it. */
+  clients: (Point & Size) | null;
   entry: Point;
   lb: Point;
   apps: Point[];
@@ -43,40 +53,47 @@ type Layout = {
   db: Point;
 };
 
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
 function computeLayout(width: number, height: number, servers: number): Layout {
-  const h = NODE_H;
   if (width >= VERTICAL_BELOW) {
-    // Left to right: balancer, app servers (stacked), cache, database.
-    const w = Math.round(Math.min(136, Math.max(96, (width - 64) / 4 - 36)));
-    const left = 24 + w / 2 + 12;
-    const right = width - 16 - w / 2;
-    const step = (right - left) / 3;
+    // Left to right: clients, balancer, app servers (stacked), cache, database.
+    const h = 60;
+    const showClients = width >= CLIENTS_FROM;
+    const start = INSET + (showClients ? CLIENTS.w : 20);
+    // Four columns, each a node plus the gap before it.
+    const column = (width - INSET - start) / 4;
+    const w = Math.round(clamp(column - 48, 108, 148));
+    const gap = column - w;
+    const x = (k: number) => start + gap + w / 2 + k * column;
     const mid = height / 2;
-    // Fixed spacing sized for the most servers, so adding one doesn't move the others around.
-    const gap = Math.min(h + 34, (height - 40 - h) / (MAX_SERVERS - 1));
-    const apps = Array.from({ length: servers }, (_, i) => ({ x: left + step, y: mid + (i - (servers - 1) / 2) * gap }));
+    // App servers spread over the well: the row pitch grows with the room, within 72-112px.
+    const pitch = clamp((height - 96) / servers, 72, 120);
+    const apps = Array.from({ length: servers }, (_, i) => ({ x: x(1), y: mid + (i - (servers - 1) / 2) * pitch }));
     return {
       width,
       height,
       vertical: false,
       node: { w, h },
       appNode: { w, h },
-      entry: { x: 0, y: mid },
-      lb: { x: left, y: mid },
+      clients: showClients ? { x: INSET, y: mid - CLIENTS.h / 2, ...CLIENTS } : null,
+      entry: { x: showClients ? INSET + CLIENTS.w : INSET, y: mid },
+      lb: { x: x(0), y: mid },
       apps,
-      cache: { x: left + 2 * step, y: mid },
-      db: { x: right, y: mid },
+      cache: { x: x(2), y: mid },
+      db: { x: x(3), y: mid },
     };
   }
 
-  // Top to bottom on narrow screens: balancer, a row of app servers, cache, database.
+  // Top to bottom on narrow screens: clients, balancer, a row of app servers, cache, database.
+  const h = 52;
   const w = Math.min(152, width - 48);
   const appGap = 10;
-  const appW = Math.min(136, Math.floor((width - 24 - appGap * (servers - 1)) / servers));
-  const top = 24;
-  const bottom = 10;
-  const step = (height - top - bottom - h) / 3;
-  const row = (k: number) => top + h / 2 + k * step;
+  const appW = Math.min(136, Math.floor((width - 2 * INSET - appGap * (servers - 1)) / servers));
+  const pillW = 128;
+  const pillBottom = INSET + CLIENTS_PILL_H;
+  const gap = (height - INSET - pillBottom - 4 * h) / 4;
+  const row = (k: number) => pillBottom + gap + h / 2 + k * (h + gap);
   const total = servers * appW + (servers - 1) * appGap;
   const apps = Array.from({ length: servers }, (_, i) => ({ x: (width - total) / 2 + appW / 2 + i * (appW + appGap), y: row(1) }));
   return {
@@ -85,7 +102,8 @@ function computeLayout(width: number, height: number, servers: number): Layout {
     vertical: true,
     node: { w, h },
     appNode: { w: appW, h },
-    entry: { x: width / 2, y: 0 },
+    clients: { x: width / 2 - pillW / 2, y: INSET, w: pillW, h: CLIENTS_PILL_H },
+    entry: { x: width / 2, y: pillBottom },
     lb: { x: width / 2, y: row(0) },
     apps,
     cache: { x: width / 2, y: row(2) },
@@ -96,8 +114,9 @@ function computeLayout(width: number, height: number, servers: number): Layout {
 type Dot = { points: Point[]; born: number; ok: boolean; slow: boolean };
 
 function pathPoints(layout: Layout, f: Finished): Point[] {
-  const jitter = (Math.random() - 0.5) * 30;
-  const start = layout.vertical ? { x: layout.entry.x + jitter, y: layout.entry.y } : { x: layout.entry.x, y: layout.entry.y + jitter };
+  // Requests leave the clients box from one port; only the bare edge entry spreads them a little.
+  const jitter = layout.clients ? 0 : (Math.random() - 0.5) * 12;
+  const start = { x: layout.entry.x, y: layout.entry.y + jitter };
   const points: Point[] = [start];
   const at: Record<Stage, Point | undefined> = {
     lb: layout.lb,
@@ -124,12 +143,17 @@ function utilColor(util: number, up = true) {
 /** A readout as a number plus a smaller unit ("27" + "ms"). */
 const msParts = (ms: number): [string, string] => (ms >= 1000 ? [(ms / 1000).toFixed(1), "s"] : [String(Math.round(ms)), "ms"]);
 
+/** 75 -> "01:15". */
+const clock = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
 const HEALTH_DOT: Record<Health, string> = { healthy: "bg-go", strained: "bg-trace", failing: "bg-destructive" };
 
 export function LiveSystem({ className = "" }: { className?: string }) {
   const [config, setConfig] = useState<SimConfig>(INITIAL);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [health, setHealth] = useState<Health>("healthy");
+  /** Simulated time, in whole seconds, for the clock in the well's corner. */
+  const [seconds, setSeconds] = useState(0);
   const [box, setBox] = useState({ width: 760, height: 320 });
   const boxRef = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -138,13 +162,13 @@ export function LiveSystem({ className = "" }: { className?: string }) {
   const visible = useRef(true);
   const reduced = useRef(false);
   const touched = useRef(false);
-  const healthRef = useRef<Health>("healthy");
+  const monitor = useRef(new HealthMonitor());
 
   const layout = useMemo(() => computeLayout(box.width, box.height, config.servers), [box, config.servers]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
 
-  if (sim.current === null) sim.current = new LiveSim(INITIAL, 7);
+  if (sim.current === null) sim.current = new LiveSim(INITIAL, SEED);
 
   // Track the canvas size so text renders at its real size.
   useEffect(() => {
@@ -180,10 +204,11 @@ export function LiveSystem({ className = "" }: { className?: string }) {
     let lastMetrics = 0;
     let lastPublished = 0;
     let dotBudget = 0;
-    const colors = { ok: "#0c0d11", slow: "#a85500", bad: "#cf2f22" };
+    let lastDot = 0;
+    const colors = { ok: "#5a5f69", slow: "#a85500", bad: "#cf2f22" };
     const readColors = () => {
       const styles = getComputedStyle(document.documentElement);
-      colors.ok = styles.getPropertyValue("--signal").trim() || colors.ok;
+      colors.ok = styles.getPropertyValue("--packet").trim() || colors.ok;
       colors.slow = styles.getPropertyValue("--trace").trim() || colors.slow;
       colors.bad = styles.getPropertyValue("--destructive").trim() || colors.bad;
     };
@@ -202,27 +227,23 @@ export function LiveSystem({ className = "" }: { className?: string }) {
       const s = sim.current!;
       const finished = s.step(dt);
 
-      // Draw a steady sample of requests, so 900 req/s doesn't become noise.
-      dotBudget = Math.min(dotBudget + (DOTS_PER_SECOND * dt) / 1000, 4);
-      if (!reduced.current) {
-        for (let i = finished.length - 1; i >= 0 && dotBudget >= 1; i--) {
-          const f = finished[i];
-          // Failures are always worth showing; successes are sampled.
-          if (f.ok && Math.random() > 0.6) continue;
-          dotBudget -= 1;
-          dots.current.push({ points: pathPoints(layoutRef.current, f), born: now, ok: f.ok, slow: f.latency > SLOW_MS });
-        }
+      // Draw a steady, evenly spaced sample of requests, so 900 req/s doesn't become noise and
+      // packets never bunch up on an edge. A random pick keeps the share of failures honest.
+      dotBudget = Math.min(dotBudget + (DOTS_PER_SECOND * dt) / 1000, 1.5);
+      if (!reduced.current && finished.length > 0 && dotBudget >= 1 && now - lastDot >= MIN_DOT_GAP_MS) {
+        const f = finished[Math.floor(Math.random() * finished.length)];
+        dotBudget -= 1;
+        lastDot = now;
+        dots.current.push({ points: pathPoints(layoutRef.current, f), born: now, ok: f.ok, slow: f.latency > SLOW_MS });
       }
 
       if (now - lastMetrics > 200) {
         lastMetrics = now;
         const m = s.metrics();
         setMetrics(m);
-        const next = assessHealth(m, healthRef.current);
-        if (next !== healthRef.current) {
-          healthRef.current = next;
-          setHealth(next);
-        }
+        setSeconds(Math.floor(s.now / 1000));
+        const next = monitor.current.update(m, now);
+        setHealth(next);
         if (now - lastPublished > 1000) {
           lastPublished = now;
           publishSimStatus({ health: next, p99: m.p99 });
@@ -240,6 +261,11 @@ export function LiveSystem({ className = "" }: { className?: string }) {
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
+      // Packets stay inside the well's inset, so none is ever cut in half by its edge.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(INSET, INSET, w - 2 * INSET, h - 2 * INSET);
+      ctx.clip();
 
       dots.current = dots.current.filter((dot) => {
         const segments = dot.points.length - 1;
@@ -257,11 +283,12 @@ export function LiveSystem({ className = "" }: { className?: string }) {
         ctx.globalAlpha = Math.max(0, fade) * (dot.ok ? 0.9 : 1);
         ctx.fillStyle = dot.ok ? (dot.slow ? colors.slow : colors.ok) : colors.bad;
         ctx.beginPath();
-        ctx.arc(x, y, dot.ok ? 2.75 : 3.25, 0, Math.PI * 2);
+        ctx.arc(x, y, dot.ok ? 2.5 : 3, 0, Math.PI * 2);
         ctx.fill();
         return true;
       });
       ctx.globalAlpha = 1;
+      ctx.restore();
     };
 
     const start = () => {
@@ -310,21 +337,20 @@ export function LiveSystem({ className = "" }: { className?: string }) {
     else sim.current!.killServer(0);
     const m = sim.current!.metrics();
     setMetrics(m);
-    const next = assessHealth(m, healthRef.current);
-    healthRef.current = next;
-    setHealth(next);
+    setHealth(monitor.current.update(m, performance.now()));
   };
 
   const reset = () => {
-    sim.current = new LiveSim(INITIAL, 7);
+    sim.current = new LiveSim(INITIAL, SEED);
+    setSeconds(0);
     dots.current = [];
-    healthRef.current = "healthy";
+    monitor.current.reset();
     setHealth("healthy");
     setConfig(INITIAL);
     setMetrics(null);
   };
 
-  const hint = metrics ? diagnose(metrics, config) : "Starting the simulation.";
+  const hint = metrics ? diagnose(metrics, config, health) : "Starting the simulation.";
   const errorRate = metrics?.errorRate ?? 0;
   const readouts: Array<{ label: string; value: [string, string]; tone: string }> = [
     { label: "p50", value: metrics ? msParts(metrics.p50) : ["–", ""], tone: "" },
@@ -340,9 +366,9 @@ export function LiveSystem({ className = "" }: { className?: string }) {
   return (
     <div className={`sim-stage ${className}`} data-health={health}>
       <div aria-hidden="true" className="heat-plate">
-        <span data-layer="healthy" />
-        <span data-layer="strained" />
-        <span data-layer="failing" />
+        <span data-layer="healthy" className="beams" />
+        <span data-layer="strained" className="beams" />
+        <span data-layer="failing" className="beams" />
       </div>
 
       <figure className="device" aria-labelledby="live-system-title">
@@ -360,20 +386,21 @@ export function LiveSystem({ className = "" }: { className?: string }) {
           </button>
         </figcaption>
 
-        <div className="grid gap-4 p-3 sm:p-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_23.75rem]">
+        <div className="grid gap-4 p-3 sm:p-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_20.5rem]">
           <div className="flex min-w-0 flex-col gap-3">
-            <div ref={boxRef} className="sim-canvas relative h-[312px] overflow-hidden rounded-[10px] md:h-[300px] lg:h-auto lg:min-h-[17.5rem] lg:flex-1">
+            <div ref={boxRef} className="sim-canvas relative h-[380px] overflow-hidden rounded-[10px] md:h-[320px] lg:h-auto lg:min-h-[19rem] lg:flex-1">
               <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
                 <Edges layout={layout} />
               </svg>
               {/* Requests travel on the canvas, between the edges and the nodes, so they pass under the boxes. */}
               <canvas ref={canvas} className="pointer-events-none absolute inset-0" style={{ width: layout.width, height: layout.height }} aria-hidden="true" />
               <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
+                {layout.clients && <Clients box={layout.clients} rate={config.rate} pill={layout.vertical} />}
                 <Node at={layout.lb} size={layout.node} title="Balancer" detail="round robin" icon={NetworkIcon} />
                 {layout.apps.map((app, i) => {
                   const up = metrics?.serverUp[i] ?? true;
                   const util = metrics?.appUtilization[i] ?? 0;
-                  const compact = layout.appNode.w < 96;
+                  const compact = layout.appNode.w < 100;
                   return (
                     <Node
                       key={i}
@@ -406,6 +433,25 @@ export function LiveSystem({ className = "" }: { className?: string }) {
                   color={utilColor(metrics?.dbUtilization ?? 0)}
                 />
               </svg>
+              <p aria-hidden="true" className="t-mono pointer-events-none absolute left-3 top-2.5 text-[0.75rem] tabular-nums text-graphite max-sm:hidden">
+                seed {SEED} · {clock(seconds)}
+              </p>
+              {!layout.vertical && (
+                <ul aria-hidden="true" className="t-mono pointer-events-none absolute bottom-3 left-3 flex gap-4 text-[0.75rem] text-graphite">
+                  <li className="flex items-center gap-1.5">
+                    <span className="size-[5px] rounded-full bg-[var(--packet)]" />
+                    request
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="size-[5px] rounded-full bg-trace" />
+                    slow, over {SLOW_MS} ms
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="size-1.5 rounded-full bg-destructive" />
+                    failed
+                  </li>
+                </ul>
+              )}
             </div>
             <p className="text-[0.8125rem] leading-snug text-graphite">
               Every request is simulated live in your browser by a seeded event engine, the idea behind Systemlab.
@@ -498,15 +544,17 @@ export function LiveSystem({ className = "" }: { className?: string }) {
 }
 
 function Edges({ layout }: { layout: Layout }) {
-  const { node, appNode, lb, apps, cache, db, entry, vertical } = layout;
+  const { node, appNode, lb, apps, cache, db, entry, vertical, clients } = layout;
   const hw = node.w / 2;
   const hh = node.h / 2;
   const ahw = appNode.w / 2;
+  // A bare entry from the well's edge is dashed; from the clients box it's a real edge.
+  const entryDash = clients ? undefined : "3 4";
   return (
     <g stroke="var(--rule-strong)" strokeWidth={1} fill="none">
       {vertical ? (
         <>
-          <line x1={entry.x} y1={entry.y} x2={lb.x} y2={lb.y - hh} strokeDasharray="3 4" />
+          <line x1={entry.x} y1={entry.y} x2={lb.x} y2={lb.y - hh} strokeDasharray={entryDash} />
           {apps.map((app, i) => (
             <g key={i}>
               <line x1={lb.x} y1={lb.y + hh} x2={app.x} y2={app.y - hh} />
@@ -517,7 +565,7 @@ function Edges({ layout }: { layout: Layout }) {
         </>
       ) : (
         <>
-          <line x1={entry.x} y1={entry.y} x2={lb.x - hw} y2={lb.y} strokeDasharray="3 4" />
+          <line x1={entry.x} y1={entry.y} x2={lb.x - hw} y2={lb.y} strokeDasharray={entryDash} />
           {apps.map((app, i) => (
             <g key={i}>
               <line x1={lb.x + hw} y1={lb.y} x2={app.x - ahw} y2={app.y} />
@@ -525,6 +573,50 @@ function Edges({ layout }: { layout: Layout }) {
             </g>
           ))}
           <line x1={cache.x + hw} y1={cache.y} x2={db.x - hw} y2={db.y} />
+        </>
+      )}
+    </g>
+  );
+}
+
+/** Where the traffic comes from: a small box (or, top to bottom, a pill) with the current rate. */
+function Clients({ box, rate, pill }: { box: Point & Size; rate: number; pill: boolean }) {
+  return (
+    <g>
+      <rect
+        x={box.x + 0.5}
+        y={box.y + 0.5}
+        width={box.w - 1}
+        height={box.h - 1}
+        rx={pill ? box.h / 2 : 8}
+        fill="var(--surface-2)"
+        stroke="var(--rule-strong)"
+      />
+      {pill ? (
+        <text
+          x={box.x + box.w / 2}
+          y={box.y + box.h / 2 + 4}
+          textAnchor="middle"
+          fontSize={12}
+          fill="var(--graphite)"
+          style={{ fontFamily: "var(--mono)", fontVariantNumeric: "tabular-nums" }}
+        >
+          <tspan fill="var(--ink)">Clients</tspan> · {rate}/s
+        </text>
+      ) : (
+        <>
+          <text x={box.x + 12} y={box.y + 20} fontSize={13} fontWeight={500} fill="var(--ink)" style={{ fontFamily: "var(--sans)" }}>
+            Clients
+          </text>
+          <text
+            x={box.x + 12}
+            y={box.y + 36}
+            fontSize={12}
+            fill="var(--graphite)"
+            style={{ fontFamily: "var(--mono)", fontVariantNumeric: "tabular-nums" }}
+          >
+            {rate}/s
+          </text>
         </>
       )}
     </g>
@@ -554,10 +646,13 @@ function Node({
 }) {
   const x = at.x - size.w / 2;
   const y = at.y - size.h / 2;
+  const large = size.h >= 60;
   // Icons only where the boxes are wide enough to hold them next to the label.
-  const showIcon = !!Icon && size.w >= 120;
+  const showIcon = !!Icon && size.w >= 124;
   const pad = size.w < 80 ? 8 : 12;
   const textX = x + (showIcon ? 34 : pad);
+  const titleY = y + (large ? 25 : 22);
+  const detailY = titleY + (large ? 17 : 15);
   const dashed = down || muted;
   return (
     <g>
@@ -567,17 +662,17 @@ function Node({
         width={size.w - 1}
         height={size.h - 1}
         rx={8}
-        fill="var(--paper-raised)"
+        fill="var(--node-bg)"
         stroke={down ? "var(--destructive)" : "var(--rule-strong)"}
         strokeDasharray={dashed ? "4 3" : undefined}
       />
       {showIcon && Icon && (
-        <Icon x={x + 12} y={y + 11} width={14} height={14} strokeWidth={1.75} color="var(--graphite)" />
+        <Icon x={x + 12} y={titleY - 12} width={14} height={14} strokeWidth={1.75} color="var(--graphite)" />
       )}
       <text
         x={textX}
-        y={y + 22}
-        fontSize={14}
+        y={titleY}
+        fontSize={large ? 15 : 14}
         fontWeight={500}
         fill={muted ? "var(--graphite)" : "var(--ink)"}
         style={{ fontFamily: "var(--sans)" }}
@@ -586,7 +681,7 @@ function Node({
       </text>
       <text
         x={textX}
-        y={y + 37}
+        y={detailY}
         fontSize={12}
         fill={down ? "var(--destructive)" : "var(--graphite)"}
         style={{ fontFamily: "var(--mono)", fontVariantNumeric: "tabular-nums" }}
@@ -595,10 +690,10 @@ function Node({
       </text>
       {util !== undefined && (
         <>
-          <rect x={x + pad} y={y + size.h - 9} width={size.w - pad * 2} height={3} rx={1.5} fill="var(--rule-strong)" />
+          <rect x={x + pad} y={y + size.h - (large ? 11 : 9)} width={size.w - pad * 2} height={3} rx={1.5} fill="var(--rule-strong)" />
           <rect
             x={x + pad}
-            y={y + size.h - 9}
+            y={y + size.h - (large ? 11 : 9)}
             width={Math.max(0, (size.w - pad * 2) * Math.min(1, util))}
             height={3}
             rx={1.5}

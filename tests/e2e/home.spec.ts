@@ -26,7 +26,15 @@ test.describe("home page", () => {
     await sim.getByRole("button", { name: "Add a server" }).click();
     await sim.getByRole("button", { name: "Add a server" }).click();
     await sim.getByRole("switch").click();
-    await expect(hint).toContainText("Healthy", { timeout: 10000 });
+    // Four servers stop the failures but still run hot at 600 req/s: the hint and the plate agree.
+    await expect(hint).toContainText("near capacity", { timeout: 10000 });
+    await expect(page.locator(".sim-stage")).toHaveAttribute("data-health", "strained");
+
+    await sim.getByRole("slider").focus();
+    for (let i = 0; i < 40; i++) await page.keyboard.press("ArrowLeft"); // 600 -> 200 req/s
+    // The old slow requests drain out of the 3-second window, then the state holds for 1.5 s before it steps down.
+    await expect(hint).toContainText("Healthy", { timeout: 15000 });
+    await expect(page.locator(".sim-stage")).toHaveAttribute("data-health", "healthy");
 
     await sim.getByRole("button", { name: "Kill a server" }).click();
     await expect(sim.getByRole("button", { name: "Restart the server" })).toBeVisible();

@@ -9,8 +9,8 @@ import type { Shot } from "@/lib/content";
 function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNode }) {
   return (
     <div className="overflow-hidden rounded-[10px] border border-rule-strong bg-surface-2">
-      <div className="t-mono flex h-8 items-center gap-2 border-b border-rule px-3 text-[0.75rem] text-graphite">
-        <span aria-hidden="true" className="flex gap-1.5 pr-1.5">
+      <div className="t-mono flex h-7 items-center gap-2 border-b border-rule px-3 text-[0.6875rem] text-graphite sm:h-8 sm:text-[0.75rem]">
+        <span aria-hidden="true" className="hidden gap-1.5 pr-1.5 sm:flex">
           <span className="size-2 rounded-full bg-rule-strong" />
           <span className="size-2 rounded-full bg-rule-strong" />
           <span className="size-2 rounded-full bg-rule-strong" />
@@ -23,17 +23,30 @@ function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNod
   );
 }
 
-function ShotImage({ shot, sizes, fade = false }: { shot: Shot; sizes: string; fade?: boolean }) {
-  return (
+/**
+ * The screenshot, plus its dark copy when there is one: each theme shows only its own, and the
+ * hidden one is never downloaded (lazy images with display: none don't load). `crop` frames the
+ * architecture canvas on phones, where the whole lesson would be an unreadable thumbnail.
+ */
+function ShotImage({ shot, sizes, crop = false }: { shot: Shot; sizes: string; crop?: boolean }) {
+  const cropClass = crop ? "max-sm:aspect-[4/3] max-sm:object-cover max-sm:object-[62%_40%]" : "";
+  const image = (src: string, theme: string) => (
     <Image
-      src={shot.src}
+      key={src}
+      src={src}
       width={shot.width}
       height={shot.height}
       alt={shot.alt}
       sizes={sizes}
-      // The capture ends mid-row, so the last strip fades into the window instead of stopping on a cut.
-      className={`shot-img block h-auto w-full ${fade ? "[mask-image:linear-gradient(to_bottom,#000_88%,transparent_100%)]" : ""}`}
+      className={`h-auto w-full ${cropClass} ${theme}`}
     />
+  );
+  if (!shot.darkSrc) return image(shot.src, "block");
+  return (
+    <>
+      {image(shot.src, "block dark:hidden")}
+      {image(shot.darkSrc, "hidden dark:block")}
+    </>
   );
 }
 
@@ -58,7 +71,7 @@ export function ProjectShot({ name, shot, phone }: { name: string; shot: Shot; p
     <BrowserFrame shot={shot}>
       <DialogTrigger asChild>
         <button type="button" className="group relative block w-full cursor-zoom-in text-left" aria-label={`Enlarge screenshots of ${name}`}>
-          <ShotImage shot={shot} fade={!phone} sizes={phone ? "(min-width: 1024px) 620px, 72vw" : "(min-width: 1024px) 1104px, 100vw"} />
+          <ShotImage shot={shot} crop={!phone} sizes={phone ? "(min-width: 1024px) 620px, 72vw" : "(min-width: 1024px) 1104px, 100vw"} />
           <span
             aria-hidden="true"
             className="t-mono pointer-events-none absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-ink px-2 py-1 text-[0.75rem] text-paper opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"

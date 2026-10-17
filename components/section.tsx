@@ -11,6 +11,7 @@ export function Section({
   children,
   className = "",
   rule = true,
+  tight = false,
 }: {
   id: string;
   title: string;
@@ -20,10 +21,12 @@ export function Section({
   className?: string;
   /** False for the section right after the hero, where the plate's light fades out instead of a rule. */
   rule?: boolean;
+  /** Less space above the heading, for the section that follows the hero device directly. */
+  tight?: boolean;
 }) {
   return (
     <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-16 ${rule ? "border-t border-rule" : ""} ${className}`}>
-      <div className="wrap py-16 lg:py-28">
+      <div className={`wrap ${tight ? "pb-16 pt-6 lg:pb-28 lg:pt-16" : "py-16 lg:py-28"}`}>
         <h2 id={`${id}-title`} className="t-section max-w-[52rem]">
           {title}
           {muted && <span className="muted"> {muted}</span>}

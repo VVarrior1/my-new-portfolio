@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LiveSim, assessHealth, diagnose, type Metrics, type SimConfig } from "@/lib/live-sim";
+import { HEALTH_HOLD_MS, HealthMonitor, LiveSim, assessHealth, diagnose, type Health, type Metrics, type SimConfig } from "@/lib/live-sim";
 
 /** Runs a simulation in 16 ms frames, like the browser does, and returns its metrics. */
 function run(config: SimConfig, seconds = 8, seed = 7) {
@@ -150,5 +150,85 @@ describe("assessHealth", () => {
     expect(assessHealth({ ...calm, errorRate: 0.006 }, "failing")).toBe("failing");
     expect(assessHealth({ ...calm, errorRate: 0.006 }, "healthy")).toBe("healthy");
     expect(assessHealth(calm, "failing")).toBe("healthy");
+  });
+
+  it("needs the p99 to fall well below the threshold before it reads healthy again", () => {
+    expect(assessHealth({ ...calm, p99: 135 }, "healthy")).toBe("healthy");
+    expect(assessHealth({ ...calm, p99: 135 }, "strained")).toBe("strained");
+    expect(assessHealth({ ...calm, p99: 110 }, "strained")).toBe("healthy");
+  });
+});
+
+describe("HealthMonitor", () => {
+  const calm: Metrics = {
+    p50: 30,
+    p99: 80,
+    throughput: 160,
+    errorRate: 0,
+    appUtilization: [0.4, 0.4],
+    serverUp: [true, true],
+    dbUtilization: 0.3,
+    cacheHitRate: 0,
+    failuresAt: { down: 0, app: 0, db: 0 },
+  };
+  const busy = { ...calm, appUtilization: [0.8, 0.78] };
+
+  it("gets worse at once but holds before it gets better", () => {
+    const monitor = new HealthMonitor();
+    expect(monitor.update(busy, 0)).toBe("strained");
+    expect(monitor.update(calm, 200)).toBe("strained");
+    expect(monitor.update(calm, 200 + HEALTH_HOLD_MS - 1)).toBe("strained");
+    expect(monitor.update(calm, 200 + HEALTH_HOLD_MS)).toBe("healthy");
+  });
+
+  it("restarts the hold if the better reading doesn't last", () => {
+    const monitor = new HealthMonitor();
+    monitor.update(busy, 0);
+    monitor.update(calm, 100);
+    monitor.update(busy, 1000);
+    expect(monitor.update(calm, 1700)).toBe("strained");
+    expect(monitor.update(calm, 1700 + HEALTH_HOLD_MS)).toBe("healthy");
+  });
+
+  it("does not flicker while the traffic is stepped through the strain threshold", () => {
+    // Step the slider from 200 to 300 req/s and back, 10 req/s every second, as a visitor would.
+    const sim = new LiveSim({ rate: 200, servers: 2, cache: false });
+    const monitor = new HealthMonitor();
+    const states: Health[] = [];
+    let now = 0;
+    const rates = [200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 200];
+    for (let t = 0; t < 4000; t += 16, now += 16) sim.step(16);
+    for (const rate of rates) {
+      sim.setConfig({ rate });
+      for (let t = 0; t < 1000; t += 16, now += 16) {
+        sim.step(16);
+        if (t % 192 === 0) states.push(monitor.update(sim.metrics(), now));
+      }
+    }
+    const changes = states.filter((state, i) => i > 0 && state !== states[i - 1]).length;
+    expect(states).toContain("strained");
+    expect(changes).toBeLessThanOrEqual(2);
+  });
+});
+
+describe("the status sentence and the health always agree", () => {
+  it.each([1, 2, 3, 4])("with %i servers, across every traffic level, cache on and off", (servers) => {
+    for (const cache of [false, true]) {
+      for (let rate = 0; rate <= 900; rate += 60) {
+        const config = { rate, servers, cache };
+        const sim = new LiveSim(config);
+        const monitor = new HealthMonitor();
+        let now = 0;
+        for (let t = 0; t < 6000; t += 16, now += 16) {
+          sim.step(16);
+          if (t % 192 !== 0) continue;
+          const m = sim.metrics();
+          const health = monitor.update(m, now);
+          const sentence = diagnose(m, config, health);
+          expect(sentence.startsWith("Healthy"), `${rate} req/s, ${health}: ${sentence}`).toBe(health === "healthy");
+          if (health === "strained") expect(sentence).toMatch(/near capacity|queues are building|load is easing/);
+        }
+      }
+    }
   });
 });

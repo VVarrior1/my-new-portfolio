@@ -60,24 +60,31 @@ follows the same `data-theme` rules. To add a component: `npx shadcn@latest add 
 writes to `components/ui`. Check its colors in both themes.
 
 **The heat plate** is the one decoration, and it is data. Slatted, grained light sits under the
-simulator (`.heat-plate` in `globals.css`): steel blue when the system is healthy, amber when a
-component passes 70% busy or the p99 passes 150 ms, red when requests fail or a server is down.
-`assessHealth()` in `lib/live-sim.ts` decides the state (with hysteresis, so it doesn't flicker),
-the simulator sets `data-health` on `.sim-stage`, and CSS crossfades the matching layer's opacity:
-no extra JavaScript, compositor-only, instant under reduced motion. The grain is one inline SVG
-used as a mask. A faint stateless copy (`.end-plate`) sits under the contact block. The footer shows
-the simulator's last-known state (`lib/sim-status.ts`). Project screenshots sit in edge-lit
-`.frame` panels; light captures are dimmed in dark mode (`--shot-filter`).
+simulator (`.heat-plate` in `globals.css`): near-white moonlight when the system is healthy, amber
+when a component passes 70% busy or the p99 passes 150 ms, red when requests fail or a server is
+down. In light mode the slats are drawn as the shadows of blinds instead. Each slat (`.beams`) has a
+hard leading edge and a soft tail, and the light rises from below the device's lower-left corner.
+`assessHealth()` in `lib/live-sim.ts` reads the state with hysteresis, and `HealthMonitor` only lets
+it get better after the better reading has held for 1.5 s, so it never flickers. The simulator sets
+`data-health` on `.sim-stage`, and CSS crossfades the matching layer's opacity: compositor-only,
+instant under reduced motion. The grain is one inline SVG used as a soft mask. Stateless copies of
+the cool light sit under each project frame (`.frame-plate`, desktop only) and under the contact
+block (`.end-plate`). The footer shows the simulator's last-known state (`lib/sim-status.ts`).
+
+**Project screenshots** sit in edge-lit `.frame` panels. Systemlab has a dark-mode capture
+(`systemlab-lesson-dark.jpg`, the page inverted at capture time) and each theme loads only its own.
+CYD's UI is itself dark, so its frame is a dark stage (`.stage-dark`) in both themes.
 
 **The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
 and in background tabs, and draws no request dots under reduced motion. `diagnose()` writes the
-hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
+hint line from the current health (so it always agrees with the badge and the plate) and, when
+requests fail, from where they actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`
-(installed Chrome, retina resolution), then update `width`/`height` in `lib/content.ts` if they changed.
+(installed Chrome, retina resolution; pass `systemlab` to refresh only those), then update `width`/`height` in `lib/content.ts` if they changed.
 
 **⌘K / Ctrl+K** opens the command menu (`components/command-menu.tsx`). The palette itself
 (`command-palette.tsx`) loads on first use to keep cmdk out of the initial bundle.

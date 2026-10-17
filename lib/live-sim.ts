@@ -349,40 +349,19 @@ export class LiveSim {
   }
 }
 
-/** One plain-language line about the current state, for the hint under the controls. */
-export function diagnose(m: Metrics, config: SimConfig): string {
-  const anyDown = m.serverUp.some((up) => !up);
-  const upCount = m.serverUp.filter(Boolean).length;
-  if (m.errorRate > 0.01) {
-    const { down, app, db } = m.failuresAt;
-    if (down >= app && down >= db) {
-      return "A server is down. Requests routed to it fail until the health check takes it out of rotation.";
-    }
-    if (db > app) {
-      return config.cache
-        ? "The database is saturated even with the cache. Ease off the traffic."
-        : "The database is the bottleneck now. Turn on the cache.";
-    }
-    if (anyDown) {
-      const survivors = upCount === 1 ? "The one remaining server can't" : `The ${upCount} remaining servers can't`;
-      return `${survivors} keep up. Restart the dead one or add another.`;
-    }
-    return m.serverUp.length < 4
-      ? "The app servers are saturated and shedding requests. Add a server."
-      : "Every app server is saturated. Ease off the traffic.";
-  }
-  if (m.p99 > 150) return "No errors yet, but queues are building and the p99 is climbing.";
-  if (anyDown) return "One server is down, and the others are absorbing its traffic.";
-  if (config.rate < 300) return "Healthy. Push the traffic up and find the first bottleneck.";
-  return "Healthy at this load. Keep pushing, or kill a server and watch what happens.";
-}
-
 export type Health = "healthy" | "strained" | "failing";
 
 /** Utilization above this marks a component as strained (the UI turns it amber). */
 export const STRAIN_UTIL = 0.7;
 /** Once strained, utilization has to fall below this to read healthy again, so the state doesn't flicker. */
 const RECOVER_UTIL = 0.62;
+/** p99 above this marks the system as strained; it has to drop below the second number to recover. */
+export const STRAIN_P99_MS = 150;
+const RECOVER_P99_MS = 120;
+/** How long a better reading has to last before the state steps down (failing to strained, strained to healthy). */
+export const HEALTH_HOLD_MS = 1500;
+
+const RANK: Record<Health, number> = { healthy: 0, strained: 1, failing: 2 };
 
 /**
  * The system's health, for the heat plate under the simulator and the status readout.
@@ -395,7 +374,93 @@ export function assessHealth(m: Metrics, previous: Health = "healthy"): Health {
   // Errors drain out of the 3-second window gradually; only leave "failing" once they're clearly gone.
   if (previous === "failing" && m.errorRate > 0.004) return "failing";
   const busiest = Math.max(m.dbUtilization, ...m.appUtilization);
-  const limit = previous === "healthy" ? STRAIN_UTIL : RECOVER_UTIL;
-  if (busiest > limit || m.p99 > 150) return "strained";
+  const calm = previous === "healthy";
+  if (busiest > (calm ? STRAIN_UTIL : RECOVER_UTIL) || m.p99 > (calm ? STRAIN_P99_MS : RECOVER_P99_MS)) return "strained";
   return "healthy";
+}
+
+/**
+ * Health over time: it gets worse at once, but only gets better after the better reading has
+ * held for HEALTH_HOLD_MS, so the plate and badge never flash back and forth.
+ */
+export class HealthMonitor {
+  current: Health = "healthy";
+  private betterSince: number | null = null;
+
+  update(m: Metrics, now: number): Health {
+    const reading = assessHealth(m, this.current);
+    if (RANK[reading] > RANK[this.current]) {
+      this.current = reading;
+      this.betterSince = null;
+    } else if (RANK[reading] < RANK[this.current]) {
+      this.betterSince ??= now;
+      if (now - this.betterSince >= HEALTH_HOLD_MS) {
+        this.current = reading;
+        this.betterSince = null;
+      }
+    } else {
+      this.betterSince = null;
+    }
+    return this.current;
+  }
+
+  reset() {
+    this.current = "healthy";
+    this.betterSince = null;
+  }
+}
+
+/**
+ * One plain-language line about the current state, for the hint under the controls. It is
+ * written from `health`, so the sentence always agrees with the badge and the plate.
+ */
+export function diagnose(m: Metrics, config: SimConfig, health: Health = assessHealth(m)): string {
+  const anyDown = m.serverUp.some((up) => !up);
+  const upCount = m.serverUp.filter(Boolean).length;
+
+  if (health === "failing") {
+    if (m.errorRate > 0.01) {
+      const { down, app, db } = m.failuresAt;
+      if (down >= app && down >= db) {
+        return anyDown
+          ? "A server is down. Requests routed to it fail until the health check takes it out of rotation."
+          : "The server is back. The requests lost during its outage are draining out of the window.";
+      }
+      if (db > app) {
+        return config.cache
+          ? "The database is saturated even with the cache. Ease off the traffic."
+          : "The database is the bottleneck now. Turn on the cache.";
+      }
+      if (anyDown) {
+        const survivors = upCount === 1 ? "The one remaining server can't" : `The ${upCount} remaining servers can't`;
+        return `${survivors} keep up. Restart the dead one or add another.`;
+      }
+      return m.serverUp.length < MAX_SERVERS
+        ? "The app servers are saturated and shedding requests. Add a server."
+        : "Every app server is saturated. Ease off the traffic.";
+    }
+    if (anyDown) return "One server is down, and the others are absorbing its traffic. Restart it to recover.";
+    return "Recovering. The last failed requests are draining out of the window.";
+  }
+
+  if (health === "strained") {
+    const app = Math.max(...m.appUtilization);
+    const busiest = Math.max(app, m.dbUtilization);
+    if (busiest <= RECOVER_UTIL) {
+      return m.p99 > RECOVER_P99_MS
+        ? "No errors yet, but queues are building and the p99 is climbing."
+        : "The load is easing. Give it a moment to settle.";
+    }
+    if (m.dbUtilization >= app) {
+      return config.cache
+        ? "The database is near capacity even with the cache, and queues are starting. Ease off the traffic."
+        : "The database is near capacity, and queues are starting. Turn on the cache.";
+    }
+    return m.serverUp.length < MAX_SERVERS
+      ? "The app servers are near capacity, and queues are starting. Add a server."
+      : "Every app server is near capacity, and queues are starting. Ease off the traffic.";
+  }
+
+  if (config.rate < 300) return "Healthy. Push the traffic up and find the first bottleneck.";
+  return "Healthy at this load. Keep pushing, or kill a server and watch what happens.";
 }

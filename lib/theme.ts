@@ -7,7 +7,7 @@ export function currentTheme(): Theme {
 }
 
 /** --paper for each theme, so the browser chrome on phones matches the page. */
-const PAPER: Record<Theme, string> = { light: "#f7f8fa", dark: "#0a0b0e" };
+const PAPER: Record<Theme, string> = { light: "#f4f5f7", dark: "#0a0b0e" };
 
 /** Points both theme-color metas at the chosen theme once the visitor has picked one. */
 export function syncThemeColor(theme: Theme = currentTheme()) {

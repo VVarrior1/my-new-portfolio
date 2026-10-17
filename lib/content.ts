@@ -38,6 +38,8 @@ export type Shot = {
   alt: string;
   /** Shown in the frame's address bar. */
   url: string;
+  /** A dark-mode copy of a light UI (same size), so the screenshot never glares on the dark page. */
+  darkSrc?: string;
 };
 
 export type FeaturedProject = {
@@ -78,9 +80,10 @@ export const featured: FeaturedProject[] = [
     ],
     shot: {
       src: "/work/systemlab-lesson.jpg",
+      darkSrc: "/work/systemlab-lesson-dark.jpg",
       width: 2400,
-      height: 1560,
-      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
+      height: 1166,
+      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization.",
       url: "system-design-playground-pi.vercel.app/learn",
     },
   },
