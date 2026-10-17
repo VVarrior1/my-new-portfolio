@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommandMenu } from "./command-menu";
-import { SoundToggle } from "./sound-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
 const links = [
@@ -65,19 +64,18 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/90 backdrop-blur-md" : "border-transparent bg-paper"
+      className={`sticky top-0 z-50 border-b bg-paper transition-[border-color] duration-200 ${
+        scrolled || open ? "border-rule" : "border-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
-        <Link href="/" aria-label="Abdelrahman Mohamed, home" className="-ml-0.5 flex items-center gap-2.5 font-semibold tracking-[-0.01em]">
+        {/* The mark: the crosshair and the AM monogram, which becomes the full name once the h1 has scrolled away. */}
+        <Link href="/" aria-label="Abdelrahman Mohamed, home" className="-ml-0.5 flex items-center gap-2.5 text-[0.9375rem] font-semibold tracking-[-0.01em]">
           <Mark />
-          <span
-            aria-hidden="true"
-            className={`text-[0.9375rem] transition-[opacity,transform] duration-300 ${
-              showName ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"
-            }`}
-          >
+          <span aria-hidden="true" className={showName ? "hidden" : "inline"}>
+            AM
+          </span>
+          <span aria-hidden="true" className={showName ? "inline animate-in fade-in duration-300" : "hidden"}>
             <span className="sm:hidden">A. Mohamed</span>
             <span className="hidden sm:inline">Abdelrahman Mohamed</span>
           </span>
@@ -89,26 +87,24 @@ export function SiteHeader() {
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              className="rounded-lg px-3 py-2 text-[0.9375rem] font-medium text-graphite transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-ink aria-[current=page]:decoration-1 aria-[current=page]:underline-offset-[0.4em]"
+              className="rounded-lg px-3 py-2 text-[0.9375rem] text-graphite transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-ink aria-[current=page]:decoration-1 aria-[current=page]:underline-offset-[0.4em]"
             >
               {link.label}
             </Link>
           ))}
           <span className="mx-2 h-5 w-px bg-rule" aria-hidden="true" />
           <CommandMenu />
-          <SoundToggle />
           <ThemeToggle />
         </nav>
 
         <div className="flex items-center md:hidden">
-          <SoundToggle />
           <ThemeToggle />
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            className="ml-1 inline-flex h-10 items-center rounded-lg px-3 text-[0.9375rem] font-medium"
+            className="ml-1 inline-flex h-10 items-center rounded-lg px-3 text-[0.9375rem] font-semibold"
           >
             {open ? "Close" : "Menu"}
           </button>

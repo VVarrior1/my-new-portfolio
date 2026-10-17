@@ -20,14 +20,22 @@ function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNod
 
 function ShotImage({ shot, sizes }: { shot: Shot; sizes: string }) {
   return (
-    <Image src={shot.src} width={shot.width} height={shot.height} alt={shot.alt} sizes={sizes} className="shot block h-auto w-full" />
+    <Image
+      src={shot.src}
+      width={shot.width}
+      height={shot.height}
+      alt={shot.alt}
+      sizes={sizes}
+      data-light={shot.light ? "" : undefined}
+      className="shot block h-auto w-full"
+    />
   );
 }
 
 function PhoneFrame({ shot, className = "" }: { shot: Shot; className?: string }) {
   return (
     <div
-      className={`overflow-hidden rounded-[1.25rem] border-[5px] border-(--bezel) bg-(--bezel) shadow-(--shadow-1) ring-1 ring-(--frame-border,var(--rule)) ${className}`}
+      className={`overflow-hidden rounded-[1rem] border-[5px] border-(--bezel) bg-(--bezel) shadow-(--shadow-1) ring-1 ring-(--frame-border,var(--rule)) ${className}`}
     >
       <Image
         src={shot.src}
@@ -35,7 +43,8 @@ function PhoneFrame({ shot, className = "" }: { shot: Shot; className?: string }
         height={shot.height}
         alt={shot.alt}
         sizes="(min-width: 1024px) 160px, 28vw"
-        className="shot block aspect-[9/16] h-auto w-full rounded-[0.875rem] object-cover object-top"
+        data-light={shot.light ? "" : undefined}
+        className="shot block aspect-[9/16] h-auto w-full rounded-[0.625rem] object-cover object-top"
       />
     </div>
   );
@@ -49,10 +58,10 @@ export function ProjectShot({ name, shot, phone }: { name: string; shot: Shot; p
         <BrowserFrame shot={shot}>
           <DialogTrigger asChild>
             <button type="button" className="group relative block w-full cursor-zoom-in text-left" aria-label={`Enlarge screenshots of ${name}`}>
-              <ShotImage shot={shot} sizes="(min-width: 1024px) 720px, 100vw" />
+              <ShotImage shot={shot} sizes="(min-width: 1024px) 620px, 100vw" />
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-ink/85 px-2 py-1 font-mono text-[0.75rem] text-paper opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                className="t-caption pointer-events-none absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-ink/85 px-2 py-1 text-paper opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
               >
                 <Maximize2Icon className="size-3" />
                 Enlarge

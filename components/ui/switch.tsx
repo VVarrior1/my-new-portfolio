@@ -4,27 +4,15 @@ import * as React from "react"
 import { cn } from "cn"
 import { Switch as SwitchPrimitive } from "radix-ui"
 
-function Switch({
-  className,
-  size = "default",
-  ...props
-}: React.ComponentProps<typeof SwitchPrimitive.Root> & {
-  size?: "sm" | "default"
-}) {
+/**
+ * The simulator's switch. Off is a solid graphite-blue track (3.5:1 against the page, so the
+ * control is visible before it is touched), on is the signal; the hit area is 24px tall and
+ * focus uses the site's single outline style (see .sim-switch in globals.css).
+ */
+function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
   return (
-    <SwitchPrimitive.Root
-      data-slot="switch"
-      data-size={size}
-      className={cn(
-        "peer group/switch relative inline-flex shrink-0 items-center rounded-full border border-transparent transition-all outline-none group-has-[:focus-visible]/field-label:border-transparent group-has-[:focus-visible]/field-label:ring-0 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-signal aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=default]:h-5 data-[size=default]:w-9 data-[size=sm]:h-[14px] data-[size=sm]:w-[24px] dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:bg-signal data-unchecked:bg-rule dark:data-unchecked:bg-rule data-disabled:cursor-not-allowed data-disabled:opacity-50",
-        className
-      )}
-      {...props}
-    >
-      <SwitchPrimitive.Thumb
-        data-slot="switch-thumb"
-        className="pointer-events-none block rounded-full bg-white shadow-[0_1px_2px_rgb(12_16_32/0.2)] ring-0 transition-transform group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 group-data-[size=default]/switch:data-checked:translate-x-[calc(100%-0px)] group-data-[size=default]/switch:data-unchecked:translate-x-0.5 group-data-[size=sm]/switch:data-checked:translate-x-[calc(100%-2px)] group-data-[size=sm]/switch:data-unchecked:translate-x-0"
-      />
+    <SwitchPrimitive.Root data-slot="switch" className={cn("sim-switch disabled:cursor-not-allowed disabled:opacity-50", className)} {...props}>
+      <SwitchPrimitive.Thumb data-slot="switch-thumb" className="pointer-events-none" />
     </SwitchPrimitive.Root>
   )
 }

@@ -10,7 +10,7 @@ export default function NotFound() {
           <p className="t-meta text-graphite">404 · not found</p>
           <h1 className="t-display mt-4 max-w-[59.75rem]">
             <span className="text-ink">Nothing here.</span>{" "}
-            <span className="text-graphite">This page doesn&apos;t exist, or it moved. The home page has everything.</span>
+            <span className="t-display-soft">This page doesn&apos;t exist, or it moved. The home page has everything.</span>
           </h1>
           <p className="mt-10">
             <Link href="/" className="btn btn-solid">

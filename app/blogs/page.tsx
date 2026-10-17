@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -26,9 +27,9 @@ export default async function BlogsPage() {
             <p className="t-meta text-graphite">
               {blogs.length} {blogs.length === 1 ? "post" : "posts"} · newest first
             </p>
-            <h1 className="t-display mt-4 max-w-[59.75rem]">
+            <h1 className="t-section mt-4 max-w-[48rem] text-balance">
               <span className="text-ink">Writing.</span>{" "}
-              <span className="text-graphite">Notes on things I&apos;ve learned while building: some technical, some not.</span>
+              <span className="t-display-soft">Notes on things I&apos;ve learned while building: some technical, some not.</span>
             </h1>
           </header>
 
@@ -37,16 +38,18 @@ export default async function BlogsPage() {
           ) : (
             <ul className="mt-14 lg:mt-20">
               {blogs.map((blog) => {
-                const teaser = excerpt(blog.excerpt, blog.title, 240);
+                const teaser = excerpt(blog.excerpt, blog.title, 150);
                 return (
                   <li key={blog.slug} className="border-b border-rule first:border-t">
-                    <Link href={`/blogs/${blog.slug}`} className="group grid grid-cols-1 gap-y-1.5 py-7 sm:grid-cols-12 sm:gap-x-6">
+                    <Link
+                      href={`/blogs/${blog.slug}`}
+                      className="row grid grid-cols-1 gap-y-1.5 py-6 sm:grid-cols-12 sm:gap-x-6"
+                      style={{ "--row-y": "1px" } as CSSProperties}
+                    >
                       <span className="t-meta text-graphite sm:col-span-3 sm:pt-[0.3rem]">{formatDate(blog.date)}</span>
                       <span className="sm:col-span-9 lg:col-span-8">
-                        <span className="t-title block text-ink transition-colors duration-200 group-hover:text-signal">
-                          {blog.title.trim()}
-                        </span>
-                        {teaser && <span className="t-body mt-2 line-clamp-2 text-ink-2">{teaser}</span>}
+                        <span className="t-item row-link block">{blog.title.trim()}</span>
+                        {teaser && <span className="t-small mt-1.5 line-clamp-2 text-ink-2">{teaser}</span>}
                       </span>
                     </Link>
                   </li>

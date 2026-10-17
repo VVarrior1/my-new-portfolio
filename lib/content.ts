@@ -33,6 +33,20 @@ export const heroFacts: Array<{ label: string; value: string; live?: boolean }> 
   { label: "Work auth", value: "Canadian \u00b7 TN-eligible" },
 ];
 
+/** The closing facts in the contact band, restated from the profile above. */
+export const bandFacts: Array<{ label: string; value: string }> = [
+  { label: "Available", value: "Full-time from Jan 2027" },
+  { label: "Based", value: "Calgary, AB" },
+  { label: "Work auth", value: "Canadian citizen, TN-eligible (no H-1B needed)" },
+  { label: "Relocation", value: "Open to relocation" },
+];
+
+/**
+ * Posts shown on the home page, in this order of preference: the technical ones. Any that
+ * are missing, or have no excerpt, are replaced by the newest posts that do.
+ */
+export const pinnedPosts = ["ai-with-api-function-calls", "machine-learning", "leetcode"];
+
 export type Link = { label: string; href: string; track?: string };
 
 export type Shot = {
@@ -43,6 +57,8 @@ export type Shot = {
   alt: string;
   /** Shown in the frame's address bar. */
   url: string;
+  /** A light-UI capture, which gets toned down in the dark theme so it never glares. */
+  light?: boolean;
 };
 
 export type FeaturedProject = {
@@ -87,10 +103,11 @@ export const featured: FeaturedProject[] = [
     ],
     shot: {
       src: "/work/systemlab-lesson.jpg",
-      width: 2400,
-      height: 1560,
-      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
+      width: 1560,
+      height: 1106,
+      alt: "A Systemlab lesson after a run: incoming traffic, an API server and a database on the architecture canvas, with the API server at 100% utilization and p95 latency of 4,766 ms.",
       url: "system-design-playground-pi.vercel.app/learn",
+      light: true,
     },
   },
   {

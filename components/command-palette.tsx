@@ -10,6 +10,7 @@ import {
   ImageIcon,
   MailIcon,
   MoonStarIcon,
+  MusicIcon,
   ServerIcon,
   UserIcon,
 } from "lucide-react";
@@ -24,6 +25,7 @@ import {
   CommandList,
   CommandShortcut,
 } from "@/components/ui/command";
+import { useAudio } from "@/contexts/audio-context";
 import { RESUME_PATH, profile } from "@/lib/content";
 import { toggleTheme } from "@/lib/theme";
 import { GithubMark, LinkedinMark } from "./brand-icons";
@@ -32,6 +34,7 @@ import { trackEvent } from "./site-analytics";
 /** The ⌘K dialog itself. Loaded on first use by CommandMenu, so cmdk stays out of the initial bundle. */
 export default function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
+  const { isPlaying, togglePlay } = useAudio();
 
   const run = (action: () => void) => {
     onOpenChange(false);
@@ -119,6 +122,9 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
             <CommandItem keywords={["dark", "light", "mode", "theme"]} onSelect={() => run(() => toggleTheme())}>
               <MoonStarIcon /> Switch theme
               <CommandShortcut>light / dark</CommandShortcut>
+            </CommandItem>
+            <CommandItem keywords={["music", "sound", "audio", "play", "pause"]} onSelect={() => run(togglePlay)}>
+              <MusicIcon /> {isPlaying ? "Pause background music" : "Play background music"}
             </CommandItem>
           </CommandGroup>
         </CommandList>

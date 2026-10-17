@@ -15,57 +15,69 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens. One hue family: every neutral sits at OKLCH hue 269-275, the
-   same hue as the signal, so the page reads as one material. Each color
-   has one job, written next to it. Light is the default; dark follows the
-   OS unless the visitor picks one with the toggle (data-theme on <html>).
-   Contrast and hue are checked by a script before shipping.
+   Tokens. One hue family: every neutral sits at OKLCH hue 266-275, the
+   same hue as the signal, at low chroma (paper .004, graphite .027), so
+   the page reads as one material. Each color has one job, written next to
+   it. Light is the default; dark follows the OS unless the visitor picks
+   one with the toggle (data-theme on <html>). Contrast and hue are
+   checked by a script before shipping.
    ------------------------------------------------------------------ */
 :root {
   /* Page background (h271). */
   --paper: #fafbfe;
-  /* URL bars, control wells, code blocks, row hover. */
+  /* URL bars, control wells, row hover. */
   --paper-raised: #f1f3fa;
   /* Headings, lead text, solid buttons (18.3:1). */
   --ink: #0c1020;
   /* All body prose (12.5:1). */
-  --ink-2: #2a3144;
-  /* Metadata only: dates, roles, stacks, labels, captions, the second half of the h1 (6.3:1). */
-  --graphite: #555d74;
+  --ink-2: #2c313f;
+  /* Metadata only: dates, roles, labels, captions, the second half of the h1 (6.4:1). */
+  --graphite: #575d6d;
   /* Hairlines, borders, section rules, frame verticals. */
   --rule: #e1e5f0;
   /* Ultramarine: packets, slider, cache switch, hard-part rule, link hover, focus, selection (7.2:1). */
   --signal: #2c3fd8;
   --signal-ink: #ffffff;
-  /* Simulator only: slow requests and >70% utilization (4.8:1). */
+  /* Simulator text that reports "slow" (4.8:1). */
   --trace: #a35f00;
+  /* Simulator marks that report "slow": the status dot (3.3:1, a graphic). */
+  --trace-mark: #c27a00;
   /* Status only: the live dot, the current job (6.0:1). */
   --go: #11703f;
-  /* Simulator only: errors, a downed server, >90% utilization (5.2:1). */
+  /* Simulator only: errors, a downed server (5.2:1). */
   --destructive: #c7341f;
   /* Charts on /stats. */
   --chart: var(--signal);
-  /* The contact band (white text 10.1:1). */
-  --band: #1b2db5;
+  /* Off state of a switch: a graphic, so 3:1 against the page (3.5:1). */
+  --control-off: #7f879e;
+  /* Unfilled slider track. */
+  --track: #c3c9db;
+
+  /* The instrument panel: the simulator's canvas, the one deep color mass in the hero. */
+  --panel-from: #243bbb;
+  --panel-to: #142475;
+
+  /* The contact band: the same hue at lower chroma, because it is the largest area (white 9.7-14:1). */
+  --band-from: #2239a1;
+  --band-to: #152569;
+  --band: var(--band-from);
   --band-ink: #ffffff;
   --band-muted: rgb(255 255 255 / 0.8);
-  /* Stages behind the screenshots: one ultramarine recipe at opposite lightness. */
+
+  /* Stages behind the screenshots. Deep blue means Systemlab; CYD gets a pale neutral one. */
   --stage-systemlab-from: #2438d0;
   --stage-systemlab-to: #16228f;
   --stage-systemlab-dot: rgb(255 255 255 / 0.1);
   --stage-systemlab-frame: rgb(255 255 255 / 0.18);
   --stage-cyd-from: #ecf0fd;
-  --stage-cyd-to: #d9e0fb;
+  --stage-cyd-to: #dae1f2;
   --stage-cyd-dot: rgb(44 63 216 / 0.14);
   --stage-cyd-frame: rgb(12 16 32 / 0.16);
   --shot-filter: none;
   --bezel: #0c1020;
-  /* Simulator canvas dot grid and its edges. */
-  --canvas-dot: rgb(44 63 216 / 0.1);
-  --edge: #c3c9db;
   /* The drafted page frame and the registration marks where rules cross it. */
   --frame-line: #e1e5f0;
-  --reg-mark: rgb(85 93 116 / 0.5);
+  --reg-mark: rgb(87 93 109 / 0.5);
   /* The only elevation, used on screenshot frames. */
   --shadow-1: 0 1px 0 rgb(12 16 32 / 0.04), 0 18px 40px -28px rgb(22 34 143 / 0.22);
   /* Behind dialogs. */
@@ -90,38 +102,44 @@
   --border: var(--rule);
   --input: var(--rule);
   --ring: var(--signal);
+  /* Three radii: 8 (controls, nodes), 10 (frames, the canvas), 16 (cards, stages). */
   --radius: 0.5rem;
 }
 
+/* Dark, authored rather than inverted: same hues, never pure black. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #0c0e16;
     --paper-raised: #151827;
     --ink: #e9ebf3;
     --ink-2: #c5cad9;
-    --graphite: #959cb3;
+    --graphite: #969dac;
     --rule: #252a3e;
     --signal: #6a86ff;
     --signal-ink: #0c0e16;
     --trace: #f2b53a;
+    --trace-mark: #f2b53a;
     --go: #4cc38a;
     --destructive: #ff6b5e;
-    --band: #18248f;
+    --control-off: #6b7287;
+    --track: #343a54;
+    --panel-from: #1a2889;
+    --panel-to: #0d174e;
+    --band-from: #1a2889;
+    --band-to: #0f1850;
     --band-muted: rgb(255 255 255 / 0.78);
     --stage-systemlab-from: #1e2c9c;
     --stage-systemlab-to: #111a5c;
     --stage-systemlab-dot: rgb(255 255 255 / 0.08);
     --stage-systemlab-frame: rgb(255 255 255 / 0.16);
-    --stage-cyd-from: #1e2c9c;
-    --stage-cyd-to: #111a5c;
-    --stage-cyd-dot: rgb(255 255 255 / 0.08);
-    --stage-cyd-frame: rgb(255 255 255 / 0.16);
-    --shot-filter: brightness(0.9);
+    --stage-cyd-from: #151827;
+    --stage-cyd-to: #10131f;
+    --stage-cyd-dot: rgb(106 134 255 / 0.14);
+    --stage-cyd-frame: rgb(255 255 255 / 0.1);
+    --shot-filter: invert(0.9) hue-rotate(180deg) saturate(1.2) contrast(0.95);
     --bezel: #05060b;
-    --canvas-dot: rgb(106 134 255 / 0.12);
-    --edge: #343a54;
     --frame-line: #1d2234;
-    --reg-mark: rgb(149 156 179 / 0.45);
+    --reg-mark: rgb(150 157 172 / 0.45);
     --shadow-1: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.6);
     --scrim: rgb(3 4 9 / 0.62);
     color-scheme: dark;
@@ -133,29 +151,33 @@
   --paper-raised: #151827;
   --ink: #e9ebf3;
   --ink-2: #c5cad9;
-  --graphite: #959cb3;
+  --graphite: #969dac;
   --rule: #252a3e;
   --signal: #6a86ff;
   --signal-ink: #0c0e16;
   --trace: #f2b53a;
+  --trace-mark: #f2b53a;
   --go: #4cc38a;
   --destructive: #ff6b5e;
-  --band: #18248f;
+  --control-off: #6b7287;
+  --track: #343a54;
+  --panel-from: #1a2889;
+  --panel-to: #0d174e;
+  --band-from: #1a2889;
+  --band-to: #0f1850;
   --band-muted: rgb(255 255 255 / 0.78);
   --stage-systemlab-from: #1e2c9c;
   --stage-systemlab-to: #111a5c;
   --stage-systemlab-dot: rgb(255 255 255 / 0.08);
   --stage-systemlab-frame: rgb(255 255 255 / 0.16);
-  --stage-cyd-from: #1e2c9c;
-  --stage-cyd-to: #111a5c;
-  --stage-cyd-dot: rgb(255 255 255 / 0.08);
-  --stage-cyd-frame: rgb(255 255 255 / 0.16);
-  --shot-filter: brightness(0.9);
+  --stage-cyd-from: #151827;
+  --stage-cyd-to: #10131f;
+  --stage-cyd-dot: rgb(106 134 255 / 0.14);
+  --stage-cyd-frame: rgb(255 255 255 / 0.1);
+  --shot-filter: invert(0.9) hue-rotate(180deg) saturate(1.2) contrast(0.95);
   --bezel: #05060b;
-  --canvas-dot: rgb(106 134 255 / 0.12);
-  --edge: #343a54;
   --frame-line: #1d2234;
-  --reg-mark: rgb(149 156 179 / 0.45);
+  --reg-mark: rgb(150 157 172 / 0.45);
   --shadow-1: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.6);
   --scrim: rgb(3 4 9 / 0.62);
   color-scheme: dark;
@@ -171,6 +193,7 @@
   --color-signal: var(--signal);
   --color-signal-ink: var(--signal-ink);
   --color-trace: var(--trace);
+  --color-trace-mark: var(--trace-mark);
   --color-chart: var(--chart);
   --color-go: var(--go);
   --color-band: var(--band);
@@ -196,13 +219,14 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Pinned so shadcn components land on the three radii too. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1rem;
+  --radius-4xl: 1rem;
 }
 
 /* ------------------------------------------------------------------
@@ -253,8 +277,14 @@ a {
 }
 
 /* ------------------------------------------------------------------
-   Type scale: seven steps, weights 400/500/600, one mono voice.
-   13 mono meta · 15 small · 17 body · 20 item · 28 title · 44 section · 58 display
+   Type scale. Schibsted 400/500/600 for words, JetBrains Mono for numbers,
+   dates, stacks, URLs and the "Fig. n" token only.
+   Desktop: 13 mono meta · 14 caption · 15 small · 17 body · 20 item ·
+   28 title · 40 email · 44 section · 52 display. 15px is 400 for text
+   and 600 for buttons and links. 12 mono appears only inside the
+   simulator, in browser-frame URL bars and on the ⌘K keycap; the
+   simulator's metrics are 20 mono. Mobile steps down
+   (16 body, 18 item, 24 title, 32 section, 34 display).
    ------------------------------------------------------------------ */
 .t-meta {
   font-family: var(--font-mono);
@@ -262,6 +292,10 @@ a {
   line-height: 1.5;
   letter-spacing: 0;
   font-variant-numeric: tabular-nums;
+}
+.t-caption {
+  font-size: 0.875rem;
+  line-height: 1.45;
 }
 .t-small {
   font-size: 0.9375rem;
@@ -290,11 +324,16 @@ a {
   letter-spacing: -0.028em;
 }
 .t-display {
-  font-size: clamp(2.125rem, 4vw, 3.625rem);
+  font-size: clamp(2.125rem, 3.65vw, 3.25rem);
   font-weight: 600;
-  line-height: 1.04;
-  letter-spacing: -0.032em;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
   text-wrap: pretty;
+}
+/* The second half of the two-tone headline: lighter weight, so the grey reads as tone, not mud. */
+.t-display-soft {
+  font-weight: 500;
+  color: var(--graphite);
 }
 .t-figure {
   font-family: var(--font-mono);
@@ -323,7 +362,34 @@ a {
 }
 
 .measure {
-  max-width: 35.25rem;
+  max-width: 41.25rem;
+}
+
+/* A dot-separated run of items that never breaks inside an item. The dot trails its item, so
+   a wrapped line never starts with one. Below 640px .dot-list-stack stacks without dots. */
+.dot-list {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.5em;
+  row-gap: 0.25em;
+}
+.dot-list > * {
+  white-space: nowrap;
+}
+.dot-list > :not(:last-child)::after {
+  content: "\00b7";
+  content: "\00b7" / "";
+  margin-left: 0.5em;
+  opacity: 0.7;
+}
+@media (max-width: 639px) {
+  .dot-list-stack {
+    flex-direction: column;
+    row-gap: 0.625rem;
+  }
+  .dot-list-stack > :not(:last-child)::after {
+    content: none;
+  }
 }
 
 /* Quiet text link: ink with a faint underline that takes the signal on hover. */
@@ -349,6 +415,53 @@ a {
 }
 .link:hover .arrow {
   transform: translate(1px, -1px);
+}
+
+/* A title that is a link inside a row: no underline at rest, the signal and a hairline on hover. */
+.row-link {
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+.row-link .arrow {
+  margin-left: 0.25em;
+  color: var(--graphite);
+  font-weight: 400;
+}
+.row-link:hover,
+.row:hover .row-link {
+  color: var(--signal);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.28em;
+}
+.row:hover .row-link .arrow {
+  color: var(--signal);
+}
+/* Rows that light up on hover: the background sits 12px outside the text, radius 8.
+   .lit-row is lit from elsewhere (the Experience ruler), never by hovering the row itself. */
+.row,
+.lit-row {
+  position: relative;
+  isolation: isolate;
+}
+.lit-row {
+  --row-y: -0.75rem;
+}
+.row::before,
+.lit-row::before {
+  content: "";
+  position: absolute;
+  inset: var(--row-y, -0.25rem) -0.75rem;
+  z-index: -1;
+  border-radius: 0.5rem;
+  background: var(--paper-raised);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.row:hover::before,
+.row:has(:focus-visible)::before {
+  opacity: 1;
 }
 
 /* Two button styles, nothing else. */
@@ -570,12 +683,13 @@ a {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
-  /* In the base layer so component utilities (outline-hidden, focus-visible:*) can refine it. */
+  /* One focus style everywhere: a 2px signal outline, 2px out. In the base layer so component
+     utilities (outline-hidden on inputs that show a border instead) can still refine it. */
   :focus-visible {
     outline: 2px solid var(--signal);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground;
@@ -597,16 +711,16 @@ a {
 }
 
 /* ------------------------------------------------------------------
-   Project stages: one ultramarine recipe. Systemlab (the product the
-   simulator comes from) sits on the deep stage, CYD on the pale one.
-   Dot fields live only inside bounded objects.
+   Project stages. Deep ultramarine is Systemlab's (the product the
+   simulator comes from); CYD sits on a pale stage in light and a neutral
+   one in dark. Dot fields live only inside bounded objects.
    ------------------------------------------------------------------ */
 .stage {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   border-radius: 1rem;
-  padding: clamp(1rem, 3vw, 2.5rem);
+  padding: clamp(1rem, 2vw, 1.5rem);
   background: linear-gradient(150deg, var(--stage-from), var(--stage-to));
 }
 .stage::before {
@@ -638,20 +752,72 @@ a {
   background: var(--paper-raised);
   box-shadow: var(--shadow-1);
 }
-.shot {
+/* Only light-UI captures are toned down in dark; CYD's UI is already dark. */
+.shot[data-light] {
   filter: var(--shot-filter);
 }
 
-/* The simulator's diagram area reads as a design canvas. */
-.sim-canvas {
-  background-image: radial-gradient(var(--canvas-dot) 1px, transparent 1.2px);
-  background-size: 16px 16px;
-  background-position: -8px -8px;
+/* ------------------------------------------------------------------
+   The instrument panel: the simulator's canvas. Deep ultramarine with a
+   16px dot field; everything drawn on it is white, with amber for slow
+   and coral for failing (both pass 3:1 as graphics on the panel).
+   ------------------------------------------------------------------ */
+.panel {
+  --on-panel: #ffffff;
+  --on-panel-muted: rgb(255 255 255 / 0.74);
+  --on-panel-faint: rgb(255 255 255 / 0.6);
+  --panel-node: rgb(255 255 255 / 0.07);
+  --panel-node-line: rgb(255 255 255 / 0.16);
+  --panel-edge: rgb(255 255 255 / 0.26);
+  --panel-track: rgb(255 255 255 / 0.14);
+  --panel-slow: #ffd166;
+  --panel-bad: #ff8a7a;
+  position: relative;
+  border-radius: 0.625rem;
+  background:
+    radial-gradient(rgb(255 255 255 / 0.1) 1px, transparent 1.2px) -8px -8px / 16px 16px,
+    linear-gradient(150deg, var(--panel-from), var(--panel-to));
+  color: var(--on-panel);
 }
 
-/* The live readout above the headline: a status dot that follows the simulator. */
+/* The live readout above the headline: a chip whose dot follows the simulator. */
+.readout {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  height: 1.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--graphite);
+  text-decoration: none;
+  transition: border-color 160ms ease;
+}
+.readout:hover {
+  border-color: var(--graphite);
+}
+.readout > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.75rem;
+  white-space: nowrap;
+}
+.readout > span + span {
+  border-left: 1px solid var(--rule);
+}
+.readout b {
+  color: var(--ink);
+  font-weight: 500;
+}
+@media (max-width: 639px) {
+  .readout > span {
+    padding-inline: 0.5625rem;
+  }
+}
 .status-dot {
   display: inline-block;
+  flex: none;
   width: 6px;
   height: 6px;
   border-radius: 999px;
@@ -659,8 +825,8 @@ a {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--go) 18%, transparent);
 }
 .status-dot[data-state="slow"] {
-  background: var(--trace);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--trace) 18%, transparent);
+  background: var(--trace-mark);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--trace-mark) 18%, transparent);
 }
 .status-dot[data-state="failing"] {
   background: var(--destructive);
@@ -672,14 +838,49 @@ a {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--graphite) 16%, transparent);
 }
 
+/* The simulator's switch and slider: visible off states, 24px targets, the one focus style. */
+.sim-switch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: var(--control-off);
+  transition: background-color 160ms ease;
+}
+.sim-switch[data-state="checked"] {
+  background: var(--signal);
+}
+.sim-switch::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem -0.75rem;
+}
+.sim-switch > span {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgb(12 16 32 / 0.12);
+  transform: translateX(2px);
+  transition: transform 160ms ease;
+}
+.sim-switch[data-state="checked"] > span {
+  transform: translateX(18px);
+}
+
 /* ------------------------------------------------------------------
-   Contact band: flat ultramarine with a dot field masked to the top right.
+   Contact band: a gradient at lower chroma than the panel, because it is
+   the largest area, with a dot field masked to the top right.
    ------------------------------------------------------------------ */
 .band {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: var(--band);
+  background: linear-gradient(160deg, var(--band-from), var(--band-to));
   color: var(--band-ink);
 }
 .band::before {
@@ -687,7 +888,7 @@ a {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background-image: radial-gradient(rgb(255 255 255 / 0.12) 1.2px, transparent 1.3px);
+  background-image: radial-gradient(rgb(255 255 255 / 0.1) 1.2px, transparent 1.3px);
   background-size: 20px 20px;
   background-position: 10px 10px;
   mask-image: radial-gradient(ellipse 55% 85% at 88% 20%, black 10%, transparent 72%);
@@ -723,7 +924,7 @@ a {
 }
 .btn-band-solid {
   background: var(--band-ink);
-  color: var(--band);
+  color: var(--band-from);
 }
 .btn-band-solid:hover {
   background: rgb(255 255 255 / 0.88);

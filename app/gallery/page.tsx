@@ -26,7 +26,7 @@ export default async function GalleryPage() {
             </p>
             <h1 className="t-display mt-4 max-w-[59.75rem]">
               <span className="text-ink">Gallery.</span>{" "}
-              <span className="text-graphite">Pictures worth keeping: notes I liked, screenshots, and the odd photo.</span>
+              <span className="t-display-soft">Pictures worth keeping: notes I liked, screenshots, and the odd photo.</span>
             </h1>
           </header>
           <div className="mt-14 lg:mt-20">

@@ -45,23 +45,32 @@ with a dark theme that follows the OS or the header toggle. The toggle reveals t
 circle using the View Transitions API, and switches instantly where that API isn't available or
 the visitor prefers reduced motion.
 
-**Color.** Every neutral sits at OKLCH hue 269-275, the same hue as the signal blue, so the page
-reads as one material; light and dark share that temperature. Each token in `app/globals.css` has
-one job, written next to it: `--ink` (headings), `--ink-2` (body prose), `--graphite` (metadata
-only), `--rule` (hairlines), `--signal` (packets, slider, switch, link hover, focus, the hard-part
-rule), and `--trace` / `--go` / `--destructive`, which appear only in the simulator, its readout
-and status dots. Saturated color comes in three places with meanings: the simulator, the deep
-Systemlab stage (the product the simulator comes from) and the closing contact band.
+**Color.** Every neutral sits at OKLCH hue 266-275, the same hue as the signal blue, at low
+chroma (paper .004, graphite .027), so the page reads as one material; light and dark share that
+temperature. Each token in `app/globals.css` has one job, written next to it: `--ink` (headings),
+`--ink-2` (body prose), `--graphite` (metadata only), `--rule` (hairlines), `--signal` (slider,
+switch, link hover, focus, the hard-part rule, the current role), and `--trace` / `--go` /
+`--destructive`, which appear only in the simulator, its readout and status dots. Deep ultramarine
+appears in three places, each with a meaning: the simulator's instrument panel (the loudest object
+in the hero), the Systemlab stage (the product the simulator comes from) and the closing contact
+band, which is the largest area and so has the lowest chroma. CYD's stage is pale in light and a
+neutral raised surface in dark. On the panel everything is white, with amber for slow and coral
+for failing.
 
-**Type.** Schibsted Grotesk at 400/500/600 on a seven-step scale (`.t-meta` 13 mono, `.t-small`
-15, `.t-body` 17, `.t-item` 20, `.t-title` 28, `.t-section` 44, `.t-display` 58), and JetBrains
-Mono for every date, stack, number, caption and readout.
+**Type.** Schibsted Grotesk at 400/500/600: `.t-meta` 13 mono, `.t-caption` 14, `.t-small` 15,
+`.t-body` 17, `.t-item` 20, `.t-title` 28, the email 40, `.t-section` 44 and `.t-display` 52 (the
+headline's second half is weight 500 graphite). 15px is 400 for text and 600 for buttons and links.
+JetBrains Mono is only for numbers, dates, stacks, URLs, the readout, simulator labels and the
+`Fig. n` token (about a third of the text on `/`); 12px mono appears only inside the simulator, in
+URL bars and on the ⌘K keycap. Radii are 8 (controls, nodes), 10 (frames, the panel) and 16
+(cards, stages), plus full pills.
 
 **Structure instead of decoration.** Everything sits on one 12-column grid (1152px, 24px gutters).
 The page frame (`.frame` on `<main>`) draws two hairline verticals one gutter outside the grid,
 section rules (`.ruled`) run full-bleed, and 9px registration marks sit where they cross. The
-Experience timeline is drawn on the frame line on wide screens. Figures carry mono `Fig. n`
-captions. Dot fields appear only inside bounded objects (the simulator canvas, the stages, the
+Experience timeline is drawn on the frame line on wide screens, under Fig. 4, a year ruler of every
+role (`components/role-timeline.tsx`) whose bars and rows light each other up on hover, in CSS.
+Figures carry a mono `Fig. n` token and a sans caption. Dot fields appear only inside bounded objects (the simulator canvas, the stages, the
 band). There are no blurred glows, no background grid and no ambient animation.
 
 **The live readout** above the headline (`components/sim-readout.tsx`) is fed by the simulator
@@ -80,12 +89,18 @@ discrete-event simulation of balancer → app servers → cache → database tha
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
 and in background tabs, and draws no request dots under reduced motion. Below a 480px canvas the
-diagram flows top to bottom. Utilization shows by state only: signal, then trace above 70%, then
-destructive above 90% or when a server is down. `diagnose()` writes the
+diagram flows top to bottom. The panel keeps one height whatever the server count (three or four
+servers get one-line boxes), so the hero never reflows. Utilization shows by state only: white,
+then amber above 70%, then coral above 90% or when a server is down; a dashed outline means only
+"down". `diagnose()` writes the
 hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`
-(installed Chrome, retina resolution), then update `width`/`height` in `lib/content.ts` if they changed.
+(installed Chrome, retina resolution), then update `width`/`height` in `lib/content.ts` if they changed. Systemlab is
+captured at a 1320px viewport and cropped to the architecture canvas and its metrics, so its labels
+stay readable at display size. Captures of a light UI are marked `light: true`; the dark theme
+inverts them with `--shot-filter` (Systemlab has no dark mode), so no white rectangle glares on a
+dark page.
 
 **⌘K / Ctrl+K** opens the command menu (`components/command-menu.tsx`). The palette itself
 (`command-palette.tsx`) loads on first use to keep cmdk out of the initial bundle.

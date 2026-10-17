@@ -117,7 +117,7 @@ export default async function StatsPage() {
           <p className="t-meta text-graphite">Updated about once a minute</p>
           <h1 className="t-display mt-4 max-w-[59.75rem]">
             <span className="text-ink">Site stats.</span>{" "}
-            <span className="text-graphite">Counted by this site itself, with no third-party trackers.</span>
+            <span className="t-display-soft">Counted by this site itself, with no third-party trackers.</span>
           </h1>
           <p className="t-body measure mt-6 text-ink-2">
             Crawlers and link previews are left out, and a visitor is a browser, identified by a first-party cookie.
