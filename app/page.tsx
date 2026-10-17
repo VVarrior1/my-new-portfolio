@@ -35,6 +35,8 @@ const formatMonth = (date: string) => new Date(date).toLocaleDateString("en-US",
 /** The home page shows only the most technical posts; the rest are one click away. */
 const HOME_POSTS = 3;
 
+const NAME_FONT_GATE = `(function(){var h=document.getElementById("hero-name");if(!h||!document.fonts||!document.fonts.check)return;var c=getComputedStyle(h),f=c.fontWeight+" "+c.fontSize+" "+c.fontFamily;if(document.fonts.check(f))return;h.setAttribute("data-font-wait","");var done=function(){h.removeAttribute("data-font-wait")};document.fonts.load(f).then(done,done);setTimeout(done,2500)})();`;
+
 /** "City of Calgary" → "city-of-calgary", for the spine's route labels. */
 const slug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -99,11 +101,15 @@ export default async function Home() {
             slides over it as you scroll (components/choreography.tsx). */}
         <section aria-labelledby="hero-name" className="-mt-16 bg-stage pt-16">
           <div className="wrap pb-12 pt-5 sm:pb-16 sm:pt-8 lg:pb-14" data-title-card>
-            <h1 id="hero-name" className="t-poster hero-name intro-name">
+            <h1 id="hero-name" className="t-poster hero-name intro-name" suppressHydrationWarning>
               <span className="sr-only">{profile.name}</span>
               <SplitLine text={profile.firstName} />
               <SplitLine text={profile.lastName} start={profile.firstName.length} className="hero-last" />
             </h1>
+            {/* The condensed cut is far narrower than any fallback font, so if it isn't here yet the name
+                waits for it (hidden, its intro paused) instead of being drawn wide and then reflowing.
+                Runs during parsing, before the first paint; without JavaScript the name simply shows. */}
+            <script dangerouslySetInnerHTML={{ __html: NAME_FONT_GATE }} />
 
             {/* The credits under the poster: the intro, then when and where, then the keys. */}
             <div className="mt-7 grid gap-y-5 sm:mt-9 lg:grid-cols-12 lg:items-start lg:gap-x-6">

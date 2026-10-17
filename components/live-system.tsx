@@ -381,7 +381,8 @@ export function LiveSystem() {
         <div className="screen overflow-hidden">
           {/* Status and diagram share a fixed height (see DISPLAY_HEIGHT). */}
           <div className="flex flex-col" style={{ height: layout.vertical ? DISPLAY_HEIGHT_VERTICAL : DISPLAY_HEIGHT }}>
-            <div className="flex shrink-0 items-start gap-2.5 border-b border-screen-line px-3.5 py-2.5">
+            {/* Two lines tall on phones whatever the hint says, so the diagram never moves (not even when the mono font arrives). */}
+            <div className="flex shrink-0 items-start gap-2.5 border-b border-screen-line px-3.5 py-2.5 max-sm:min-h-[3.5rem]">
               <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full" style={{ background: status }} aria-hidden="true" />
               <p className="t-mono text-[0.75rem] leading-[1.45] text-screen-ink" aria-live="polite">
                 {hint}

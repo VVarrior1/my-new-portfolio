@@ -992,9 +992,11 @@ body {
     transform: translateY(0);
   }
 }
+/* Starts at 0.01, not 0: the intro paragraph is the page's largest text, and Chrome only counts it
+   as painted (LCP) once it isn't fully transparent. Nobody can see 1%. */
 @keyframes fade-rise {
   from {
-    opacity: 0;
+    opacity: 0.01;
     transform: translateY(14px);
   }
   to {
@@ -1090,6 +1092,19 @@ html[data-motion] .shot-stage {
     background: linear-gradient(var(--paper), transparent);
     pointer-events: none;
   }
+}
+
+/* The name, while its font is still on the way (see NAME_FONT_GATE in app/page.tsx). */
+.hero-name[data-font-wait] {
+  visibility: hidden;
+}
+.hero-name[data-font-wait] .split-ch {
+  animation-play-state: paused;
+}
+
+/* The spine's wire, until the script has measured where it starts and ends. */
+html[data-js] .spine-trunk:not([data-placed]) {
+  visibility: hidden;
 }
 
 /* The simulator's diagram, until it has measured its screen (components/live-system.tsx). */

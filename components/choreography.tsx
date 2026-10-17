@@ -35,6 +35,7 @@ export function Choreography() {
       const box = sheet.getBoundingClientRect();
       trunk.style.setProperty("--spine-top", `${Math.round(origin.getBoundingClientRect().top - box.top)}px`);
       trunk.style.setProperty("--spine-bottom", `${Math.round(box.bottom - end.getBoundingClientRect().top)}px`);
+      trunk.setAttribute("data-placed", "");
     };
     placeSpine();
     const resize = new ResizeObserver(placeSpine);
