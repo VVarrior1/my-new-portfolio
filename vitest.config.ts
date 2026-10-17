@@ -5,6 +5,8 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Match Next.js: JSX compiles without React in scope.
+  esbuild: { jsx: "automatic" },
   test: {
     environment: "jsdom",
     globals: true,

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
+import { playlist } from "@/lib/playlist";
 import { SiteAnalytics } from "@/components/site-analytics";
 import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
@@ -99,7 +100,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to content
         </a>
-        <AudioProvider trackUrl="/background-music.m4a">
+        <AudioProvider tracks={playlist}>
           {children}
           <SiteAnalytics />
           <Toaster position="bottom-center" />

@@ -782,3 +782,23 @@ body {
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* Equalizer bars on the music button (components/music-player.tsx). */
+.eq-bar {
+  height: 35%;
+  transition: height 200ms ease;
+}
+.eq-bar:nth-child(2) {
+  height: 60%;
+}
+.eq-bar-on {
+  animation: eq 0.9s ease-in-out infinite alternate;
+}
+@keyframes eq {
+  0% { height: 25%; }
+  50% { height: 100%; }
+  100% { height: 45%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eq-bar-on { animation: none; height: 70%; }
+}

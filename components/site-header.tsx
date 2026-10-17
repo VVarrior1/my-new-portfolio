@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommandMenu } from "./command-menu";
+import { MusicPlayer } from "./music-player";
 import { ThemeToggle } from "./theme-toggle";
 
 const links = [
@@ -89,10 +90,12 @@ export function SiteHeader() {
           ))}
           <span className="mx-2 h-5 w-px bg-rule" aria-hidden="true" />
           <CommandMenu />
+          <MusicPlayer />
           <ThemeToggle />
         </nav>
 
         <div className="flex items-center md:hidden">
+          <MusicPlayer />
           <ThemeToggle />
           <button
             type="button"
