@@ -30,6 +30,7 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 | `lib/content.ts` | All profile content: intro, featured projects and their screenshots, experience, education, skills. Edit this to update the site. |
 | `public/Abdelrahman_Mohamed_Resume.pdf` | The résumé every "Résumé" link points to. Replace the file, keep the name. |
 | `app/page.tsx` | Home page. Sections use `components/section.tsx`. |
+| `app/work/[slug]` | Case pages for the featured projects |
 | `app/blogs`, `app/gallery`, `app/stats` | Writing, gallery, public stats |
 | `app/admin` | Token-protected panel for publishing posts and uploading gallery images |
 | `app/globals.css` | Design tokens (light and dark), shadcn token mapping, post typography |
@@ -40,22 +41,21 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 ## Design
 
-"Workbench": near-white paper with grey hardware on it, where every decoration is an object with a
-job. The hero simulator is a small device (raised panel, dark screen, keycap controls) that also
-feeds a live status strip above the name, project screenshots sit on mats with numbered captions,
-Experience opens with a span strip of every role, the tools are a board of keycaps, and the page
-closes on a charcoal contact console in the simulator's screen material. International orange
-(`--signal`) appears on things you press and on "now" (the current role and the timeline cursor),
-and in the first viewport only on the device. Light by default, with a dark
-theme at the same temperature that follows the OS or the header toggle. The toggle reveals the new
-theme as a circle using the View Transitions API, and switches instantly where that API isn't
-available or the visitor prefers reduced motion.
+"Springs": everything has weight. A cool green-grey paper with white cards, near-black ink, one
+colour (volt, a highlighter lime) and a black screen for the simulator. The name is set as big as one
+line allows and rises in letter by letter; under the pointer it swells, and a tap sends a ripple
+through it. The header is an island: one floating pill that morphs into the music player, the ⌘K
+menu and the phone menu. Buttons are magnetic, cards light their edges under the cursor and lean
+toward it, project rows show a poster that follows the cursor on a spring, numbers count up on
+springs, and the simulator's servers spring in and out. Featured projects open into case pages
+(`/work/[slug]`) and their title and screenshot morph across (View Transitions), as do post titles.
+The theme toggle reveals the new theme as a growing circle. Under reduced motion all of it is off and
+the page is static.
 
-Type is Archivo (variable; the width axis is the display voice) with JetBrains Mono for dates,
-stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--ink`, `--ink-2`,
-`--graphite`, `--rule`, `--signal`, `--screen`…) exposed to Tailwind as `bg-paper`, `text-graphite`
-and so on. The object classes (`.panel`, `.screen`, `.key`, `.key-signal`, `.key-ink`, `.keycap`,
-`.spec`, `.stat-row`, `.sep-list`, `.console`, `.sim-status`) are in `app/globals.css`.
+Type is Bricolage Grotesque (display), Geist (text) and Geist Mono (data). Motion is Motion
+(`motion/react`) under `LazyMotion`, with the same springs as CSS `linear()` easings for the load
+sequence and hovers (`app/globals.css`). Colors are CSS variables on `:root` (`--paper`, `--ink`,
+`--signal`, `--screen`…) exposed to Tailwind as `bg-paper`, `text-graphite` and so on.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,
@@ -74,8 +74,9 @@ hint line from where requests actually failed. The behavior is pinned by `tests/
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`
 (installed Chrome, retina resolution), then update `width`/`height` in `lib/content.ts` if they changed.
 
-**⌘K / Ctrl+K** opens the command menu (`components/command-menu.tsx`). The palette itself
-(`command-palette.tsx`) loads on first use to keep cmdk out of the initial bundle.
+**⌘K / Ctrl+K** morphs the island into the command menu (`components/site-header.tsx`). The menu
+itself (`command-palette.tsx`) is its own chunk, fetched when the page is idle, to keep cmdk out of
+the initial bundle.
 
 ## Analytics
 

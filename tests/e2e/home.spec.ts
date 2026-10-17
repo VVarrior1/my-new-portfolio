@@ -43,14 +43,29 @@ test.describe("home page", () => {
     await expect(dialog).toBeHidden();
   });
 
-  test("enlarges a project screenshot", async ({ page }) => {
+  test("a case card opens its case page, which enlarges the screenshot", async ({ page }) => {
     await page.goto("/");
+    await page.getByRole("link", { name: "Systemlab", exact: true }).click();
+    await expect(page).toHaveURL(/\/work\/systemlab$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Systemlab" })).toBeVisible();
     await page.getByRole("button", { name: /Enlarge screenshots of Systemlab/ }).click();
     const dialog = page.getByRole("dialog", { name: "Systemlab" });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("img").first()).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
+  });
+
+  test("the island morphs into the music player and gives focus back", async ({ page }) => {
+    await page.goto("/");
+    const trigger = page.getByRole("button", { name: /^Music/ }).first();
+    await trigger.click();
+    const player = page.getByRole("dialog", { name: "Music player" });
+    await expect(player).toBeVisible();
+    await expect(player.getByRole("button", { name: "Play" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(player).toBeHidden();
+    await expect(page.getByRole("button", { name: /^Music/ }).first()).toBeFocused();
   });
 
   test("remembers the chosen theme", async ({ page }) => {
