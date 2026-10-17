@@ -19,9 +19,13 @@ export const profile = {
     "When I'm not coding, I'm playing bullet chess (rated\u00a02000), at the gym, adding to a fragrance collection, or opening another Red Bull.",
   graduation: "Graduating December 2026.",
   availability: "Available full-time from January 2027",
+  /** The same date, short: where the experience strip's axis ends. */
+  availableFrom: "Jan 2027",
   workAuth: "Canadian citizen, TN-eligible for US roles (no H-1B needed). Open to relocation.",
-  /** The hero's mono fact strip: the same facts as above, in recruiter order. */
-  facts: ["Software engineer", "Calgary, AB", "Grad Dec 2026", "Full-time Jan 2027", "Canadian \u00b7 TN"],
+  /** The hero's mono fact strip: the same facts as above, in recruiter order, on two lines (who and where; when and status). */
+  facts: ["Software engineer", "Calgary, AB", "Grad Dec 2026", "Full-time Jan 2027", "Canadian, TN-eligible"],
+  /** The fact strip breaks after this many items. */
+  factsFirstLine: 2,
   /** The personal line above, set as a small spec sheet. Same words, nothing added. */
   offTheClock: [
     { label: "Chess", value: "Bullet, rated\u00a02000" },
@@ -55,8 +59,6 @@ export type Shot = {
 export type FeaturedProject = {
   slug: "cyd" | "systemlab";
   name: string;
-  /** Short name and view for the mono label tab on the screenshot's mat. */
-  tab: string;
   summary: string;
   role: string;
   facts: Array<{ value: string; label: string }>;
@@ -71,7 +73,6 @@ export const featured: FeaturedProject[] = [
   {
     slug: "systemlab",
     name: "Systemlab",
-    tab: "Systemlab \u00b7 lesson view",
     summary:
       "A system design trainer built on a discrete-event simulator I wrote. You design an architecture, estimate its latency and cost, then run it and see where it breaks.",
     role: "Solo project, open source",
@@ -91,10 +92,10 @@ export const featured: FeaturedProject[] = [
       { label: "Code", href: "https://github.com/VVarrior1/systemlab", track: "project:systemlab-code" },
     ],
     shot: {
-      src: "/work/systemlab-lesson.jpg",
-      width: 2400,
-      height: 1560,
-      alt: "A Systemlab lesson after a run: traffic, API server and database on a canvas, with the API server at 100% utilization and p95 latency of 4.8 seconds.",
+      src: "/work/systemlab-canvas.jpg",
+      width: 1480,
+      height: 1202,
+      alt: "A Systemlab lesson after a run: incoming traffic at 300 requests per second, an API server at 100% utilization and a catalog database at 12%, with a p95 latency of 4,766 ms.",
       url: "system-design-playground-pi.vercel.app/learn",
       tone: "light",
     },
@@ -102,7 +103,6 @@ export const featured: FeaturedProject[] = [
   {
     slug: "cyd",
     name: "CYD Soccer Academy platform",
-    tab: "CYD \u00b7 venue picker",
     summary:
       "Registration, Stripe billing, SMS and email, and roster sync for a youth soccer academy in Calgary. Families sign up and pay without anyone entering data by hand.",
     role: "Sole engineer, May 2025 to now",
@@ -139,9 +139,11 @@ export const featured: FeaturedProject[] = [
   }
 ];
 
-export const otherProjects: Array<{ name: string; summary: string; href?: string; stack: string }> = [
+export const otherProjects: Array<{ name: string; summary: string; href?: string; note?: string; stack: string }> = [
   {
     name: "Road object detection",
+    /** No public repository, so the title says why it isn't a link. */
+    note: "team project",
     summary:
       "Fine-tuned YOLOv8 and YOLOv11 on a 12-class Egyptian traffic dataset, with tuk-tuks and street banners that Western benchmarks don't have. I owned the v11 training and the accuracy-versus-cost comparison.",
     stack: "Python, PyTorch, Ultralytics",

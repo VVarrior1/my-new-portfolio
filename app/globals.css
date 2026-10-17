@@ -25,29 +25,33 @@
    picks one with the toggle (stored as data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
-  --paper: #f3f2ef;
-  /* Device panel, project mats, the contact nameplate. */
-  --paper-raised: #e7e5e1;
+  /* Near-white paper with grey hardware on it, like a Braun on a white table: the page is the
+     lightest surface but one, the panels sit a step darker, and keycaps are pure white. */
+  --paper: #f8f7f4;
+  /* Device panel, project mats, the experience track, the contact nameplate. */
+  --paper-raised: #edebe7;
   /* Keycap faces. */
-  --key-face: #f8f7f4;
+  --key-face: #ffffff;
   --ink: #171614;
   /* Body prose. */
   --ink-2: #353431;
-  /* Metadata only (≥ 5.2:1 on every surface). */
-  --graphite: #5f5d5a;
-  --rule: #d7d5d1;
-  --rule-strong: #c4c1bc;
+  /* Metadata only (≥ 5.7:1 on every surface). */
+  --graphite: #5c5a57;
+  --rule: #dbd9d5;
+  --rule-strong: #c8c6c2;
   /* International orange: fills of actuators only. Never text, never tinted. */
   --signal: #ff4f00;
   --signal-edge: #c23b00;
   --signal-ink: #171614;
-  /* The only text-safe orange (4.79:1 on paper). */
+  /* The only text-safe orange (5.0:1 on paper). */
   --signal-text: #c23b00;
-  /* Screens are dark in both themes. */
+  /* Screens are dark in both themes. Only the simulator and the /stats chart are screens. */
   --screen: #141311;
   --screen-ink: #ecebe8;
   --screen-graphite: #91908c;
-  --screen-line: rgb(236 235 232 / 0.16);
+  --screen-line: rgb(236 235 232 / 0.14);
+  --screen-wire: rgb(236 235 232 / 0.28);
+  --screen-outline: rgb(236 235 232 / 0.24);
   --screen-dot: rgb(236 235 232 / 0.075);
   --screen-fill: rgb(236 235 232 / 0.045);
   --screen-track: rgb(236 235 232 / 0.12);
@@ -57,11 +61,13 @@
   /* Page-level status: the available dot and the current job. */
   --go: #18723f;
   --plate-engrave: rgb(23 22 20 / 0.1);
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.65), inset 0 -2px 0 rgb(23 22 20 / 0.11);
+  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -2px 0 rgb(23 22 20 / 0.1);
   --key-shadow-down: inset 0 1px 2px rgb(23 22 20 / 0.14);
   --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -2px 0 rgb(0 0 0 / 0.18);
   --signal-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.28);
-  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -2px 0 rgb(0 0 0 / 0.4);
+  --ink-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.5);
+  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
   --screen-inset: inset 0 2px 6px rgb(0 0 0 / 0.35);
   /* The single elevation, for screenshot frames. */
   --elevation: 0 1px 0 rgb(23 22 20 / 0.05), 0 16px 32px -24px rgb(23 22 20 / 0.3);
@@ -95,13 +101,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #151412;
-    --paper-raised: #1f1e1c;
-    --key-face: #292825;
+    --paper-raised: #262522;
+    --key-face: #302e2b;
     --ink: #eceae6;
     --ink-2: #ceccc8;
     --graphite: #9d9b98;
-    --rule: #32302d;
-    --rule-strong: #45433f;
+    --rule: #383633;
+    --rule-strong: #4a4844;
     --signal: #ff5f1f;
     --signal-edge: #ff5f1f;
     --signal-ink: #151412;
@@ -109,13 +115,17 @@
     --screen: #0b0b0a;
     --go: #4fc98a;
     --plate-engrave: rgb(236 234 230 / 0.08);
-    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 -2px 0 rgb(0 0 0 / 0.35);
+    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
     --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
     --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
+    --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
+    --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
     --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-    --screen-inset: inset 0 2px 6px rgb(0 0 0 / 0.6);
+    /* A faint inner ring, so the screen reads as recessed into the panel. */
+    --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
     --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
-    --shot-filter: brightness(0.88);
+    /* Systemlab has no dark theme, so its white UI is dimmed to about 8:1 against the mat. */
+    --shot-filter: brightness(0.72);
     --scrim: rgb(0 0 0 / 0.62);
     --destructive: #ff6a55;
     color-scheme: dark;
@@ -124,13 +134,13 @@
 
 :root[data-theme="dark"] {
   --paper: #151412;
-  --paper-raised: #1f1e1c;
-  --key-face: #292825;
+  --paper-raised: #262522;
+  --key-face: #302e2b;
   --ink: #eceae6;
   --ink-2: #ceccc8;
   --graphite: #9d9b98;
-  --rule: #32302d;
-  --rule-strong: #45433f;
+  --rule: #383633;
+  --rule-strong: #4a4844;
   --signal: #ff5f1f;
   --signal-edge: #ff5f1f;
   --signal-ink: #151412;
@@ -138,13 +148,17 @@
   --screen: #0b0b0a;
   --go: #4fc98a;
   --plate-engrave: rgb(236 234 230 / 0.08);
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 -2px 0 rgb(0 0 0 / 0.35);
+  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
   --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
   --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
+  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
+  --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
   --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-  --screen-inset: inset 0 2px 6px rgb(0 0 0 / 0.6);
+  /* A faint inner ring, so the screen reads as recessed into the panel. */
+  --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
   --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
-  --shot-filter: brightness(0.88);
+  /* Systemlab has no dark theme, so its white UI is dimmed to about 8:1 against the mat. */
+  --shot-filter: brightness(0.72);
   --scrim: rgb(0 0 0 / 0.62);
   --destructive: #ff6a55;
   color-scheme: dark;
@@ -166,6 +180,7 @@
   --color-screen-ink: var(--screen-ink);
   --color-screen-graphite: var(--screen-graphite);
   --color-screen-line: var(--screen-line);
+  --color-screen-wire: var(--screen-wire);
   --color-screen-go: var(--screen-go);
   --color-trace: var(--trace);
   --color-fail: var(--fail);
@@ -241,8 +256,10 @@ body {
 @layer components {
   /* ------------------------------------------------------------------
      Type. Seven steps: 13 (mono labels), 15 (labels, buttons), 17 (body),
-     20 (lead, item titles), 26 (project titles), 40 (section titles),
-     56 (display). Weights 400/500/600, and 650 for the display.
+     20 (lead, item titles), 26 (project titles, stat numbers), 40 (section
+     titles), 56 (display). Weights 400/500/600, and 650 for the display.
+     Mono is for data only (dates, numbers, stacks, URLs, everything on a
+     screen) and is 13px off-screen; 12px exists only on the screens.
      Archivo's width axis does the expressive work: wider means louder.
      ------------------------------------------------------------------ */
   .t-display {
@@ -388,6 +405,102 @@ body {
     box-shadow: var(--signal-shadow-down);
   }
 
+  /* Ink keys: the primary action where orange would compete with the device (the hero's "Email me"). */
+  .key-ink {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow: var(--ink-shadow);
+  }
+  .key-ink:hover {
+    border-color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 86%, var(--paper));
+  }
+  .key-ink:active {
+    box-shadow: var(--ink-shadow-down);
+  }
+
+  /* A legend key: the same cap as .key, but it labels something instead of doing something
+     (the tools board). No hover, no press. */
+  .keycap {
+    display: inline-flex;
+    align-items: center;
+    height: 1.875rem;
+    padding: 0 0.625rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--rule-strong);
+    background: var(--key-face);
+    box-shadow: var(--key-shadow);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* "A · B · C" lists that wrap without a separator ever ending (or starting) a line: each item
+     carries its separator on its left, and the first item of every line has it clipped away. */
+  .sep-list {
+    overflow: hidden;
+  }
+  .sep-list > ul {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -1.25rem;
+  }
+  .sep-list li {
+    position: relative;
+    padding-left: 1.25rem;
+    white-space: nowrap;
+  }
+  .sep-list li::before {
+    content: "·";
+    position: absolute;
+    left: 0.4rem;
+    color: var(--graphite);
+  }
+  .sep-list .sep-break {
+    flex-basis: 100%;
+    height: 0;
+    padding: 0;
+  }
+  .sep-list .sep-break::before {
+    content: none;
+  }
+
+  /* A project's numbers: three columns between two hairlines, on the paper. */
+  .stat-row {
+    display: grid;
+    /* The first two columns take their labels' width; the last takes what is left. */
+    grid-template-columns: auto auto minmax(0, 1fr);
+    column-gap: 2.5rem;
+    border-block: 1px solid var(--rule);
+    padding-block: 0.75rem;
+  }
+  /* dt comes first in the markup (valid HTML); the number is drawn on top. */
+  .stat-row > div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+  }
+  .stat-row dd {
+    font-size: 1.625rem;
+    font-weight: 600;
+    font-stretch: 104%;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .stat-row dt {
+    margin-top: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--graphite);
+  }
+
   /* The little ⌘K-style keycap inside other controls. */
   .kbd {
     display: inline-flex;
@@ -425,6 +538,12 @@ body {
     border-radius: calc(1.25rem - 6px);
     border: 1px solid var(--plate-engrave);
     pointer-events: none;
+  }
+  /* On a phone the double frame costs too much width. */
+  @media (max-width: 639px) {
+    .plate::before {
+      content: none;
+    }
   }
 
   /* Recessed screens: where data lives, dark in both themes. */
@@ -472,10 +591,21 @@ body {
   .spec dt {
     color: var(--graphite);
   }
+  .spec dt {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.5rem;
+  }
+  /* Values are words, so they are set in the sans; the labels stay mono. */
   .spec dd {
-    padding-left: 1.5rem;
+    padding-left: 1rem;
     color: var(--ink);
     text-align: right;
+    white-space: nowrap;
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.5rem;
   }
 
   /* The fader in the simulator's control deck. */

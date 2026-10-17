@@ -58,7 +58,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     // Equal to --paper in each scheme (app/globals.css).
-    { media: "(prefers-color-scheme: light)", color: "#f3f2ef" },
+    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
     { media: "(prefers-color-scheme: dark)", color: "#151412" },
   ],
 };

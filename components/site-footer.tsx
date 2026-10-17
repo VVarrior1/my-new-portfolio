@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RESUME_PATH, profile } from "@/lib/content";
+import { SoundToggle } from "./sound-toggle";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
@@ -29,13 +30,16 @@ export function SiteFooter() {
           </li>
           <li>
             <a href={RESUME_PATH} className="transition-colors hover:text-ink">
-              Résumé (PDF)
+              Résumé PDF
             </a>
           </li>
           <li>
             <Link href="/stats" className="transition-colors hover:text-ink">
               Site stats →
             </Link>
+          </li>
+          <li>
+            <SoundToggle />
           </li>
         </ul>
       </div>

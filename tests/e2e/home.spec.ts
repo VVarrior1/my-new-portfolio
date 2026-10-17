@@ -29,7 +29,7 @@ test.describe("home page", () => {
     await expect(hint).toContainText("Healthy", { timeout: 10000 });
 
     await sim.getByRole("button", { name: "Kill a server" }).click();
-    await expect(sim.getByRole("button", { name: "Restart the server" })).toBeVisible();
+    await expect(sim.getByRole("button", { name: /^Restart app \d$/ })).toBeVisible();
   });
 
   test("opens the command menu with the keyboard and finds the résumé", async ({ page }) => {

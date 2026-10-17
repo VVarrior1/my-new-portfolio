@@ -9,7 +9,7 @@ import type { Shot } from "@/lib/content";
 function BrowserFrame({ shot, children }: { shot: Shot; children: React.ReactNode }) {
   return (
     <div className="shot-frame">
-      <div className="flex h-8 items-center gap-1.5 border-b border-rule px-3 font-mono text-[0.75rem] text-graphite">
+      <div className="flex h-8 items-center gap-1.5 border-b border-rule px-3 font-mono text-[0.8125rem] text-graphite">
         <LockIcon className="size-3" aria-hidden="true" />
         <span className="truncate">{shot.url}</span>
       </div>
@@ -47,27 +47,32 @@ function PhoneFrame({ shot, className = "" }: { shot: Shot; className?: string }
   );
 }
 
-/** A product screenshot in a browser frame (plus an optional phone). Select it to see it full size. */
-export function ProjectShot({ name, shot, phone }: { name: string; shot: Shot; phone?: Shot }) {
+/**
+ * A product screenshot in a browser frame. Select it to see it full size, with the phone view
+ * (if there is one) beside it. `maxHeight` crops a tall capture from the top on wide screens.
+ */
+export function ProjectShot({ name, shot, phone, maxHeight }: { name: string; shot: Shot; phone?: Shot; maxHeight?: number }) {
   return (
     <Dialog>
-      <div className={`relative ${phone ? "pb-6 pl-6 sm:pb-8 sm:pl-10" : ""}`}>
-        <BrowserFrame shot={shot}>
-          <DialogTrigger asChild>
-            <button type="button" className="group relative block w-full cursor-zoom-in text-left" aria-label={`Enlarge screenshots of ${name}`}>
-              <ShotImage shot={shot} sizes="(min-width: 1024px) 620px, 100vw" />
-              <span
-                aria-hidden="true"
-                className="kbd pointer-events-none absolute right-3 top-3 h-7 gap-1.5 px-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
-              >
-                <Maximize2Icon className="size-3" />
-                enlarge
-              </span>
-            </button>
-          </DialogTrigger>
-        </BrowserFrame>
-        {phone && <PhoneFrame shot={phone} className="absolute bottom-0 left-0 w-[24%] max-w-[150px]" />}
-      </div>
+      <BrowserFrame shot={shot}>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="group relative block w-full cursor-zoom-in overflow-hidden text-left"
+            style={maxHeight ? { maxHeight } : undefined}
+            aria-label={`Enlarge screenshots of ${name}`}
+          >
+            <ShotImage shot={shot} sizes="(min-width: 1024px) 620px, 100vw" />
+            <span
+              aria-hidden="true"
+              className="kbd pointer-events-none absolute right-3 top-3 h-7 gap-1.5 px-2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+            >
+              <Maximize2Icon className="size-3" />
+              {phone ? "enlarge · phone view" : "enlarge"}
+            </span>
+          </button>
+        </DialogTrigger>
+      </BrowserFrame>
 
       <DialogContent className="max-h-[92vh] w-[min(96vw,1280px)] max-w-none overflow-y-auto rounded-[1.25rem] bg-paper p-4 sm:max-w-none sm:p-6">
         <DialogTitle className="t-wide pr-10 text-[1.25rem] font-semibold">{name}</DialogTitle>

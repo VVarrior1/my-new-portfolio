@@ -16,6 +16,13 @@ const SEGMENT_MS = 240;
 const SLOW_MS = 150;
 /** Below this screen width the diagram flows top to bottom instead of left to right. */
 const VERTICAL_BELOW = 560;
+/** The status line and the diagram share a fixed height, so a two-line status shrinks the diagram
+ * a little instead of pushing the controls down under the pointer. Narrow screens stack the
+ * diagram top to bottom, so they get a taller display. */
+const DISPLAY_HEIGHT = 300;
+const DISPLAY_HEIGHT_VERTICAL = 400;
+/** Where requests enter the diagram, clear of the screen's rounded edge. */
+const ENTRY_X = 14;
 
 type Point = { x: number; y: number };
 type Size = { w: number; h: number };
@@ -32,9 +39,13 @@ type Layout = {
   db: Point;
 };
 
-function computeLayout(width: number, servers: number): Layout {
+function computeLayout(width: number, measuredHeight: number, servers: number): Layout {
   if (width < VERTICAL_BELOW) {
-    const rows = [56, 136, 216, 296];
+    const height = Math.max(300, measuredHeight);
+    // The first row leaves room for the incoming wire and its label; the rest share the height.
+    const top = 64;
+    const step = (height - 36 - top) / 3;
+    const rows = [top, top + step, top + 2 * step, top + 3 * step];
     const node = { w: Math.min(156, width - 48), h: 48 };
     const gap = 8;
     const appW = Math.min(132, Math.floor((width - 24 - (servers - 1) * gap) / servers));
@@ -42,7 +53,7 @@ function computeLayout(width: number, servers: number): Layout {
     const mid = width / 2;
     return {
       width,
-      height: 332,
+      height,
       vertical: true,
       node,
       app: { w: appW, h: node.h },
@@ -54,23 +65,24 @@ function computeLayout(width: number, servers: number): Layout {
     };
   }
 
-  // A fixed height, so the stepper never moves under the pointer when servers are added.
-  const height = 248;
+  const height = Math.max(220, measuredHeight);
   const mid = height / 2;
-  const left = 36;
+  const left = 52;
   const right = 14;
   // Nodes shrink before the edges do, so requests always have a visible stretch of wire.
-  const node = { w: Math.min(112, Math.floor((width - left - right - 3 * 40) / 4)), h: 48 };
+  const node = { w: Math.min(120, Math.floor((width - left - right - 3 * 36) / 4)), h: 52 };
+  const app = { w: node.w, h: servers >= 4 ? 46 : 52 };
   const gap = (width - left - right - 4 * node.w) / 3;
   const col = (i: number) => left + node.w / 2 + i * (node.w + gap);
-  const pitch = servers > 1 ? Math.min(72, (height - 32 - node.h) / (servers - 1)) : 0;
+  // Spread the app servers over the screen: 2 sit well apart, 4 still leave a gap between boxes.
+  const pitch = servers > 1 ? Math.min(112, (height - 24 - app.h) / (servers - 1)) : 0;
   return {
     width,
     height,
     vertical: false,
     node,
-    app: node,
-    entry: { x: 0, y: mid },
+    app,
+    entry: { x: ENTRY_X, y: mid },
     lb: { x: col(0), y: mid },
     apps: Array.from({ length: servers }, (_, i) => ({ x: col(1), y: mid + (i - (servers - 1) / 2) * pitch })),
     cache: { x: col(2), y: mid },
@@ -85,8 +97,8 @@ const entryOf = (l: Layout, p: Point, s: Size): Point => (l.vertical ? { x: p.x,
 type Dot = { points: Point[]; born: number; ok: boolean; slow: boolean };
 
 function pathPoints(layout: Layout, f: Finished): Point[] {
-  const jitter = (Math.random() - 0.5) * 30;
-  const start = layout.vertical ? { x: layout.entry.x + jitter, y: 0 } : { x: 0, y: layout.entry.y + jitter };
+  const jitter = (Math.random() - 0.5) * 16;
+  const start = layout.vertical ? { x: layout.entry.x + jitter, y: 0 } : { x: layout.entry.x, y: layout.entry.y + jitter };
   const points: Point[] = [start];
   const at: Record<Stage, Point | undefined> = {
     lb: layout.lb,
@@ -104,8 +116,8 @@ function pathPoints(layout: Layout, f: Finished): Point[] {
 }
 
 function utilColor(util: number, up = true) {
-  if (!up || util > 0.9) return "var(--fail)";
-  if (util > 0.7) return "var(--trace)";
+  if (!up || util > 0.95) return "var(--fail)";
+  if (util > 0.85) return "var(--trace)";
   return "var(--screen-ink)";
 }
 
@@ -116,7 +128,7 @@ function reading(ms: number): { value: string; unit: string } {
 export function LiveSystem() {
   const [config, setConfig] = useState<SimConfig>(INITIAL);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [width, setWidth] = useState(600);
+  const [size, setSize] = useState({ w: 600, h: DISPLAY_HEIGHT - 40 });
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const sim = useRef<LiveSim | null>(null);
@@ -125,17 +137,21 @@ export function LiveSystem() {
   const reduced = useRef(false);
   const touched = useRef(false);
 
-  const layout = useMemo(() => computeLayout(width, config.servers), [width, config.servers]);
+  const layout = useMemo(() => computeLayout(size.w, size.h, config.servers), [size, config.servers]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
 
   if (sim.current === null) sim.current = new LiveSim(INITIAL, 7);
 
-  // Track the screen's width so text renders at its real size.
+  // Track the diagram's size so text renders at its real size.
   useEffect(() => {
     const element = box.current;
     if (!element) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(Math.max(280, Math.round(entry.contentRect.width))));
+    const observer = new ResizeObserver(([entry]) => {
+      const w = Math.max(280, Math.round(entry.contentRect.width));
+      const h = Math.round(entry.contentRect.height);
+      setSize((current) => (current.w === w && current.h === h ? current : { w, h }));
+    });
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
@@ -317,16 +333,13 @@ export function LiveSystem() {
 
   const { node, app } = layout;
   const narrowApps = app.w < 96;
+  const killLabel = down ? `restart app ${downIndex + 1}` : "kill a server";
 
   return (
     <div>
       <figure className="panel p-2" aria-labelledby="live-system-title">
         <figcaption className="flex items-center justify-between gap-4 pb-2 pl-2.5 pr-0.5 pt-0.5">
           <p id="live-system-title" className="t-mono text-ink-2">
-            <span className="text-graphite max-sm:hidden">sys 01</span>
-            <span className="px-1.5 text-graphite max-sm:hidden" aria-hidden="true">
-              ·
-            </span>
             a small system you can break
           </p>
           <button type="button" onClick={reset} className="key key-sm">
@@ -335,68 +348,81 @@ export function LiveSystem() {
         </figcaption>
 
         <div className="screen overflow-hidden">
-          <div className="flex items-start gap-2.5 border-b border-screen-line px-3.5 py-2.5">
-            <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full" style={{ background: status }} aria-hidden="true" />
-            <p className="t-mono min-h-[2lh] text-[0.75rem] leading-[1.45] text-screen-ink" aria-live="polite">
-              {hint}
-            </p>
-          </div>
+          {/* Status and diagram share a fixed height (see DISPLAY_HEIGHT). */}
+          <div className="flex flex-col" style={{ height: layout.vertical ? DISPLAY_HEIGHT_VERTICAL : DISPLAY_HEIGHT }}>
+            <div className="flex shrink-0 items-start gap-2.5 border-b border-screen-line px-3.5 py-2.5">
+              <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full" style={{ background: status }} aria-hidden="true" />
+              <p className="t-mono text-[0.75rem] leading-[1.45] text-screen-ink" aria-live="polite">
+                {hint}
+              </p>
+            </div>
 
-          <div ref={box} className="screen-dots relative" style={{ height: layout.height }}>
-            <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
-              <g stroke="var(--screen-line)" strokeWidth={1} fill="none">
-                <Edge from={layout.vertical ? { x: layout.entry.x, y: 0 } : { x: 0, y: layout.entry.y }} to={entryOf(layout, layout.lb, node)} dashed />
-                {layout.apps.map((point, i) => (
-                  <g key={i}>
-                    <Edge from={exitOf(layout, layout.lb, node)} to={entryOf(layout, point, app)} />
-                    <Edge from={exitOf(layout, point, app)} to={entryOf(layout, layout.cache, node)} />
-                  </g>
-                ))}
-                <Edge from={exitOf(layout, layout.cache, node)} to={entryOf(layout, layout.db, node)} />
-              </g>
-            </svg>
-            {/* Requests travel on the canvas, between the edges and the nodes, so they pass under the boxes. */}
-            <canvas
-              ref={canvas}
-              className="pointer-events-none absolute inset-0"
-              style={{ width: layout.width, height: layout.height }}
-              aria-hidden="true"
-            />
-            <svg width={layout.width} height={layout.height} className="absolute inset-0 font-mono" aria-hidden="true">
-              <Node at={layout.lb} size={node} title="balancer" detail="round robin" />
-              {layout.apps.map((point, i) => {
-                const up = metrics?.serverUp[i] ?? true;
-                const util = metrics?.appUtilization[i] ?? 0;
-                const pct = `${Math.round(util * 100)}%`;
-                return (
-                  <Node
-                    key={i}
-                    at={point}
-                    size={app}
-                    title={`app ${i + 1}`}
-                    detail={up ? (narrowApps ? pct : `${pct} busy`) : "down"}
-                    util={up ? util : 1}
-                    color={utilColor(util, up)}
-                    state={up ? "normal" : "down"}
-                  />
-                );
-              })}
-              <Node
-                at={layout.cache}
-                size={node}
-                title="cache"
-                detail={config.cache ? `${Math.round((metrics?.cacheHitRate ?? 0) * 100)}% hits` : "off"}
-                state={config.cache ? "normal" : "off"}
+            <div ref={box} className="screen-dots relative min-h-0 flex-1">
+              <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
+                <g stroke="var(--screen-wire)" strokeWidth={1.5} fill="none">
+                  <Edge from={layout.entry} to={entryOf(layout, layout.lb, node)} dashed />
+                  {layout.apps.map((point, i) => (
+                    <g key={i}>
+                      <Edge from={exitOf(layout, layout.lb, node)} to={entryOf(layout, point, app)} />
+                      <Edge from={exitOf(layout, point, app)} to={entryOf(layout, layout.cache, node)} />
+                    </g>
+                  ))}
+                  <Edge from={exitOf(layout, layout.cache, node)} to={entryOf(layout, layout.db, node)} />
+                </g>
+                {/* The incoming rate, where requests enter. */}
+                <text
+                  x={layout.vertical ? layout.entry.x + 12 : layout.entry.x}
+                  y={layout.vertical ? 18 : layout.lb.y - node.h / 2 - 12}
+                  fontSize={12}
+                  className="font-mono"
+                  fill="var(--screen-graphite)"
+                >
+                  in · {config.rate}/s
+                </text>
+              </svg>
+              {/* Requests travel on the canvas, between the edges and the nodes, so they pass under the boxes. */}
+              <canvas
+                ref={canvas}
+                className="pointer-events-none absolute inset-0"
+                style={{ width: layout.width, height: layout.height }}
+                aria-hidden="true"
               />
-              <Node
-                at={layout.db}
-                size={node}
-                title="database"
-                detail={`${Math.round((metrics?.dbUtilization ?? 0) * 100)}% busy`}
-                util={metrics?.dbUtilization ?? 0}
-                color={utilColor(metrics?.dbUtilization ?? 0)}
-              />
-            </svg>
+              <svg width={layout.width} height={layout.height} className="absolute inset-0 font-mono" aria-hidden="true">
+                <Node at={layout.lb} size={node} title="balancer" detail="round robin" />
+                {layout.apps.map((point, i) => {
+                  const up = metrics?.serverUp[i] ?? true;
+                  const util = metrics?.appUtilization[i] ?? 0;
+                  const pct = `${Math.round(util * 100)}%`;
+                  return (
+                    <Node
+                      key={i}
+                      at={point}
+                      size={app}
+                      title={`app ${i + 1}`}
+                      detail={up ? (narrowApps ? pct : `${pct} busy`) : "down"}
+                      util={up ? util : 1}
+                      color={utilColor(util, up)}
+                      state={up ? "normal" : "down"}
+                    />
+                  );
+                })}
+                <Node
+                  at={layout.cache}
+                  size={node}
+                  title="cache"
+                  detail={config.cache ? `${Math.round((metrics?.cacheHitRate ?? 0) * 100)}% hits` : "off"}
+                  state={config.cache ? "normal" : "off"}
+                />
+                <Node
+                  at={layout.db}
+                  size={node}
+                  title="database"
+                  detail={`${Math.round((metrics?.dbUtilization ?? 0) * 100)}% busy`}
+                  util={metrics?.dbUtilization ?? 0}
+                  color={utilColor(metrics?.dbUtilization ?? 0)}
+                />
+              </svg>
+            </div>
           </div>
 
           <dl className="grid grid-cols-4 border-t border-screen-line">
@@ -412,101 +438,114 @@ export function LiveSystem() {
           </dl>
         </div>
 
-        <div className="grid gap-x-6 gap-y-5 px-2.5 pb-2 pt-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-stretch">
-          <div className="min-w-0 space-y-4">
-            <div>
-              <div className="t-mono flex items-baseline justify-between">
-                <span className="text-graphite" aria-hidden="true">
-                  traffic
-                </span>
-                <span className="text-ink">{config.rate} requests/s</span>
-              </div>
-              <Fader value={config.rate} onChange={(rate) => update({ rate })} />
+        {/* The control deck. Phones: fader, then servers · cache · kill on one row. Wider: the kill key gets its own bay. */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-4 px-2.5 pb-2 pt-4 sm:gap-x-6">
+          <div className="col-span-2 min-w-0 sm:col-span-1">
+            <div className="t-mono flex items-baseline justify-between">
+              <span className="text-graphite" aria-hidden="true">
+                traffic
+              </span>
+              <span className="text-ink">{config.rate} requests/s</span>
             </div>
+            <Fader value={config.rate} onChange={(rate) => update({ rate })} />
+          </div>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:flex sm:flex-wrap sm:items-end">
-              <div>
-                <span id="servers-label" className="t-mono mb-1.5 block text-graphite">
-                  app servers
-                </span>
-                <div className="flex items-center gap-1.5" role="group" aria-labelledby="servers-label">
-                  <button
-                    type="button"
-                    aria-label="Remove a server"
-                    disabled={config.servers <= 1}
-                    onClick={() => update({ servers: config.servers - 1 })}
-                    className="key key-icon h-10 min-h-10 w-10 text-lg"
-                  >
-                    −
-                  </button>
-                  <span className="w-7 text-center font-mono text-[1.0625rem] font-medium tabular-nums" aria-live="polite">
-                    {config.servers}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Add a server"
-                    disabled={config.servers >= MAX_SERVERS}
-                    onClick={() => update({ servers: config.servers + 1 })}
-                    className="key key-icon h-10 min-h-10 w-10 text-lg"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <span id="cache-label" className="t-mono mb-1.5 block text-graphite">
-                  cache
-                </span>
-                {/* A latching rocker: pressed in while the cache is on. */}
+          <div className="col-start-1 flex min-w-0 flex-wrap items-end gap-x-4 gap-y-4 self-start sm:row-start-2 sm:gap-x-6">
+            <div>
+              <span id="servers-label" className="t-mono mb-1.5 block text-graphite">
+                app servers
+              </span>
+              <div className="flex items-center gap-1.5" role="group" aria-labelledby="servers-label">
                 <button
                   type="button"
-                  role="switch"
-                  aria-checked={config.cache}
-                  aria-labelledby="cache-label"
-                  data-latched={config.cache}
-                  onClick={() => update({ cache: !config.cache })}
-                  className="key h-10 min-h-10 w-[5.75rem] justify-between px-3"
+                  aria-label="Remove a server"
+                  disabled={config.servers <= 1}
+                  onClick={() => update({ servers: config.servers - 1 })}
+                  className="key key-icon h-10 min-h-10 w-10 text-lg"
                 >
-                  <span
-                    className="size-1.5 rounded-full transition-colors"
-                    style={{ background: config.cache ? "var(--go)" : "var(--rule-strong)" }}
-                    aria-hidden="true"
-                  />
-                  <span className="font-mono text-[0.8125rem] font-medium">{config.cache ? "on" : "off"}</span>
+                  −
+                </button>
+                <span className="w-7 text-center font-mono text-[1.0625rem] font-medium tabular-nums" aria-live="polite">
+                  {config.servers}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Add a server"
+                  disabled={config.servers >= MAX_SERVERS}
+                  onClick={() => update({ servers: config.servers + 1 })}
+                  className="key key-icon h-10 min-h-10 w-10 text-lg"
+                >
+                  +
                 </button>
               </div>
             </div>
+
+            <div>
+              <span id="cache-label" className="t-mono mb-1.5 block text-graphite">
+                cache
+              </span>
+              {/* A latching rocker: pressed in while the cache is on, with an ink dot as its lamp. */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={config.cache}
+                aria-labelledby="cache-label"
+                data-latched={config.cache}
+                onClick={() => update({ cache: !config.cache })}
+                className="key h-10 min-h-10 w-[5rem] justify-between px-3 sm:w-[5.75rem]"
+              >
+                <span
+                  className="size-1.5 rounded-full transition-colors"
+                  style={{ background: config.cache ? "var(--ink)" : "var(--rule-strong)" }}
+                  aria-hidden="true"
+                />
+                <span className="font-mono text-[0.8125rem] font-medium">{config.cache ? "on" : "off"}</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col items-stretch gap-2 sm:w-[9.5rem] sm:items-center sm:justify-center sm:border-l sm:border-rule sm:pl-6">
+          {/* The signature: a blank orange cap, labelled on the panel the way hardware is. */}
+          <div className="col-start-2 row-start-2 flex flex-col items-end justify-start gap-1.5 sm:row-span-2 sm:row-start-1 sm:w-[9.5rem] sm:items-center sm:justify-center sm:gap-2.5 sm:border-l sm:border-rule sm:pl-6">
             <button
               type="button"
               onClick={toggleKill}
-              aria-label={down ? "Restart the server" : "Kill a server"}
+              aria-label={down ? `Restart app ${downIndex + 1}` : "Kill a server"}
               data-latched={down}
-              className="key key-signal h-14 w-full text-[0.9375rem] font-semibold sm:size-[4.25rem] sm:min-h-0 sm:rounded-full sm:px-0 sm:text-[0.75rem] sm:leading-[1.15]"
+              className="key key-signal size-14 min-h-0 rounded-full p-0 sm:size-[4.75rem]"
             >
-              {down ? (
-                <>
-                  Restart <br className="max-sm:hidden" />
-                  the server
-                </>
-              ) : (
-                <>
-                  Kill a <br className="max-sm:hidden" />
-                  server
-                </>
-              )}
+              {down ? <RestartGlyph /> : <PowerGlyph />}
             </button>
-            <span className="t-mono text-center text-[0.75rem] text-graphite">{down ? `app ${downIndex + 1} is down` : "random app server"}</span>
+            <span className="t-mono whitespace-nowrap text-ink max-sm:order-first" aria-hidden="true">
+              <span className="sm:hidden">{down ? "restart" : "kill"}</span>
+              <span className="max-sm:hidden">{killLabel}</span>
+            </span>
           </div>
         </div>
       </figure>
-      <p className="t-mono mt-3 px-1 text-graphite">
+      <p className="mt-3 px-1 text-[0.9375rem] leading-snug text-graphite">
         Every request is simulated in your browser by a seeded event engine, the idea behind Systemlab.
       </p>
     </div>
+  );
+}
+
+/** Kill: a power symbol, 22px, in the key's ink. */
+function PowerGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[18px] sm:size-[22px]" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" aria-hidden="true">
+      <path d="M12 3v8" />
+      <path d="M6.4 6.6a8 8 0 1 0 11.2 0" />
+    </svg>
+  );
+}
+
+/** Restart: a circular arrow. */
+function RestartGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[18px] sm:size-[22px]" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 12a8 8 0 1 1-2.6-5.9" />
+      <path d="M20 4v4.5h-4.5" />
+    </svg>
   );
 }
 
@@ -561,7 +600,8 @@ function Node({
   const muted = state === "off";
   const hasTrack = util !== undefined;
   // Without a track, the two lines sit in the middle of the box.
-  const titleY = y + (hasTrack ? 18 : size.h / 2 - 3);
+  const titleY = y + (hasTrack ? Math.round(size.h * 0.36) : size.h / 2 - 3);
+  const lineGap = size.h < 50 ? 14 : 15;
   return (
     <g>
       {/* Opaque, so requests pass under the box instead of over its label. */}
@@ -573,19 +613,19 @@ function Node({
         height={size.h - 1}
         rx={8}
         fill={muted ? "none" : "var(--screen-fill)"}
-        stroke={state === "down" ? "var(--fail)" : "var(--screen-line)"}
+        stroke={state === "down" ? "var(--fail)" : "var(--screen-outline)"}
         strokeDasharray={state === "normal" ? undefined : "4 3"}
       />
       <text x={x + pad} y={titleY} fontSize={13} fontWeight={500} fill={muted ? "var(--screen-graphite)" : "var(--screen-ink)"}>
         {title}
       </text>
-      <text x={x + pad} y={titleY + 15} fontSize={12} fill={state === "down" ? "var(--fail)" : "var(--screen-graphite)"}>
+      <text x={x + pad} y={titleY + lineGap} fontSize={12} fill={state === "down" ? "var(--fail)" : "var(--screen-graphite)"}>
         {detail}
       </text>
       {hasTrack && (
         <>
-          <rect x={x + pad} y={y + size.h - 10} width={size.w - pad * 2} height={3} rx={1.5} fill="var(--screen-track)" />
-          <rect x={x + pad} y={y + size.h - 10} width={Math.max(0, (size.w - pad * 2) * Math.min(1, util))} height={3} rx={1.5} fill={color} />
+          <rect x={x + pad} y={y + size.h - (size.h < 50 ? 9 : 11)} width={size.w - pad * 2} height={3} rx={1.5} fill="var(--screen-track)" />
+          <rect x={x + pad} y={y + size.h - (size.h < 50 ? 9 : 11)} width={Math.max(0, (size.w - pad * 2) * Math.min(1, util))} height={3} rx={1.5} fill={color} />
         </>
       )}
     </g>

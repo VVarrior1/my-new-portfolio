@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommandMenu } from "./command-menu";
-import { SoundToggle } from "./sound-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
 const links = [
@@ -19,7 +18,8 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  // On the home page the name is already the h1, so the wordmark waits until the h1 scrolls away.
+  // On the home page the name is already the h1, so the wordmark's text waits until the h1 scrolls
+  // away. The AM keycap is always there, so the header never looks half-loaded.
   const [nameInView, setNameInView] = useState(pathname === "/");
 
   useEffect(() => {
@@ -59,15 +59,21 @@ export function SiteHeader() {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
-        <Link
-          href="/"
-          aria-hidden={hideMark || undefined}
-          tabIndex={hideMark ? -1 : undefined}
-          className={`t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-opacity duration-200 ${
-            hideMark ? "pointer-events-none opacity-0" : "opacity-100"
-          }`}
-        >
-          A. Mohamed
+        <Link href="/" className="group flex items-center gap-2.5" aria-label="A. Mohamed, home">
+          <span
+            aria-hidden="true"
+            className="inline-flex size-7 items-center justify-center rounded-lg border border-rule-strong bg-key-face font-mono text-[0.75rem] font-medium tracking-[-0.02em] text-ink shadow-[var(--key-shadow)] transition-transform group-active:translate-y-px"
+          >
+            AM
+          </span>
+          <span
+            aria-hidden="true"
+            className={`t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
+              hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
+            }`}
+          >
+            A. Mohamed
+          </span>
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
@@ -83,12 +89,10 @@ export function SiteHeader() {
           ))}
           <span className="mx-2 h-5 w-px bg-rule" aria-hidden="true" />
           <CommandMenu />
-          <SoundToggle />
           <ThemeToggle />
         </nav>
 
         <div className="flex items-center md:hidden">
-          <SoundToggle />
           <ThemeToggle />
           <button
             type="button"

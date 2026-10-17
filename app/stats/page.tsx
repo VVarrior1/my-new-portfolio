@@ -122,15 +122,12 @@ export default async function StatsPage() {
           </Suspense>
         </PageHeader>
 
-        {/* The headline numbers, as a readout strip. */}
-        <dl className="screen mt-14 grid grid-cols-2 lg:grid-cols-4">
+        {/* The headline numbers, between two hairlines on the paper. Only the chart below is a screen. */}
+        <dl className="mt-14 grid grid-cols-2 gap-x-6 border-y border-rule lg:grid-cols-4">
           {figures.map((figure, i) => (
-            <div
-              key={figure.label}
-              className={`flex flex-col-reverse justify-end px-4 py-4 sm:px-5 sm:py-5 ${i % 2 === 1 ? "border-l border-screen-line" : ""} ${i >= 2 ? "border-t border-screen-line lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
-            >
-              <dt className="t-mono mt-2 text-[0.75rem] text-screen-graphite">{figure.label}</dt>
-              <dd className="font-mono text-[1.75rem] font-medium leading-none tracking-tight tabular-nums sm:text-[2.25rem]">{fmt(figure.value)}</dd>
+            <div key={figure.label} className={`flex flex-col-reverse justify-end py-4 sm:py-5 ${i >= 2 ? "border-t border-rule lg:border-t-0" : ""}`}>
+              <dt className="t-mono mt-1.5 text-graphite">{figure.label}</dt>
+              <dd className="text-[2.5rem] font-[620] leading-none tracking-[-0.02em] tabular-nums [font-stretch:108%]">{fmt(figure.value)}</dd>
             </div>
           ))}
         </dl>
