@@ -400,6 +400,7 @@ function HudLayer() {
       let yieldP = 0;
       const mapFrost = rail.querySelector<HTMLElement>("[data-mapfrost]")!;
       let lastPct = -1;
+      let needleShown = -1;
       const lit = new Map<HTMLElement, boolean>();
       const setInvert = (el: HTMLElement, value: boolean) => {
         if (lit.get(el) === value) return;
@@ -634,6 +635,13 @@ function HudLayer() {
         const h = railH();
         const needleY = railTop + p * h;
         needle.style.transform = `translate3d(0,${needleY.toFixed(1)}px,0)`;
+        // The needle and its readout fade in over the first few percent, as on getartcraft.com: at
+        // the very top of the page there is nothing to read yet.
+        const needleIn = Math.max(zoom, clamp01((p - 0.004) / 0.026));
+        if (Math.abs(needleIn - needleShown) > 0.004 || (needleIn === 0) !== (needleShown === 0)) {
+          needleShown = needleIn;
+          needle.style.opacity = needleIn.toFixed(3);
+        }
         const span = limit + h;
         const speed = Math.min(1, Math.abs(velocity) / 1600);
         for (let i = 0; i <= 100; i++) {
@@ -650,7 +658,7 @@ function HudLayer() {
           // A tick's number never sits under the readout riding the needle.
           const label = tickLabels[i];
           if (label) {
-            const near = dist < 18 && zoom < 0.5;
+            const near = dist < 18 && zoom < 0.5 && needleShown > 0.3;
             if (label.dataset.near !== String(near)) {
               label.dataset.near = String(near);
               label.style.opacity = near ? "0" : "";
