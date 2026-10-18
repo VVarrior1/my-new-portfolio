@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BrandMark } from "./brand-mark";
 import { CommandMenu } from "./command-menu";
 import { MusicPlayer } from "./music-player";
 import { ThemeToggle } from "./theme-toggle";
@@ -20,8 +21,8 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  // On the home page the name is already the h1, so the wordmark's text waits until the h1 scrolls
-  // away. The AM keycap is always there, so the header never looks half-loaded.
+  // On the home page the name is already the h1, so the surname waits until the h1 scrolls away.
+  // The mark is always there, so the header never looks half-loaded.
   const [nameInView, setNameInView] = useState(pathname === "/");
 
   useEffect(() => {
@@ -62,24 +63,18 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[88rem] items-center justify-between gap-4 px-4 sm:px-8">
-        <Link href="/" className="group flex items-center gap-2.5" aria-label="A. Mohamed, home">
-          <span
-            aria-hidden="true"
-            className="inline-flex size-8 items-center justify-center rounded-full bg-ink font-mono text-[0.75rem] font-medium tracking-[-0.02em] text-paper transition-transform duration-500 ease-[var(--ease-spring)] group-hover:scale-110 group-active:scale-95"
-          >
-            AM
-          </span>
-          {/* Letter by letter, so on the home page the hero's name can fly into it (components/hud.tsx). */}
-          <span
-            aria-hidden="true"
-            data-wordmark=""
-            className={`wordmark t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
-              hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
-            }`}
-          >
-            <span data-wl="">A</span>
-            <span data-wl="">.</span>{" "}
-            <span className="wordmark-serif">
+        <Link href="/" className="brand flex items-center" aria-label="Abdelrahman Mohamed, home">
+          {/* "Am." then the surname, letter by letter, so on the home page the hero's name can fly
+              into it (components/hud.tsx): its A to the mark's A, the rest of the first name into
+              the stop, the surname onto the surname. */}
+          <span aria-hidden="true" data-wordmark="" className="flex items-end gap-[0.5rem] sm:gap-[0.5625rem]">
+            <BrandMark className="h-[19px] w-auto sm:h-[21px]" />
+            <span
+              data-surname=""
+              className={`wordmark-serif -mb-[0.16em] text-[0.9375rem] leading-none transition-[opacity,transform] duration-200 motion-reduce:transition-none sm:text-[1rem] ${
+                hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
+              }`}
+            >
               {Array.from("Mohamed").map((ch, i) => (
                 <span key={i} data-wl="">
                   {ch}

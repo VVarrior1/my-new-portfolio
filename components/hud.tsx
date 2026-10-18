@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { emitFlow } from "@/lib/flow-bus";
 import { clamp01, easeInOutCubic, flipProgress, letterProgress, quad } from "@/lib/hud-math";
 import { getLenis, onFrame, scrollToTarget, type Frame } from "@/lib/ticker";
+import { redrawMark } from "./brand-mark";
 
 // The HUD: the page's scroll signature, after getartcraft.com/apps.
 //
@@ -84,10 +85,12 @@ export function Hud() {
 /**
  * The hero's name flies into the header. As you scroll out of the hero, the name's letters lift off
  * (the first letter first, the rest a beat behind) and fly, shrinking and tumbling a little, into
- * the wordmark "A. Mohamed": the A to its A, the surname letter by letter to its surname, and the
- * rest of the first name pours into the full stop. It is scrubbed by the scroll, not snapped, so the
- * simulator under it can be used at any scroll position. Scroll back and the letters fly home.
- * After getartcraft.com, where the hero wordmark docks as the first heading.
+ * the brand "Am. Mohamed": the A docks on the mark's A, the rest of the first name pours into the
+ * mark's cobalt full stop, and the surname lands letter by letter on the surname. When the first
+ * name has been delivered into the stop, the stop runs the mark's route like a request packet and
+ * writes the m again. It is scrubbed by the scroll, not snapped, so the simulator under it can be
+ * used at any scroll position. Scroll back and the letters fly home (the mark stays; only the
+ * surname empties). After getartcraft.com, where the hero wordmark docks as the first heading.
  */
 const NAME_START = 24;
 const NAME_RANGE = 330;
@@ -99,8 +102,10 @@ function createNameFlight(layer: HTMLElement) {
   if (sources.length < 2 || targets.length < 3) return null;
   const root = document.documentElement;
   root.dataset.nameFlight = "";
-  // Map each letter of the name to a letter of the wordmark (A . M o h a m e d): the first letter to
-  // the A, the surname to the surname, and the rest of the first name into the full stop.
+  // Map each letter of the name to the brand (A . M o h a m e d): the first letter to the mark's A,
+  // the surname to the surname, and the rest of the first name into the mark's full stop. The A and
+  // the stop are the mark's own paths (data-keep): they never leave, so the hero's A dives into the
+  // mark's A and dissolves into it over the last stretch rather than covering it.
   const first = sources.filter((el) => !el.closest(".t-serif"));
   const last = sources.filter((el) => el.closest(".t-serif"));
   const dot = targets[1];
@@ -111,6 +116,8 @@ function createNameFlight(layer: HTMLElement) {
     pour: boolean;
     el: HTMLSpanElement;
     size: number;
+    /** Ink centre minus box centre, per px of font size, and cap height per px (for SVG targets). */
+    ink: { x: number; y: number; cap: number };
     tumble: number;
     prev: { x: number; y: number };
   };
@@ -126,6 +133,7 @@ function createNameFlight(layer: HTMLElement) {
       pour,
       el,
       size: 0,
+      ink: { x: 0, y: 0, cap: 0.7 },
       tumble: (((i * 5 + 3) % 7) - 3) * 4,
       prev: { x: 0, y: 0 },
     });
@@ -133,12 +141,23 @@ function createNameFlight(layer: HTMLElement) {
   first.forEach((src, i) => make(src, i === 0 ? targets[0] : dot, i > 0, i));
   last.forEach((src, i) => make(src, surname[i] ?? surname[surname.length - 1], false, first.length + i));
 
+  const ctx = document.createElement("canvas").getContext("2d");
   const style = () => {
     for (const l of letters) {
       const cs = getComputedStyle(l.src);
       l.size = parseFloat(cs.fontSize) || 100;
       // One property at a time: the font shorthand won't take a percentage width.
       Object.assign(l.el.style, { fontFamily: cs.fontFamily, fontStyle: cs.fontStyle, fontWeight: cs.fontWeight, fontStretch: cs.fontStretch, fontSize: `${l.size}px` });
+      // Where the glyph's ink sits in its box, so a letter can land ink to ink on a drawn mark.
+      if (ctx && l.dst instanceof SVGElement) {
+        ctx.font = `${cs.fontStyle} ${cs.fontWeight} 100px ${cs.fontFamily}`;
+        const m = ctx.measureText(l.el.textContent || "A");
+        l.ink = {
+          x: ((m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2 - m.width / 2) / 100,
+          y: (m.actualBoundingBoxDescent - m.actualBoundingBoxAscent + m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 / 100,
+          cap: (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) / 100 || 0.7,
+        };
+      }
     }
   };
   style();
@@ -157,11 +176,17 @@ function createNameFlight(layer: HTMLElement) {
     el.style.visibility = value ? "hidden" : "";
   };
 
+  // The mark writes itself again when the last letter of the first name pours into its stop.
+  const mark = dot.closest("svg");
+  const lastPour = letters.filter((l) => l.pour).pop();
+  let delivered: boolean | null = null;
+  let lastDraw = 0;
+
   let p = 0;
   const frame = (fr: Frame) => {
     p = clamp01((fr.y - NAME_START) / NAME_RANGE);
     const n = letters.length;
-    let dotIn = 0;
+    let pourDone = false;
     const docked = new Set<HTMLElement>();
     letters.forEach((l, k) => {
       const d = ease(letterProgress(p, n - 1 - k, n, NAME_STAGGER));
@@ -171,17 +196,19 @@ function createNameFlight(layer: HTMLElement) {
         l.el.style.opacity = "0";
         l.prev.x = 0;
         if (d >= 0.999) {
-          if (l.pour) dotIn = 1;
-          else docked.add(l.dst);
+          if (!l.pour) docked.add(l.dst);
+          if (l === lastPour) pourDone = true;
         }
         return;
       }
-      if (l.pour) dotIn = Math.max(dotIn, d > 0.85 ? 1 : 0);
       const a = l.src.getBoundingClientRect();
       const b = l.dst.getBoundingClientRect();
       const p0 = { x: a.left + a.width / 2, y: a.top + a.height / 2 };
-      const p1 = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
-      const target = parseFloat(getComputedStyle(l.dst).fontSize) || 15;
+      // A drawn target (the mark's A) is sized by its cap height and met ink to ink.
+      const drawn = l.dst instanceof SVGElement;
+      const target = drawn ? b.height / l.ink.cap : parseFloat(getComputedStyle(l.dst).fontSize) || 15;
+      const end = drawn && !l.pour ? target : 0; // the letter's size in px as it lands
+      const p1 = { x: b.left + b.width / 2 - l.ink.x * end, y: b.top + b.height / 2 - l.ink.y * end };
       // Up first, then across: the control point sits above the start, a third of the way over.
       const c = {
         x: p1.x + (p0.x - p1.x) * 0.62,
@@ -191,7 +218,7 @@ function createNameFlight(layer: HTMLElement) {
       const s1 = l.pour ? 0.04 : target / l.size;
       const scale = 1 + (s1 - 1) * d;
       const rot = Math.sin(Math.PI * d) * l.tumble;
-      const alpha = l.pour ? 1 - clamp01((d - 0.55) / 0.4) : 1;
+      const alpha = l.pour ? 1 - clamp01((d - 0.55) / 0.4) : drawn ? 1 - clamp01((d - 0.72) / 0.26) : 1;
       l.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-50%) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
       l.el.style.opacity = alpha.toFixed(3);
       // A letter in flight drags the liquid with it.
@@ -215,8 +242,14 @@ function createNameFlight(layer: HTMLElement) {
       l.prev.x = x;
       l.prev.y = y;
     });
-    // The wordmark's own letters show as their twins land.
-    targets.forEach((t, i) => show(t, i === 1 ? dotIn > 0 : docked.has(t)));
+    // The surname's letters show as their twins land.
+    targets.forEach((t) => t.dataset.keep === undefined && show(t, docked.has(t)));
+    // "Request delivered": on the way down, not on the way back, and not for a page loaded below it.
+    if (delivered === false && pourDone && fr.now - lastDraw > 1200) {
+      lastDraw = fr.now;
+      redrawMark(mark);
+    }
+    delivered = pourDone;
   };
 
   return {
