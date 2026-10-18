@@ -190,7 +190,8 @@ registered at Namecheap with its nameservers pointed at Vercel (`ns1/ns2.vercel-
 Deploy through git pushes, not `vercel deploy`: CLI uploads ignore `.gitignore` (see `.vercelignore`).
 
 The old address https://abdelrahmanmohamed1.netlify.app is printed on résumés that are already out, so the Netlify site
-must stay up. It still builds `master`, and `netlify.toml` 301s every request on that host to the same path on
-abdelrahmanm.dev. Never delete that site. Keep `next` on a patched 15.5.x release
-(CVE-2025-55182); Netlify refuses to build affected versions. To read a failed Netlify build's log:
+must stay up. It is redirect-only: `netlify.toml` publishes the one-page `netlify-redirect/` folder (no Next.js
+build) and 301s every path, query string kept, to the same path on abdelrahmanm.dev. Netlify rebuilds only when
+`netlify.toml` or that folder changes, so other pushes cost it nothing. Never delete that site. Keep `next` on a
+patched 15.5.x release (CVE-2025-55182). To read a failed Netlify build's log:
 `netlify logs -d <deploy-id> -s deploy --since <ISO time>`.

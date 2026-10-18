@@ -1,19 +1,22 @@
+# Netlify only serves redirects now. The site lives on Vercel at https://abdelrahmanm.dev, but the old
+# address https://abdelrahmanmohamed1.netlify.app is printed on résumés already out, so this site must stay up
+# and send every path (query string kept) to the same path on the real domain. Never delete it.
+
 [build]
-  command = "npm run build"
-  publish = ".next"
+  command = "echo 'Redirect only: the site lives at https://abdelrahmanm.dev on Vercel.'"
+  publish = "netlify-redirect"
+  # Rebuild only when the redirect itself changes; other pushes keep the published deploy.
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- netlify.toml netlify-redirect/"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-[build.environment]
-  NODE_VERSION = "22"
-  NEXT_ALLOW_MIDDLEWARE_RESPONSE_BODY = "true"
-
-# The old Netlify address keeps working for links already out there (résumés, LinkedIn),
-# but every request lands on the real domain. Only this exact host matches, so deploy
-# permalinks and branch deploys are unaffected.
+# Netlify's own pretty-URL path; the Next.js site has no /index.html.
 [[redirects]]
-  from = "https://abdelrahmanmohamed1.netlify.app/*"
+  from = "/index.html"
+  to = "https://abdelrahmanm.dev/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/*"
   to = "https://abdelrahmanm.dev/:splat"
   status = 301
   force = true
