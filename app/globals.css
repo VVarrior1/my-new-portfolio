@@ -1273,6 +1273,11 @@ html[data-choreo="on"] .spine-svg[data-placed] .spine-wire {
   left: 5px;
   width: 1px;
 }
+/* The same cross where the bar meets the frame's right edge: a register mark, never lit. */
+.station-right {
+  left: auto;
+  right: -6px;
+}
 .station[data-lit]::before,
 .station[data-lit]::after {
   background: var(--signal);

@@ -109,7 +109,7 @@ test.describe("scroll choreography", () => {
     await page.goto("/");
     const packet = page.locator(".packet");
     await expect(packet).toHaveAttribute("data-on", "");
-    const station = page.locator('#work .station');
+    const station = page.locator('#work .station[data-station]');
     await expect(station).not.toHaveAttribute("data-lit", "");
     await page.evaluate(() => window.scrollTo(0, document.getElementById("experience")!.getBoundingClientRect().top + window.scrollY));
     await expect(station).toHaveAttribute("data-lit", "", { timeout: 8000 });

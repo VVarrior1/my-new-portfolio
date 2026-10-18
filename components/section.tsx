@@ -24,6 +24,7 @@ export function Section({
   return (
     <section id={id} aria-labelledby={`${id}-title`} className={`chapter scroll-mt-16 ${className}`} data-hud={title}>
       <span aria-hidden="true" className="station" data-station="" data-route={`/${id}`} />
+      <span aria-hidden="true" className="station station-right" />
       <div className="eyebrow">
         <h2 id={`${id}-title`} className="eyebrow-title">
           <span className="eyebrow-index" aria-hidden="true">
