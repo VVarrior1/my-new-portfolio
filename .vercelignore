@@ -1,0 +1,8 @@
+# CLI deploys upload the working tree and don't read .gitignore. Keep secrets and local junk out.
+gallery-uploader-key.json
+*.pem
+*-key.json
+.env*
+test-results
+playwright-report
+tsconfig.tsbuildinfo
