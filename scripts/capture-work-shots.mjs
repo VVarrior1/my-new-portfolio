@@ -21,7 +21,7 @@ const shots = [
   { url: "https://cydsoccer.com/register/programs", file: "cyd-register-phone", width: 390, height: 844, mobile: true },
   {
     url: "https://system-design-playground-pi.vercel.app/learn/find-the-bottleneck",
-    file: "systemlab-canvas",
+    file: "systemlab-lesson",
     width: 1280,
     height: 800,
     run: true,
@@ -32,7 +32,7 @@ const shots = [
     clip: { x: 509, y: 200, width: 740, height: 601 },
     // Systemlab has no dark theme, so the dark-mode copy is the same run inverted (images and
     // canvases are flipped back), captured from the same page so the two line up exactly.
-    dark: "systemlab-canvas-dark",
+    dark: "systemlab-lesson-dark",
   },
 ];
 
