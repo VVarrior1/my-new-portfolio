@@ -200,10 +200,11 @@ export function Choreo() {
       cleanups.push(() => parts.forEach((part) => ((part.style.transform = ""), (part.style.opacity = ""))));
     }
 
-    // The intro ends with a drop landing in the pool.
+    // The intro ends with a drop landing in the pool: in the hero it is poured into the river (a
+    // burst at the foot of the screen rolls up into loose curls beside the copy).
     if (root.hasAttribute("data-intro")) {
       // Ink only: the accent is kept for what the simulator does.
-      const t = window.setTimeout(() => emitFlow({ kind: "drop", x: window.innerWidth * 0.5, y: window.innerHeight * 0.96, size: 0.9, accent: 0.04 }), 1250);
+      const t = window.setTimeout(() => emitFlow({ kind: "drop", x: window.innerWidth * 0.5, y: window.innerHeight * 0.96, size: 0.9, accent: 0.04, river: true }), 1250);
       cleanups.push(() => window.clearTimeout(t));
     }
 

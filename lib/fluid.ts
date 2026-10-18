@@ -338,6 +338,9 @@ float contour (float v, float g, float steps, float w) {
   float l = 1.0 - smoothstep(w - 0.55, w + 0.55, d);
   return l * (1.0 - smoothstep(0.14, 0.3, gs));
 }
+// The value a neutral line is traced on: the wide blur w where the dye is faint, the fine field c
+// where it is a body.
+float traced (float c, float w) { return mix(w, c, smoothstep(0.1, 0.3, w)); }
 float edge (float y, float x) {
   float t = uTime;
   float w = sin(x * 0.0042 / uDpr + t * 0.7) * 7.0 + sin(x * 0.0113 / uDpr - t * 1.1 + 1.3) * 3.5 + sin(x * 0.027 / uDpr + t * 1.9) * 1.2;
@@ -369,6 +372,12 @@ void main () {
   vec2 span = 2.0 * h * uViewport;
   vec2 gn = vec2(fr.r - fl.r, ft.r - fb.r) / span;
   vec2 ga = vec2(fr.g - fl.g, ft.g - fb.g) / span;
+  // The neutral dye's lines are traced on the wide blur where the ink is faint and on the fine
+  // field only where it is a body: a faint fringe wrinkling across the first level is what drew
+  // stray dots, small closed curls and islands, and in the wide blur it is one smooth edge.
+  float tn = traced(c.r, wide.r);
+  vec2 gt = vec2(traced(fr.r, texture2D(uWide, vUv + vec2(h.x, 0.0)).r) - traced(fl.r, texture2D(uWide, vUv - vec2(h.x, 0.0)).r),
+                 traced(ft.r, texture2D(uWide, vUv + vec2(0.0, h.y)).r) - traced(fb.r, texture2D(uWide, vUv - vec2(0.0, h.y)).r)) / span;
 
   float inv = max(band(px, uBands.x, uBands.y), band(px, uBands.z, uBands.w));
   vec3 bg = mix(uBg, uBg2, inv);
@@ -390,9 +399,9 @@ void main () {
   // They are traced on a saturating height (1 - e^-1.3x), so a dense core gets a handful of rings,
   // not a pile of them, however much dye a busy system pours in.
   float w = max(0.62, 0.55 * uDpr);
-  vec2 hc = 1.0 - exp(-1.3 * c.rg);
-  vec2 hs = 1.3 * exp(-1.3 * c.rg);
-  float ln = contour(hc.x, length(gn) * hs.x, uSteps, w) * smoothstep(0.05, 0.14, wide.r) * smoothstep(0.02, 0.06, c.r) * traceOf;
+  vec2 hc = 1.0 - exp(-1.3 * vec2(tn, c.g));
+  vec2 hs = 1.3 * exp(-1.3 * vec2(tn, c.g));
+  float ln = contour(hc.x, length(gt) * hs.x, uSteps, w) * smoothstep(0.05, 0.14, wide.r) * smoothstep(0.35, 0.65, wide.r / max(tn, 1e-3)) * smoothstep(0.02, 0.06, c.r) * traceOf;
   float la = contour(hc.y, length(ga) * hs.y, uSteps * 0.7, w) * smoothstep(0.07, 0.16, wide.g) * smoothstep(0.05, 0.1, c.g) * traceOf;
 
   vec3 col = mix(bg, neutral, n * uNeutralMax * uFill);

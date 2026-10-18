@@ -40,6 +40,8 @@ const MOBILE: FluidConfig = { ...DESKTOP, simResolution: 96, dyeResolution: 640,
 const PARALLAX = 0.62;
 /** The ambient curl-noise stir, in sim texels/s² (see FORCE in lib/fluid.ts). */
 const AMBIENT = 1.6;
+/** The share of the ambient stir the hero keeps while its river runs. */
+const RIVER_AMBIENT = 0.5;
 
 function hex(value: string, fallback: [number, number, number]): [number, number, number] {
   const m = value.trim().match(/^#([0-9a-f]{6})$/i);
@@ -182,6 +184,8 @@ export function LiquidField() {
     let pulse = 0;
     /** Failing requests: they tint the river's thread rather than spatter the pool. */
     let failGlow = 0;
+    /** Whether the hero's river ran last frame (the device is on screen). */
+    let riverLive = false;
 
     // The device (the simulator's figure) and the name's block, read fresh each frame.
     const deviceBox = () => document.querySelector<HTMLElement>("#play figure")?.getBoundingClientRect() ?? null;
@@ -210,6 +214,13 @@ export function LiquidField() {
         failGlow = Math.min(1, failGlow + 0.06);
       } else if (e.kind === "stir") {
         f.splat(x, y, e.dx, -e.dy, e.ink, e.accent, e.radius);
+      } else if (e.river && riverLive) {
+        // A drop meant for the river: poured in where the current leaves the device, like a
+        // restarted server's ink, so the current carries it off as one swell.
+        const dev = deviceBox();
+        const m = dev ? mouth(dev) : { x: e.x, y: e.y };
+        const [bx, by] = uv(m.x - 24, m.y + 16);
+        f.ink(bx, by, 0.3 * e.size, (e.accent ?? 0) * e.size, 0.07);
       } else {
         const accent = e.accent ?? 0.35;
         for (let i = 0; i < 7; i++) {
@@ -225,17 +236,22 @@ export function LiquidField() {
     // name; stacked (phones, tablets) it wells up from the device's top edge. Returns false while
     // the device is off screen, so the page's own weather takes over.
     let phase = 0;
+    /** The traffic the river carries, eased toward the simulator's rate over about a second: a
+     * sudden jump in the current at the mouth rolls the river's front into curls. */
+    let carried = -1;
     const river = (f: Fluid, dt: number, vw: number, vh: number) => {
       const dev = deviceBox();
       if (!dev || dev.width === 0 || dev.bottom < 60 || dev.top > vh - 60) return false;
       const { rate, strain } = flowState();
-      const q = Math.min(1, rate / 900);
+      const target = Math.min(1, rate / 900);
+      carried = carried < 0 ? target : carried + (target - carried) * Math.min(1, dt * 1.2);
+      const q = carried;
       const k = dt * 60 * tune.ink;
-      phase += dt * (0.45 + q * 0.9 + strain * 1.6);
-      const speed = (52 + q * 64) * (1 + pulse * 0.35) * tune.current;
+      phase += dt * (0.45 + q * 0.9 + strain * 0.8);
+      const speed = (52 + q * 64) * (1 + pulse * 0.15) * tune.current;
       const ink = (0.09 + q * 0.06) * k;
       const thread = (0.12 + q * 0.18 + strain * 0.08 + failGlow * 0.15 + pulse * 0.7) * k;
-      const sway = (Math.sin(phase) * 0.1 + Math.sin(phase * 0.43 + 1.3) * 0.07) * (1 + strain * 0.6);
+      const sway = (Math.sin(phase) * 0.1 + Math.sin(phase * 0.43 + 1.3) * 0.07) * (1 + strain * 0.3);
       const name = nameBox();
       const beside = !!name && name.right <= dev.left + 8;
       if (beside && name) {
@@ -247,10 +263,16 @@ export function LiquidField() {
         f.splat(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, ink, 0, 0.085);
         f.ink(x, y, 0, thread, 0.016);
         // The turn: in the left lane the current is drawn up alongside the name, then eases right
-        // under the header, so the river frames the name instead of banking up on the edge.
+        // under the header, so the river frames the name instead of banking up on the edge. The
+        // turn's push sits on the river's own line, below the copy's corner: pushed up right at
+        // the corner, the current split there and spun a standing curl under the buttons.
         const lx = Math.max(40, name.left - 30);
-        const [ax, ay] = uv(lx, name.bottom + 10);
+        const [ax, ay] = uv(Math.max(30, lx - 10), name.bottom + 50);
         f.splat(ax, ay, -speed * 0.05, speed * 0.5, 0, 0, 0.12);
+        // The pocket between the river and the copy's lower edge is swept gently into the turn, so
+        // ink can't idle there and close into a loop under the buttons.
+        const [px, py] = uv(name.left + name.width * 0.25, name.bottom + 24);
+        f.splat(px, py, -speed * 0.35, -speed * 0.2, 0, 0, 0.1);
         const [bx, by] = uv(lx, name.top + 60);
         f.splat(bx, by, speed * 0.2, speed * 0.25, 0, 0, 0.12);
         // And a soft push off the screen's edge, so the turn never banks up against it.
@@ -433,6 +455,14 @@ export function LiquidField() {
       if (!fluid) return;
       const f = fluid;
       const base = { ...f.config };
+      // How much the pool is stirred on its own. In the hero the river is the motion, so while it
+      // runs there is no vorticity confinement (it winds the river's fringe, and a failing
+      // system's swell, into small closed curls beside the copy) and only half the ambient noise
+      // (the full stir tears the fringe into islands). Below the hero the page's weather keeps both.
+      const weatherFor = (fl: Fluid, live: boolean, strain: number, q: number) => {
+        fl.config.curl = live ? 0 : base.curl + strain * 2;
+        fl.ambient = AMBIENT * tune.ambient * (1 + q * 0.6) * (live ? RIVER_AMBIENT : 1);
+      };
       f.resize(dpr());
       const rand = seeded(11);
       gather(f, window.innerHeight, window.innerWidth);
@@ -472,10 +502,11 @@ export function LiquidField() {
       const prewarm = (steps: number) => {
         const vh = window.innerHeight;
         const vw = window.innerWidth;
-        f.ambient = AMBIENT * tune.ambient;
         for (let i = 0; i < steps; i++) {
           f.time += 1 / 60;
-          if (!river(f, 1 / 60, vw, vh)) ambient(f, 1 / 60, rand, vw, vh);
+          riverLive = river(f, 1 / 60, vw, vh);
+          weatherFor(f, riverLive, 0, 0);
+          if (!riverLive) ambient(f, 1 / 60, rand, vw, vh);
           f.obstruct();
           f.step(1 / 60);
         }
@@ -552,20 +583,19 @@ export function LiquidField() {
         f.shift = Math.max(-0.2, Math.min(0.2, (delta / vh) * tune.parallax));
 
         const { strain, rate } = flowState();
-        kick = Math.max(0, kick - dt * 0.6);
-        pulse += (kick - pulse) * Math.min(1, dt * 6);
-        failGlow = Math.max(0, failGlow - dt * 0.5);
-        f.config.curl = base.curl + strain * 2;
         const q = Math.min(1, rate / 900);
+        kick = Math.max(0, kick - dt * 0.6);
+        pulse += (kick - pulse) * Math.min(1, dt * 3);
+        failGlow = Math.max(0, failGlow - dt * 0.5);
+        weatherFor(f, riverLive, strain, q);
         // A busier system turns over its ink faster, so more traffic reads as more current, not
         // more mud.
         f.config.densityDissipation = base.densityDissipation * (1 + q * 0.9 + strain * 0.3);
-        f.ambient = AMBIENT * tune.ambient * (1 + q * 0.6);
 
         while (queue.length) applyEvent(f, queue.shift()!, rand);
-        const heroLive = river(f, dt, vw, vh);
+        riverLive = river(f, dt, vw, vh);
         wake(f, delta, vh, vw);
-        if (!heroLive) {
+        if (!riverLive) {
           drip(f, dt, rand, vw, vh);
           ambient(f, dt, rand, vw, vh);
         }
