@@ -15,7 +15,8 @@ const links = [
   { href: "/#contact", label: "Contact" },
 ];
 
-export function SiteHeader() {
+/** `overlay`: the header starts transparent, over the liquid, and turns into frosted paper once you scroll. */
+export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -55,25 +56,36 @@ export function SiteHeader() {
 
   return (
     <header
+      data-site-header=""
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/85 backdrop-blur-md" : "border-transparent bg-paper"
+        scrolled || open ? "border-rule bg-paper/80 backdrop-blur-xl" : overlay ? "border-transparent bg-transparent" : "border-transparent bg-paper"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-[76rem] items-center justify-between gap-4 px-4 sm:px-8">
+      <div className="mx-auto flex h-16 max-w-[88rem] items-center justify-between gap-4 px-4 sm:px-8">
         <Link href="/" className="group flex items-center gap-2.5" aria-label="A. Mohamed, home">
           <span
             aria-hidden="true"
-            className="inline-flex size-7 items-center justify-center rounded-lg border border-rule-strong bg-key-face font-mono text-[0.75rem] font-medium tracking-[-0.02em] text-ink shadow-[var(--key-shadow)] transition-transform group-active:translate-y-px"
+            className="inline-flex size-8 items-center justify-center rounded-full bg-ink font-mono text-[0.75rem] font-medium tracking-[-0.02em] text-paper transition-transform duration-500 ease-[var(--ease-spring)] group-hover:scale-110 group-active:scale-95"
           >
             AM
           </span>
+          {/* Letter by letter, so on the home page the hero's name can fly into it (components/hud.tsx). */}
           <span
             aria-hidden="true"
-            className={`t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
+            data-wordmark=""
+            className={`wordmark t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
               hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
             }`}
           >
-            A. Mohamed
+            <span data-wl="">A</span>
+            <span data-wl="">.</span>{" "}
+            <span className="wordmark-serif">
+              {Array.from("Mohamed").map((ch, i) => (
+                <span key={i} data-wl="">
+                  {ch}
+                </span>
+              ))}
+            </span>
           </span>
         </Link>
 
@@ -83,7 +95,7 @@ export function SiteHeader() {
               key={link.href}
               href={link.href}
               aria-current={isCurrent(link.href) ? "page" : undefined}
-              className="rounded-lg px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink aria-[current=page]:underline aria-[current=page]:decoration-signal-text aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[0.4em]"
+              className="nav-link rounded-full px-3 py-2 text-[0.9375rem] font-[550] text-ink-2 transition-colors hover:text-ink aria-[current=page]:text-ink"
             >
               {link.label}
             </Link>

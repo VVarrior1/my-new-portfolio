@@ -31,23 +31,24 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
   const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
 
   return (
-    <div aria-hidden="true" className="lg:grid lg:grid-cols-12 lg:gap-x-6">
+    <div aria-hidden="true" className="lg:grid lg:grid-cols-[8.25rem_minmax(0,1fr)] lg:gap-x-4">
       {/* Lane labels, aligned to the lanes inside the track. Below lg they sit on the lanes instead,
           above each bar, so a two-line name can never drift away from its bar. */}
-      <ul className="hidden py-2.5 lg:col-span-3 lg:block">
-        {jobs.map((job) => (
+      <ul className="hidden py-2.5 lg:block">
+        {jobs.map((job, i) => (
           <li
             key={`${job.company}-${job.start}`}
-            className={`t-mono flex h-8 items-center leading-[1.15] ${job.end === "Now" ? "text-ink" : "text-ink-2"}`}
+            data-lane={i}
+            className={`span-label t-mono flex h-8 items-center leading-[1.15] ${job.end === "Now" ? "text-ink" : "text-ink-2"}`}
           >
             {job.company}
           </li>
         ))}
       </ul>
 
-      <div className="min-w-0 lg:col-span-9">
-        <div className="relative rounded-xl border border-rule bg-paper-raised py-2.5 shadow-[var(--panel-highlight)]">
-          {/* Year lines, then the "now" cursor: orange, because it is the present. */}
+      <div className="min-w-0">
+        <div className="span-track relative rounded-xl border border-rule bg-paper-raised py-2.5">
+          {/* Year lines, then the "now" cursor: cobalt, because it is the present. */}
           {years.map((year) =>
             year * 12 > axisStart && year * 12 < axisEnd ? (
               <span key={year} className="absolute inset-y-0 w-px bg-rule" style={{ left: at(year * 12) }} />
@@ -55,7 +56,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
           )}
           <span className="absolute inset-y-0 w-px bg-signal-text" style={{ left: at(nowAt) }} />
           <ul className="relative">
-            {jobs.map((job) => {
+            {jobs.map((job, i) => {
               const start = toMonths(job.start, now);
               const current = job.end === "Now";
               // A role runs to the end of its last month; the current one runs to today.
@@ -64,7 +65,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
               const late = (start - axisStart) / span > 0.6;
               const first = start === axisStart;
               return (
-                <li key={`${job.company}-${job.start}`} className="relative h-11 lg:h-8">
+                <li key={`${job.company}-${job.start}`} className="span-lane relative h-11 lg:h-8" data-lane={i}>
                   <span
                     className={`t-mono absolute top-1 whitespace-nowrap leading-4 lg:hidden ${current ? "text-ink" : "text-ink-2"} ${late ? "-translate-x-full" : ""} ${first ? "pl-2" : ""}`}
                     style={{ left: late ? at(end) : at(start) }}
@@ -72,7 +73,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
                     {job.company}
                   </span>
                   <span
-                    className={`absolute h-1.5 rounded-full max-lg:bottom-2.5 lg:top-1/2 lg:-translate-y-1/2 ${current ? "bg-signal" : "bg-ink"}`}
+                    className={`span-bar absolute h-1.5 rounded-full max-lg:bottom-2.5 lg:top-1/2 lg:-translate-y-1/2 ${current ? "bg-signal" : "bg-ink"}`}
                     style={{ left: at(start), width: `calc(${at(end)} - ${at(start)})` }}
                   />
                   {current && (
@@ -102,7 +103,8 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
           <span className="absolute -translate-x-1/2 text-signal-text" style={{ left: at(nowAt) }}>
             now
           </span>
-          <span className="absolute right-0 max-lg:hidden">{Math.floor(axisEnd / 12)}</span>
+          {/* The end year, unless "now" is already close enough to say it. */}
+          {(axisEnd - nowAt) / span > 0.14 && <span className="absolute right-0 max-lg:hidden">{Math.floor(axisEnd / 12)}</span>}
         </div>
       </div>
     </div>

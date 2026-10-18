@@ -26,7 +26,7 @@ export default async function BlogsPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-20">
+      <main id="main" className="mx-auto w-full max-w-[88rem] px-4 pb-24 pt-10 sm:px-8 sm:pt-20">
         <PageHeader
           title="Writing"
           lead={<>Notes on things I&apos;ve learned while building: some technical, some not.</>}

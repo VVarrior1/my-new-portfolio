@@ -1,25 +1,29 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { playlist } from "@/lib/playlist";
+import { MotionRoot } from "@/components/motion-root";
 import { SiteAnalytics } from "@/components/site-analytics";
 import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-// Archivo is variable on weight and width; its wide cuts carry the display voice (name, section
-// titles, big numbers). Below about 24px it reads generic, so text is Instrument Sans.
-const display = Archivo({
+// Instrument Sans is variable on weight and width: set tight and large it is the display voice
+// (the name, section titles, big numbers), and at text sizes it is the body. Instrument Serif
+// italic is the second voice, for one or two words in a heading.
+const sans = Instrument_Sans({
   subsets: ["latin"],
   axes: ["wdth"],
-  variable: "--font-archivo",
+  variable: "--font-instrument",
   display: "swap",
 });
 
-const sans = Instrument_Sans({
+const serif = Instrument_Serif({
   subsets: ["latin"],
-  variable: "--font-instrument",
+  weight: "400",
+  style: "italic",
+  variable: "--font-instrument-serif",
   display: "swap",
 });
 
@@ -64,10 +68,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Before the stylesheet arrives the browser paints its own canvas: in the visitor's scheme, so a
+  // dark first frame is never a white flash.
+  colorScheme: "light dark",
   themeColor: [
     // Equal to --paper in each scheme (app/globals.css).
-    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#151412" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f4f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0c0e" },
   ],
 };
 
@@ -76,7 +83,9 @@ export const viewport: Viewport = {
 //    production domain. React then can't match <head> and re-renders the whole page on the
 //    client (error #418). Remove comments and whitespace-only text nodes that precede this script.
 // 2. Applies a saved theme before first paint so there's no flash.
-const headScript = `(function(){var n=document.head&&document.head.firstChild;while(n){var x=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!/\\S/.test(n.nodeValue)))n.parentNode.removeChild(n);n=x}})();try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+// 3. Marks the first view of the home page in this tab, so the intro (components/intro.tsx) plays
+//    once; never under reduced motion, and never without JavaScript.
+const headScript = `(function(){var n=document.head&&document.head.firstChild;while(n){var x=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!/\\S/.test(n.nodeValue)))n.parentNode.removeChild(n);n=x}})();try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}try{if(location.pathname==="/"&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!sessionStorage.getItem("intro")){document.documentElement.dataset.intro="";sessionStorage.setItem("intro","1")}}catch(e){}`;
 
 const personJsonLd = {
   "@context": "https://schema.org",
@@ -92,7 +101,7 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn(display.variable, sans.variable, mono.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn(sans.variable, serif.variable, mono.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: headScript }} />
         <script
@@ -109,6 +118,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </a>
         <AudioProvider tracks={playlist}>
           {children}
+          <MotionRoot />
           <SiteAnalytics />
           <Toaster position="bottom-center" />
         </AudioProvider>

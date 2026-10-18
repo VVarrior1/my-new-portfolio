@@ -15,64 +15,95 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens: the workbench. Warm grey paper, objects with a job, and one
-   colour, international orange, used on things you press and on "now"
-   (the current role and the timeline's cursor), never on large areas.
+   Tokens: Liquid World. The whole home page floats on a real fluid
+   simulation (components/liquid-field.tsx): ink marbling on pale water
+   in the light theme, lit smoke on black in the dark one. There are no
+   opaque sheets; text sits on calm water (data-calm holds the dye back)
+   and the résumé chapter is set in the opposite theme, its edges a
+   waterline the current pushes around ([data-chapter="invert"]).
 
-   Every neutral sits on one warm hue (OKLCH h≈88) at chroma ≤ 0.006, so
-   light and dark share one temperature. Status colours (--trace, --fail,
-   --screen-go) live only on the dark screens (the simulator and the
-   readouts). Light is the default; dark follows the OS unless the visitor
-   picks one with the toggle (stored as data-theme on <html>).
+   One accent, cobalt (--signal), and neutrals that all sit on one cool
+   hue (OKLCH h≈265, chroma ≤ 0.016), so both themes share a temperature.
+   Cobalt fills the things you press, marks "now", runs the spine and the
+   ruler's needle, voices the serif labels, and is the only colour the
+   fluid can paint besides its neutral ink: there it means traffic (a
+   thread in the current), a killed server and the packet's thread, and
+   calm water holds it back from text like the ink. Status colours
+   (--trace, --fail, --screen-go) mean status only: the simulator's
+   screen, the spine's packet and wire while requests fail, and the
+   /stats chart.
+
+   Every theme token has an "-x" twin holding the opposite theme's value,
+   for things that cross into the inverted chapter (HUD letters, the
+   cursor ring, the fluid's second palette, the frosts' second tint). The
+   header and the phone HUD's bar take the chapter's whole token block
+   while the chapter is under them. Images are shown as themselves:
+   sharp, in colour, never dimmed. Dark follows the OS unless the visitor
+   picks a theme (data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
-  /* Near-white paper with grey hardware on it, like a Braun on a white table: the page is the
-     lightest surface but one, the panels sit a step darker, and keycaps are pure white. */
-  --paper: #f8f7f4;
-  /* Device panel, project mats, the experience track, the tools board. */
-  --paper-raised: #edebe7;
-  /* Keycap faces. */
+  --paper: #f4f4f5;
+  /* Frames, the tools board, the experience track: one step off the paper. */
+  --paper-raised: #e8e9eb;
+  /* Button faces and popovers. */
   --key-face: #ffffff;
-  --ink: #171614;
+  --ink: #0e0f12;
   /* Body prose. */
-  --ink-2: #353431;
-  /* Metadata only (≥ 5.7:1 on every surface). */
-  --graphite: #5c5a57;
-  --rule: #dbd9d5;
-  --rule-strong: #c8c6c2;
-  /* International orange: fills of actuators and the "now" marks. Never text on paper, never tinted. */
-  --signal: #ff4f00;
-  --signal-edge: #c23b00;
-  --signal-ink: #171614;
-  /* The only text-safe orange (5.0:1 on paper). */
-  --signal-text: #c23b00;
-  /* Screens are dark in both themes. Only the simulator and the /stats chart are screens. */
-  --screen: #141311;
-  --screen-ink: #ecebe8;
-  --screen-graphite: #91908c;
-  --screen-line: rgb(236 235 232 / 0.14);
-  --screen-wire: rgb(236 235 232 / 0.28);
-  --screen-outline: rgb(236 235 232 / 0.24);
-  --screen-dot: rgb(236 235 232 / 0.075);
-  --screen-fill: rgb(236 235 232 / 0.045);
-  --screen-track: rgb(236 235 232 / 0.12);
+  --ink-2: #33353b;
+  /* Metadata only (≥ 5.5:1 on every surface). */
+  --graphite: #5d6067;
+  --rule: #d9dadc;
+  --rule-strong: #c2c4c8;
+  /* Cobalt. Fills (buttons you press, the kill key, the fader cap, "now"), and text that is a link
+     or an arrow. White on it is 6:1, and as text on the paper it is 5.6:1. */
+  --signal: #2a46ff;
+  --signal-ink: #ffffff;
+  --signal-text: #2a46ff;
+  /* The simulator is a dark instrument in both themes. */
+  --screen: #0d0e11;
+  --screen-raised: #16171b;
+  --screen-ink: #eceef2;
+  --screen-graphite: #9095a0;
+  --screen-line: rgb(236 238 242 / 0.12);
+  --screen-wire: rgb(236 238 242 / 0.26);
+  --screen-outline: rgb(236 238 242 / 0.22);
+  --screen-dot: rgb(236 238 242 / 0.07);
+  --screen-fill: rgb(236 238 242 / 0.045);
+  --screen-track: rgb(236 238 242 / 0.12);
   --screen-go: #4fc98a;
   --trace: #ffc247;
   --fail: #ff5c52;
-  /* Page-level status: the available dot and the current job. */
+  /* The cobalt that reads on the dark screen (5.3:1). */
+  --screen-signal: #5b74ff;
+  /* Page-level status: the availability dot. */
   --go: #18723f;
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 -2px 0 rgb(23 22 20 / 0.1);
-  --key-shadow-down: inset 0 1px 2px rgb(23 22 20 / 0.14);
-  --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -2px 0 rgb(0 0 0 / 0.18);
-  --signal-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.28);
-  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 -2px 0 rgb(0 0 0 / 0.4);
-  --ink-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.5);
-  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.7);
-  --screen-inset: inset 0 2px 6px rgb(0 0 0 / 0.35);
-  /* The single elevation, for screenshot frames. */
-  --elevation: 0 1px 0 rgb(23 22 20 / 0.05), 0 16px 32px -24px rgb(23 22 20 / 0.3);
-  /* Behind dialogs: a flat scrim, no blur. */
-  --scrim: rgb(23 22 20 / 0.42);
+  /* The fluid's two dyes and how far each may cover the paper. The light theme is ink in water,
+     flat; the dark theme is lit smoke, with a soft relief from the dye's surface. */
+  /* The pool: the water the page floats on, and so the page's ground. */
+  --pool: #ebecee;
+  --fluid-neutral: #16181e;
+  --fluid-accent: #2a46ff;
+  --fluid-neutral-max: 0.5;
+  --fluid-accent-max: 0.9;
+  --fluid-shading: 0;
+  /* Marbling: how much of the dye is a soft fill, how strong its contour lines are, and how many
+     lines per unit of dye. Lines, not fill, carry a busy system, so it never turns into a wash. */
+  --fluid-fill: 0.42;
+  --fluid-lines: 0.9;
+  --fluid-steps: 6;
+  /* The opposite theme, for the inverted chapter. */
+  --pool-x: #08090b;
+  --ink-x: #eeeff2;
+  --fluid-neutral-x: #c4c8d2;
+  --fluid-accent-x: #5470ff;
+  --fluid-shading-x: 0.5;
+  --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
+  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 40px 80px -40px rgb(14 15 18 / 0.55), 0 12px 24px -16px rgb(14 15 18 / 0.35);
+  --scrim: rgb(14 15 18 / 0.42);
+  /* Motion. A spring for things with weight, and an expo-out for things that glide. */
+  --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-pour: cubic-bezier(0.65, 0, 0.2, 1);
   color-scheme: light;
 
   /* shadcn/ui tokens, mapped onto ours so components follow both themes automatically. */
@@ -94,34 +125,41 @@
   --border: var(--rule);
   --input: var(--rule);
   --ring: var(--signal-text);
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #151412;
-    --paper-raised: #262522;
-    --key-face: #302e2b;
-    --ink: #eceae6;
-    --ink-2: #ceccc8;
-    --graphite: #9d9b98;
-    --rule: #383633;
-    --rule-strong: #4a4844;
-    --signal: #ff5f1f;
-    --signal-edge: #ff5f1f;
-    --signal-ink: #151412;
-    --signal-text: #ff5f1f;
-    --screen: #0b0b0a;
+    --paper: #0b0c0e;
+    --paper-raised: #141518;
+    --key-face: #1b1c20;
+    --ink: #eeeff2;
+    --ink-2: #c0c3ca;
+    --graphite: #8d919b;
+    --rule: #24262b;
+    --rule-strong: #34363d;
+    --signal: #3d5afe;
+    --signal-ink: #ffffff;
+    --signal-text: #8597ff;
+    --screen: #101115;
+    --screen-raised: #18191e;
     --go: #4fc98a;
-    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-    --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-    --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
-    --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
-    --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
-    --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-    /* A faint inner ring, so the screen reads as recessed into the panel. */
-    --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
-    --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
+    --pool: #08090b;
+    --fluid-neutral: #c4c8d2;
+    --fluid-accent: #5470ff;
+    --fluid-neutral-max: 0.55;
+    --fluid-accent-max: 0.95;
+    --fluid-shading: 0.5;
+    --fluid-fill: 0.5;
+    --fluid-lines: 0.75;
+    --fluid-steps: 6;
+    --pool-x: #ebecee;
+    --ink-x: #0e0f12;
+    --fluid-neutral-x: #16181e;
+    --fluid-accent-x: #2a46ff;
+    --fluid-shading-x: 0;
+    --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
+    --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
     --scrim: rgb(0 0 0 / 0.62);
     --destructive: #ff6a55;
     color-scheme: dark;
@@ -129,29 +167,36 @@
 }
 
 :root[data-theme="dark"] {
-  --paper: #151412;
-  --paper-raised: #262522;
-  --key-face: #302e2b;
-  --ink: #eceae6;
-  --ink-2: #ceccc8;
-  --graphite: #9d9b98;
-  --rule: #383633;
-  --rule-strong: #4a4844;
-  --signal: #ff5f1f;
-  --signal-edge: #ff5f1f;
-  --signal-ink: #151412;
-  --signal-text: #ff5f1f;
-  --screen: #0b0b0a;
+  --paper: #0b0c0e;
+  --paper-raised: #141518;
+  --key-face: #1b1c20;
+  --ink: #eeeff2;
+  --ink-2: #c0c3ca;
+  --graphite: #8d919b;
+  --rule: #24262b;
+  --rule-strong: #34363d;
+  --signal: #3d5afe;
+  --signal-ink: #ffffff;
+  --signal-text: #8597ff;
+  --screen: #101115;
+  --screen-raised: #18191e;
   --go: #4fc98a;
-  --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-  --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-  --signal-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -2px 0 rgb(0 0 0 / 0.25);
-  --ink-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), inset 0 -2px 0 rgb(23 22 20 / 0.22);
-  --ink-shadow-down: inset 0 1px 3px rgb(23 22 20 / 0.3);
-  --panel-highlight: inset 0 1px 0 rgb(255 255 255 / 0.05);
-  /* A faint inner ring, so the screen reads as recessed into the panel. */
-  --screen-inset: inset 0 0 0 1px rgb(255 255 255 / 0.06), inset 0 2px 6px rgb(0 0 0 / 0.6);
-  --elevation: 0 1px 0 rgb(0 0 0 / 0.2), 0 16px 32px -24px rgb(0 0 0 / 0.7);
+  --pool: #08090b;
+  --fluid-neutral: #c4c8d2;
+  --fluid-accent: #5470ff;
+  --fluid-neutral-max: 0.55;
+  --fluid-accent-max: 0.95;
+  --fluid-shading: 0.5;
+  --fluid-fill: 0.5;
+  --fluid-lines: 0.75;
+  --fluid-steps: 6;
+  --pool-x: #ebecee;
+  --ink-x: #0e0f12;
+  --fluid-neutral-x: #16181e;
+  --fluid-accent-x: #2a46ff;
+  --fluid-shading-x: 0;
+  --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
+  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
   --scrim: rgb(0 0 0 / 0.62);
   --destructive: #ff6a55;
   color-scheme: dark;
@@ -179,7 +224,8 @@
   --color-fail: var(--fail);
   --color-go: var(--go);
   --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-archivo), var(--font-instrument), ui-sans-serif, sans-serif;
+  --font-display: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -199,14 +245,14 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  /* Three radii: 8 (controls, nodes), 12 (inner frames, screens), 20 (panels, mats). */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1.25rem;
-  --radius-3xl: 1.25rem;
-  --radius-4xl: 1.25rem;
+  /* Radii: 10 (nodes, small controls), 14 (frames, screens), 24 (the device, panels); buttons are pills. */
+  --radius-sm: 0.625rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 1.5rem;
 }
 
 /* ------------------------------------------------------------------
@@ -215,6 +261,20 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+/* Lenis drives scrolling when it runs; native smooth scrolling would fight it. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
 }
 
 body {
@@ -229,8 +289,8 @@ body {
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--signal);
+  color: var(--signal-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -246,59 +306,82 @@ body {
   }
 }
 
+/* The fluid canvas: fixed behind the whole page. It appears at once on its first frame, which is
+   the bare pool (the dye then fades in), so nothing flashes. */
+.liquid-field {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+}
+.liquid-field[data-ready] {
+  opacity: 1;
+}
+
 /* Type and objects live in the components layer, so Tailwind utilities can still override them. */
 @layer components {
   /* ------------------------------------------------------------------
-     Type. Seven steps: 13 (mono labels), 15 (labels, buttons), 17 (body),
-     20 (lead, item titles), 26 (project titles, stat numbers), 40 (section
-     titles), 56 (display). Weights 400/500/600, and 650 for the display.
-     Mono is for data only (dates, numbers, stacks, URLs, everything on a
-     screen) and is 13px off-screen; 12px exists only on the screens.
-     Display steps (26 and up) are Archivo, whose width axis does the expressive work: wider
-     means louder. Everything smaller is Instrument Sans.
+     Type. Instrument Sans throughout, tight and large where it speaks
+     (the name, section titles), with Instrument Serif italic as the
+     second voice, for one or two words per heading. JetBrains Mono is for
+     data only: dates, numbers, stacks, URLs and everything on a screen.
+     Steps: 13 (mono), 15 (labels, buttons), 17 (body), 20 (lead, items),
+     32 (project titles), 48–88 (section titles), 64–148 (the name).
      ------------------------------------------------------------------ */
   .t-display {
     font-family: var(--font-display);
-    font-size: clamp(2.5rem, 3.9vw, 3.5rem);
-    font-weight: 720;
-    font-stretch: 118%;
-    line-height: 0.95;
-    letter-spacing: -0.025em;
+    font-size: clamp(3.25rem, 9.6vw, 9.25rem);
+    font-weight: 600;
+    font-stretch: 94%;
+    line-height: 0.86;
+    letter-spacing: -0.052em;
   }
-  @media (max-width: 639px) {
-    .t-display {
-      font-stretch: 104%;
-    }
+  .t-serif {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  /* The hero's name fills its column exactly: sized on the column (a container), not the viewport. */
+  .t-name {
+    font-size: min(17.4cqi, 9.5rem);
+  }
+  .t-display .t-serif {
+    letter-spacing: -0.035em;
+    /* The serif runs smaller on the body; a little extra size matches the cap heights. */
+    font-size: 1.08em;
   }
 
   .t-section {
     font-family: var(--font-display);
-    font-size: clamp(2rem, 3vw, 2.5rem);
-    font-weight: 620;
-    font-stretch: 108%;
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    font-size: clamp(2.875rem, 6.4vw, 5.5rem);
+    font-weight: 600;
+    font-stretch: 94%;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
   }
 
   .t-title {
     font-family: var(--font-display);
-    font-size: 1.625rem;
+    font-size: clamp(1.75rem, 2.6vw, 2.25rem);
     font-weight: 600;
-    font-stretch: 104%;
-    line-height: 1.15;
-    letter-spacing: -0.015em;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
   }
 
   .t-item {
     font-size: 1.25rem;
     font-weight: 600;
     line-height: 1.3;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   .t-wide {
     font-family: var(--font-display);
-    font-stretch: 112%;
+    letter-spacing: -0.02em;
   }
 
   /* Mono labels: dates, stacks, specs, captions, readouts. */
@@ -310,128 +393,146 @@ body {
     font-variant-numeric: tabular-nums;
   }
 
-  /* About 70 characters of Instrument Sans (ch is the width of "0", which runs wide in it). */
   .measure {
     max-width: 34em;
   }
 
-  /* Text links: ink with a quiet underline that turns orange on hover. */
+  /* Text links: ink with a quiet underline that pours into cobalt on hover. */
   .link {
     color: var(--ink);
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
     text-decoration-color: color-mix(in srgb, var(--ink) 30%, transparent);
     text-underline-offset: 0.25em;
-    transition: text-decoration-color 240ms ease;
+    transition: text-decoration-color 240ms ease, text-underline-offset 420ms var(--ease-spring);
   }
   .link:hover {
     text-decoration-color: var(--signal-text);
     text-decoration-thickness: 2px;
+    text-underline-offset: 0.32em;
   }
   .link-arrow {
     display: inline-block;
     margin-left: 0.2em;
     color: var(--graphite);
-    transition: transform 160ms ease, color 160ms ease;
+    transition: transform 520ms var(--ease-spring), color 160ms ease;
   }
   .link:hover .link-arrow {
     color: var(--signal-text);
+    transform: translate(0.12em, -0.12em);
   }
 
   /* ------------------------------------------------------------------
-     Objects. All decoration is one of these, and each has a function.
+     Buttons. Pills with weight: on hover a fill pours up from the bottom
+     with a curved meniscus, on a spring, and they settle when pressed.
      ------------------------------------------------------------------ */
-
-  /* Keycaps: anything you press. */
   .key {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0 1.05rem;
-    border-radius: 0.5rem;
+    min-height: 2.875rem;
+    padding: 0 1.25rem;
+    border-radius: 999px;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
     color: var(--ink);
-    box-shadow: var(--key-shadow);
     font-size: 0.9375rem;
     font-weight: 550;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
     user-select: none;
-    transition: transform 60ms ease, box-shadow 60ms ease, border-color 150ms ease, background-color 150ms ease;
+    transition: transform 420ms var(--ease-spring), border-color 200ms ease, color 120ms ease, background-color 200ms ease;
   }
-  .key:hover {
-    border-color: color-mix(in srgb, var(--ink) 38%, var(--rule-strong));
+  /* The pour: a disc wider than the key, risen from below. It rises fast and settles slowly, so it
+     has covered the label (about 70 ms in) before the label turns; on the way out the label turns
+     back at once, while the fill is still over it. */
+  .key::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: -25%;
+    right: -25%;
+    top: 0;
+    height: 220%;
+    border-radius: 50%;
+    background: var(--pour, var(--ink));
+    transform: translateY(100%);
+    transition: transform 560ms var(--ease-out);
+  }
+  @media (hover: hover) {
+    .key:hover {
+      color: var(--pour-ink, var(--paper));
+      border-color: var(--pour, var(--ink));
+      transition: transform 420ms var(--ease-spring), border-color 200ms ease, color 90ms ease 60ms, background-color 200ms ease;
+    }
+    .key:hover::before {
+      transform: translateY(-18%);
+    }
+    .key:hover {
+      --graphite: color-mix(in srgb, var(--pour-ink, var(--paper)) 72%, transparent);
+    }
   }
   .key:active,
   .key[data-latched="true"] {
-    transform: translateY(1px);
-    box-shadow: var(--key-shadow-down);
+    transform: scale(0.96);
+    transition-duration: 120ms;
   }
   .key:disabled {
     cursor: not-allowed;
-    opacity: 0.45;
+    opacity: 0.4;
     transform: none;
-    box-shadow: var(--key-shadow);
+  }
+  .key:disabled::before {
+    display: none;
+  }
+  @media (max-width: 400px) {
+    .key {
+      padding: 0 1.05rem;
+    }
   }
   .key-sm {
     min-height: 2rem;
-    padding: 0 0.7rem;
+    padding: 0 0.8rem;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     font-weight: 500;
   }
   .key-icon {
-    width: 2.75rem;
+    width: 2.875rem;
     padding: 0;
   }
 
-  /* Orange keys: the actuators. */
+  /* Cobalt keys: the actuators and the main "Email me". They pour into ink. */
   .key-signal {
-    border-color: var(--signal-edge);
+    border-color: var(--signal);
     background: var(--signal);
     color: var(--signal-ink);
-    box-shadow: var(--signal-shadow);
-  }
-  .key-signal:hover {
-    border-color: var(--signal-edge);
-    background: var(--signal);
-    filter: brightness(1.04);
-  }
-  .key-signal:active,
-  .key-signal[data-latched="true"] {
-    box-shadow: var(--signal-shadow-down);
+    --pour: var(--ink);
+    --pour-ink: var(--paper);
   }
 
-  /* Ink keys: the primary action where orange would compete with the device (the hero's "Email me"). */
+  /* Ink keys: the strongest neutral. They pour into cobalt. */
   .key-ink {
     border-color: var(--ink);
     background: var(--ink);
     color: var(--paper);
-    box-shadow: var(--ink-shadow);
-  }
-  .key-ink:hover {
-    border-color: var(--ink);
-    background: color-mix(in srgb, var(--ink) 86%, var(--paper));
-  }
-  .key-ink:active {
-    box-shadow: var(--ink-shadow-down);
+    --pour: var(--signal);
+    --pour-ink: var(--signal-ink);
   }
 
-  /* A legend key: the same cap as .key, but it labels something instead of doing something
-     (the tools board). No hover, no press. */
+  /* A tag: labels something, never presses (the tools board). */
   .keycap {
     display: inline-flex;
     align-items: center;
-    height: 1.875rem;
-    padding: 0 0.625rem;
-    border-radius: 0.5rem;
+    height: 2rem;
+    padding: 0 0.8rem;
+    border-radius: 999px;
     border: 1px solid var(--rule-strong);
-    background: var(--key-face);
-    box-shadow: var(--key-shadow);
     color: var(--ink);
     font-family: var(--font-mono);
     font-size: 0.8125rem;
@@ -470,16 +571,14 @@ body {
     content: none;
   }
 
-  /* A project's numbers: three columns between two hairlines, on the paper. */
+  /* A project's numbers: big figures over mono labels, between two hairlines. */
   .stat-row {
     display: grid;
-    /* The first two columns take their labels' width; the last takes what is left. */
     grid-template-columns: auto auto minmax(0, 1fr);
     column-gap: 2.5rem;
     border-block: 1px solid var(--rule);
-    padding-block: 0.75rem;
+    padding-block: 1rem;
   }
-  /* dt comes first in the markup (valid HTML); the number is drawn on top. */
   .stat-row > div {
     display: flex;
     flex-direction: column-reverse;
@@ -487,23 +586,20 @@ body {
   }
   .stat-row dd {
     font-family: var(--font-display);
-    font-size: 1.625rem;
+    font-size: 2.5rem;
     font-weight: 600;
-    font-stretch: 104%;
-    line-height: 1.1;
-    letter-spacing: -0.015em;
+    line-height: 1;
+    letter-spacing: -0.045em;
     font-variant-numeric: tabular-nums;
     color: var(--ink);
   }
   .stat-row dt {
-    margin-top: 0.25rem;
+    margin-top: 0.4rem;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--graphite);
   }
-  /* On a phone three columns leave the labels a word wide, so each number gets its own row with
-     its label beside it, on the same hairlines as a spec table. */
   @media (max-width: 639px) {
     .stat-row {
       grid-template-columns: minmax(0, 1fr);
@@ -513,13 +609,14 @@ body {
       flex-direction: row-reverse;
       align-items: baseline;
       gap: 0.875rem;
-      padding-block: 0.625rem;
+      padding-block: 0.75rem;
     }
     .stat-row > div + div {
       border-top: 1px solid var(--rule);
     }
     .stat-row dd {
-      min-width: 3.25em;
+      min-width: 2.6em;
+      font-size: 2rem;
     }
     .stat-row dt {
       margin-top: 0;
@@ -537,64 +634,48 @@ body {
     border-radius: 0.5rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
-    box-shadow: var(--key-shadow);
     font-family: var(--font-mono);
     font-size: 0.75rem;
     font-weight: 500;
     color: var(--ink-2);
   }
 
-  /* Raised panels: the device, the project mats, the tools board. */
+  /* A surface one step off the paper: the tools board, the stats page's empty state. */
   .panel {
-    border-radius: 1.25rem;
+    border-radius: 1.5rem;
     border: 1px solid var(--rule);
     background: var(--paper-raised);
-    box-shadow: var(--panel-highlight);
   }
 
-  /* The contact console: the page closes on the simulator's material. A charcoal plate, dark in
-     both themes, with an engraved inner rule inset 6px. Inside it the page tokens are
-     re-pointed at the screen's, so text, hairlines, spec tables and keys all follow without
-     per-element colours. Its keys are dark caps; the orange "Email me" stays the one actuator. */
-  .console {
+  /* ------------------------------------------------------------------
+     The device: the simulator, a dark instrument floating on the fluid in
+     both themes. Inside it the page tokens are re-pointed at the screen's,
+     so keys, labels and hairlines follow without per-element colours.
+     ------------------------------------------------------------------ */
+  .device {
     position: relative;
-    border-radius: 1.25rem;
-    background: var(--screen);
+    border-radius: 1.5rem;
+    background: color-mix(in srgb, var(--screen) 90%, transparent);
     color: var(--screen-ink);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), var(--elevation);
+    box-shadow: var(--device-shadow);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
     --ink: var(--screen-ink);
     --ink-2: var(--screen-ink);
     --graphite: var(--screen-graphite);
     --rule: var(--screen-line);
     --rule-strong: var(--screen-outline);
-    /* Dark caps, a step above the plate: light enough to read as keys, dark enough that the
-       graphite legends ("PDF") keep 4.5:1. */
-    --key-face: color-mix(in srgb, var(--screen-ink) 8%, var(--screen));
-    --key-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), inset 0 -2px 0 rgb(0 0 0 / 0.35);
-    --key-shadow-down: inset 0 1px 3px rgb(0 0 0 / 0.45);
-    /* On charcoal the fill orange is itself text-safe (5.7:1), so underlines and focus use it. */
-    --signal-text: var(--signal);
-  }
-  .console::before {
-    content: "";
-    position: absolute;
-    inset: 6px;
-    border-radius: calc(1.25rem - 6px);
-    border: 1px solid var(--screen-line);
-    pointer-events: none;
-  }
-  @media (max-width: 639px) {
-    .console::before {
-      content: none;
-    }
+    --paper: var(--screen);
+    --key-face: var(--screen-raised);
+    --signal-text: var(--screen-signal);
   }
 
-  /* Recessed screens: where data lives, dark in both themes. */
+  /* The contact block's portrait plate and the dark screens. */
   .screen {
-    border-radius: 0.75rem;
+    border-radius: 0.875rem;
     background: var(--screen);
     color: var(--screen-ink);
-    box-shadow: var(--screen-inset);
+    box-shadow: inset 0 0 0 1px var(--screen-line);
   }
   .screen-dots {
     background-image: radial-gradient(var(--screen-dot) 1px, transparent 1.2px);
@@ -602,11 +683,11 @@ body {
     background-position: 8px 8px;
   }
 
-  /* A screenshot sits on a mat inside a browser frame. Captures with a dark copy swap by theme
+  /* A screenshot in a browser frame. Captures with a dark copy swap by theme
      (components/project-shot.tsx); nothing is dimmed with a filter. */
   .shot-frame {
     overflow: hidden;
-    border-radius: 0.75rem;
+    border-radius: 0.875rem;
     border: 1px solid var(--rule-strong);
     background: var(--key-face);
     box-shadow: var(--elevation);
@@ -622,7 +703,7 @@ body {
   }
   .spec dt,
   .spec dd {
-    padding: 0.5rem 0;
+    padding: 0.55rem 0;
     border-top: 1px solid var(--rule);
   }
   .spec > div:last-child dt,
@@ -631,13 +712,10 @@ body {
   }
   .spec dt {
     color: var(--graphite);
-  }
-  .spec dt {
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     line-height: 1.5rem;
   }
-  /* Values are words, so they are set in the sans; the labels stay mono. */
   .spec dd {
     padding-left: 1rem;
     color: var(--ink);
@@ -649,37 +727,192 @@ body {
     line-height: 1.5rem;
   }
 
-  /* The fader in the simulator's control deck. */
+  /* The fader cap in the simulator's control deck. */
   .fader-cap {
     position: relative;
     display: block;
-    width: 28px;
-    height: 16px;
-    border-radius: 8px;
-    border: 1px solid var(--signal-edge);
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
     background: var(--signal);
-    box-shadow: var(--signal-shadow);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 22%, transparent), 0 2px 6px rgb(0 0 0 / 0.4);
     cursor: grab;
-    transition: transform 60ms ease;
-  }
-  .fader-cap::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 3px;
-    bottom: 4px;
-    width: 1px;
-    margin-left: -0.5px;
-    background: rgb(0 0 0 / 0.35);
+    transition: transform 380ms var(--ease-spring), box-shadow 300ms ease;
   }
   .fader-cap::after {
     content: "";
     position: absolute;
-    inset: -12px -10px;
+    inset: -12px;
+  }
+  .fader-cap:hover {
+    transform: scale(1.12);
   }
   .fader-cap:active {
     cursor: grabbing;
-    transform: translateY(1px);
+    transform: scale(0.92);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--signal) 26%, transparent), 0 2px 6px rgb(0 0 0 / 0.4);
+  }
+
+  /* A row that floods with ink on hover (Writing, More projects): the fill rises from the bottom
+     edge with a curved surface, on the same pour curve as the buttons. Decoration only: on touch
+     screens nothing is hidden behind it. */
+  .pour-row {
+    position: relative;
+    isolation: isolate;
+  }
+  .pour-row::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0 -1rem;
+    border-radius: 1rem;
+    background: var(--paper-raised);
+    clip-path: ellipse(75% 0% at 50% 100%);
+    transition: clip-path 700ms var(--ease-pour);
+  }
+  @media (hover: hover) {
+    .pour-row:hover::before {
+      clip-path: ellipse(90% 150% at 50% 100%);
+    }
+  }
+
+  /* The traffic reading that swells when it changes. */
+  .tick {
+    display: inline-block;
+    transition: transform 500ms var(--ease-spring);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Reveals (components/motion-root.tsx). Hidden only once motion is on, so
+   without JavaScript or under reduced motion everything is just there.
+   ------------------------------------------------------------------ */
+html[data-motion="on"] [data-reveal]:not([data-in]) {
+  opacity: 0;
+}
+html[data-motion="on"] [data-reveal="rise"]:not([data-in]) {
+  transform: translate3d(0, 2.25rem, 0);
+}
+html[data-motion="on"] [data-reveal="title"]:not([data-in]) {
+  opacity: 1;
+  transform: translate3d(0, 0.45em, 0);
+  clip-path: inset(-0.2em -0.2em 100% -0.2em);
+}
+html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
+  opacity: 1;
+  clip-path: circle(0 at 50% 50%);
+}
+/* The wipe (after landonorris.com): a bar of the accent sweeps across, the words appear under it at
+   the halfway mark, and it pulls away the other side. */
+html[data-motion="on"] [data-reveal="wipe"] {
+  position: relative;
+}
+html[data-motion="on"] [data-reveal="wipe"]:not([data-in]) {
+  opacity: 1;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke-color: transparent;
+}
+html[data-motion="on"] [data-reveal="wipe"]::after {
+  content: "";
+  position: absolute;
+  inset: 0.06em -0.04em 0.02em;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+}
+html[data-motion="on"] [data-reveal="wipe"][data-in]::after {
+  animation: wipe-bar 1000ms var(--ease-pour) var(--d, 0ms) both;
+}
+html[data-motion="on"] [data-reveal="wipe"][data-in] {
+  animation: wipe-text 1000ms linear var(--d, 0ms) both;
+}
+@keyframes wipe-bar {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  48% {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+  52% {
+    transform: scaleX(1);
+    transform-origin: right center;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right center;
+  }
+}
+@keyframes wipe-text {
+  0%,
+  49% {
+    -webkit-text-fill-color: transparent;
+  }
+  50%,
+  100% {
+    -webkit-text-fill-color: currentColor;
+  }
+}
+[data-reveal] {
+  transition: opacity 900ms var(--ease-out), transform 1100ms var(--ease-out), clip-path 1100ms var(--ease-out);
+  transition-delay: var(--d, 0ms);
+}
+[data-reveal="title"] {
+  clip-path: inset(-0.2em -0.2em -0.2em -0.2em);
+}
+
+/* The name pours in on load: each line rises inside its own clip. It starts partly visible, so the
+   first paint already shows it. */
+.rise-line {
+  display: block;
+  overflow: clip;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.rise-line > span {
+  display: inline-block;
+  animation: rise-in 1300ms var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes rise-in {
+  from {
+    transform: translate3d(0, 55%, 0) skewY(4deg);
+  }
+  to {
+    transform: none;
+  }
+}
+.fade-up {
+  animation: fade-up 1100ms var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes fade-up {
+  from {
+    opacity: 0.001;
+    transform: translate3d(0, 1rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The music player and other popovers open like a drop landing: a spring, from the trigger. */
+[data-slot="popover-content"][data-state="open"] {
+  animation: drop-in 560ms var(--ease-spring) both !important;
+}
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.94);
+    clip-path: inset(0 0 60% 0 round 1rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0 round 1rem);
   }
 }
 
@@ -797,11 +1030,11 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
-  /* In the base layer, so component colours (the orange keys) win over it. */
+  /* In the base layer, so component colours (the cobalt keys) win over it. */
   a {
     color: inherit;
   }
-  /* Orange means "you're operating this". Utilities like outline-hidden can still opt out. */
+  /* Cobalt means "you are operating this". Utilities like outline-hidden can still opt out. */
   :focus-visible {
     outline: 2px solid var(--signal-text);
     outline-offset: 3px;
@@ -818,7 +1051,7 @@ body {
   }
 }
 
-/* Theme switch: the new theme is revealed as a growing circle (see lib/theme.ts). */
+/* Theme switch: the new theme floods out of the toggle as an ink blot (see lib/theme.ts). */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -843,4 +1076,1468 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .eq-bar-on { animation: none; height: 70%; }
+}
+
+/* ------------------------------------------------------------------
+   The inverted chapter (Experience and Background). Its tokens are the
+   opposite theme's, so everything inside follows without per-element
+   colours. Until the liquid runs it is a solid band; once it runs the
+   shader draws the band and its waterline instead.
+   ------------------------------------------------------------------ */
+[data-chapter="invert"],
+[data-site-header][data-x],
+[data-mhud][data-x] {
+  --paper: #0b0c0e;
+  --paper-raised: #141518;
+  --key-face: #1b1c20;
+  --ink: #eeeff2;
+  --ink-2: #c0c3ca;
+  --graphite: #8d919b;
+  --rule: #26282d;
+  --rule-strong: #393b42;
+  --signal: #3d5afe;
+  --signal-ink: #ffffff;
+  --signal-text: #8597ff;
+  --pool: #08090b;
+  --go: #4fc98a;
+  --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-chapter="invert"],
+  :root:not([data-theme="light"]) [data-site-header][data-x],
+  :root:not([data-theme="light"]) [data-mhud][data-x] {
+    --paper: #f4f4f5;
+    --paper-raised: #e3e4e7;
+    --key-face: #ffffff;
+    --ink: #0e0f12;
+    --ink-2: #33353b;
+    --graphite: #5a5d64;
+    --rule: #d3d4d8;
+    --rule-strong: #bec0c5;
+    --signal: #2a46ff;
+    --signal-text: #2a46ff;
+    --pool: #ebecee;
+    --go: #18723f;
+    --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
+    color-scheme: light;
+  }
+}
+:root[data-theme="dark"] [data-chapter="invert"],
+:root[data-theme="dark"] [data-site-header][data-x],
+:root[data-theme="dark"] [data-mhud][data-x] {
+  --paper: #f4f4f5;
+  --paper-raised: #e3e4e7;
+  --key-face: #ffffff;
+  --ink: #0e0f12;
+  --ink-2: #33353b;
+  --graphite: #5a5d64;
+  --rule: #d3d4d8;
+  --rule-strong: #bec0c5;
+  --signal: #2a46ff;
+  --signal-text: #2a46ff;
+  --pool: #ebecee;
+  --go: #18723f;
+  --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
+  color-scheme: light;
+}
+/* The header takes the chapter's tokens while the chapter runs under it (components/choreo.tsx). */
+[data-site-header] {
+  color: var(--ink);
+}
+.chapter-invert {
+  position: relative;
+  color: var(--ink);
+  padding-block: 2rem;
+}
+/* Below the liquid's canvas (z-index -1) but above the body: the canvas paints over it. */
+.chapter-ground {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: var(--pool);
+}
+
+/* On the home page the body is the pool, so the page matches the liquid before it starts (and
+   without WebGL). */
+html:has(.liquid-field) body {
+  background: var(--pool);
+}
+
+/* ------------------------------------------------------------------
+   Layout: one container. Laptops leave a lane on the left for the spine
+   and room on the right for the HUD's ruler.
+   ------------------------------------------------------------------ */
+.wrap {
+  margin-inline: auto;
+  max-width: 88rem;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .wrap {
+    padding-inline: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  html:has(.liquid-field) .wrap {
+    padding-left: clamp(4.5rem, 7vw, 7.5rem);
+    padding-right: 5.5rem;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Section heads. Big titles by default; on laptops with motion (where
+   the HUD flies the title) a sticky frosted bar, "01 / WORK".
+   ------------------------------------------------------------------ */
+.sec-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 1.5rem;
+  padding: 5rem 0 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.sec-index {
+  flex-basis: 100%;
+}
+.sec-slash {
+  display: none;
+}
+.sec-meta {
+  margin-left: auto;
+  padding-bottom: 0.4rem;
+}
+@media (min-width: 640px) {
+  .sec-head-row {
+    padding-top: 8rem;
+  }
+}
+@media (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .sec-head {
+    position: sticky;
+    top: 4rem;
+    z-index: 20;
+  }
+  .sec-head-row {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    height: 2.75rem;
+    padding: 0 1rem;
+    margin-inline: -1rem;
+    border-block: 1px solid var(--rule);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--pool) 62%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .sec-index {
+    flex-basis: auto;
+  }
+  .sec-slash {
+    display: inline;
+    color: var(--graphite);
+  }
+  .sec-head .sec-title {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-stretch: 100%;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  html[data-motion="on"] .sec-head [data-reveal="title"]:not([data-in]) {
+    clip-path: none;
+    transform: none;
+  }
+  .sec-meta {
+    margin-left: 2rem;
+    padding: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Poster type. Instrument Sans semi-condensed, heavy, very large: the
+   project names (whose letters the HUD lifts off the page), the tools
+   count, the experience odometer, the contact title, the rivers of type.
+   ------------------------------------------------------------------ */
+.poster {
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  letter-spacing: -0.035em;
+  line-height: 0.84;
+}
+.poster-word {
+  display: block;
+  font-size: clamp(3.75rem, 12.5vw, 12rem);
+  margin-left: -0.04em;
+}
+.poster-rest {
+  display: block;
+  margin-top: 0.9rem;
+  font-size: clamp(1.75rem, 2.8vw, 2.5rem);
+  font-weight: 600;
+  font-stretch: 100%;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.letters {
+  white-space: nowrap;
+}
+.ltr {
+  display: inline-block;
+  line-height: 1;
+  transition: color 500ms var(--ease-out);
+}
+/* A letter the HUD has lifted off leaves its outline behind. */
+.ltr[data-away] {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--rule-strong);
+  transition-duration: 120ms;
+}
+.project-head-flip {
+  text-align: right;
+}
+.project-head-flip .poster-word {
+  margin-left: 0;
+  margin-right: -0.04em;
+}
+.t-poster {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 9vw, 9rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+}
+.t-poster .t-serif {
+  font-size: 1.06em;
+  letter-spacing: -0.03em;
+}
+.t-role {
+  font-family: var(--font-display);
+  font-size: clamp(1.625rem, 2.6vw, 2.375rem);
+  font-weight: 620;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+.t-row {
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 2.1vw, 1.875rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+.tools-count {
+  font-family: var(--font-display);
+  font-size: clamp(7rem, 17vw, 15rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A count holds its final width while it runs. */
+.count {
+  display: inline-grid;
+}
+.count > * {
+  grid-area: 1 / 1;
+}
+.count-hold {
+  visibility: hidden;
+}
+
+/* A project's figures: one per line, big number then its label. */
+.stat-stack > div {
+  display: grid;
+  grid-template-columns: 6.75rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: 0.7rem;
+  border-top: 1px solid var(--rule);
+}
+.stat-stack > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.stat-stack dd {
+  order: -1;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stat-stack dt {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--graphite);
+}
+
+/* The experience odometer: start month and year of the role you're reading, on rolling reels. */
+.odometer {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 11vw, 10rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.odo-col {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+.odo-reel {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--n, 0) * -1em));
+  transition: transform 1100ms var(--ease-spring);
+}
+.odo-sep {
+  padding-inline: 0.04em;
+  color: var(--signal-text);
+  font-weight: 400;
+}
+.span-label,
+.span-bar {
+  transition: opacity 400ms ease, color 400ms ease;
+}
+[data-active] .span-label {
+  color: var(--graphite);
+}
+[data-active] .span-label[data-on] {
+  color: var(--ink);
+}
+.span-label::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  margin-right: 0;
+  border-radius: 999px;
+  background: var(--signal-text);
+  transform: scale(0);
+  transition: transform 500ms var(--ease-spring), margin 500ms var(--ease-spring);
+  flex: none;
+}
+.span-label[data-on]::before {
+  transform: scale(1);
+  margin-right: 0.5rem;
+}
+[data-active] .span-lane:not([data-on]) .span-bar {
+  opacity: 0.35;
+}
+
+/* ------------------------------------------------------------------
+   Off the clock: two rivers of type. Without motion, the plain list.
+   ------------------------------------------------------------------ */
+.offclock {
+  overflow: hidden;
+  padding-block: 4rem 4.5rem;
+}
+@media (min-width: 1024px) {
+  .offclock {
+    padding-top: 1rem;
+  }
+}
+.offclock-list {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.marquee {
+  margin-top: 1.25rem;
+}
+.marquee-row {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  will-change: transform;
+  animation: river 46s linear infinite;
+}
+.marquee-row-b {
+  animation-direction: reverse;
+  margin-top: 0.2rem;
+}
+html[data-marquee="js"] .marquee-row {
+  animation: none;
+}
+@keyframes river {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.marquee-run {
+  display: flex;
+  flex: none;
+}
+.marquee-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28em;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8.4vw, 8.25rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.marquee-label {
+  font-size: 0.52em;
+  text-transform: none;
+  color: var(--signal-text);
+}
+.marquee-row-b .marquee-item {
+  color: transparent;
+  -webkit-text-stroke: 1.25px var(--ink);
+}
+.marquee-row-b .marquee-label {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--signal-text);
+}
+.marquee-dot {
+  align-self: center;
+  width: 0.14em;
+  height: 0.14em;
+  margin-inline: 0.42em 0.5em;
+  border-radius: 999px;
+  background: var(--signal);
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    display: none;
+  }
+  .offclock-list {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    white-space: normal;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin-top: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 640px) {
+  .offclock-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------------
+   Tide rows (more projects, writing): ink fills the row from the edge
+   the pointer came in by and leaves by the edge it goes out of.
+   Decoration only; nothing is hidden behind it.
+   ------------------------------------------------------------------ */
+.tide-row {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+}
+.tide-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ink);
+  transform: translate3d(0, 101%, 0);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tide-row[data-tide="pre"] .tide-fill {
+    transform: translate3d(0, var(--from, 101%), 0);
+  }
+  .tide-row[data-tide="in"] .tide-fill {
+    transform: none;
+    transition: transform 560ms var(--ease-pour);
+  }
+  .tide-row[data-tide="out"] .tide-fill {
+    transform: translate3d(0, var(--to, 101%), 0);
+    transition: transform 560ms var(--ease-pour);
+  }
+  .tide-row[data-tide="in"] > :not(.tide-fill) {
+    --ink: var(--paper);
+    --ink-2: color-mix(in srgb, var(--paper) 84%, transparent);
+    --graphite: color-mix(in srgb, var(--paper) 72%, transparent);
+    --signal-text: var(--paper);
+  }
+}
+.tide-row > div:not(.tide-fill),
+.tide-row > a {
+  transition: color 120ms ease 60ms, padding 560ms var(--ease-pour);
+}
+.tide-row .t-row,
+.tide-row p,
+.tide-row span {
+  transition: color 120ms ease 60ms;
+}
+.tide-link {
+  color: inherit;
+  text-decoration: none;
+}
+.tide-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.tide-arrow {
+  display: inline-block;
+  margin-left: 0.4em;
+  color: var(--graphite);
+  transition: transform 520ms var(--ease-spring), color 200ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tide-row[data-tide="in"] .tide-arrow {
+    transform: translateX(0.3em);
+    color: var(--signal-text);
+  }
+  .tide-row[data-tide="in"] .link-arrow {
+    color: var(--paper);
+  }
+}
+.tide-row > a,
+.tide-row > div:not(.tide-fill) {
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------
+   The lineup (more projects): cards on one hairline grid, after
+   getartcraft.com/apps. A cobalt number chip, the name, a line, mono
+   bordered tags. On hover a raised fill comes in from the edge the
+   pointer crossed, topped with a cobalt rule. Decoration only.
+   ------------------------------------------------------------------ */
+.t-hud {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.lineup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+@media (min-width: 640px) {
+  .lineup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .lineup-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.lineup-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 17rem;
+  padding: 1.25rem 1.25rem 1.5rem;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.lineup-name {
+  margin-top: 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.375rem;
+  padding: 0 0.4rem;
+  background: var(--signal);
+  color: var(--signal-ink);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.tag-mono {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.hud-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ink) 25%, transparent);
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color 200ms ease, color 200ms ease;
+}
+.hud-link:hover {
+  text-decoration-color: var(--signal-text);
+}
+.hud-link:hover .link-arrow {
+  color: var(--signal-text);
+  transform: translate(0.12em, -0.12em);
+}
+/* The whole card is the link's target when it has one. */
+.lineup-card .hud-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+[data-dir-hover]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-top: 2px solid var(--signal);
+  background: var(--paper-raised);
+  transform: translate3d(0, var(--from, 101%), 0);
+  transition: transform 560ms var(--ease-pour);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-dir-hover][data-fill]::before {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Screenshots and the portrait. On laptops they are drawn into the
+   liquid (data-gl-live); the <img> keeps its box and goes invisible.
+   ------------------------------------------------------------------ */
+.shot-url {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+  color: var(--graphite);
+}
+.shot-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: 0.875rem;
+  text-align: left;
+  cursor: zoom-in;
+}
+.shot-img {
+  border-radius: 0.875rem;
+  box-shadow: 0 0 0 1px var(--rule-strong), var(--elevation);
+}
+.shot-phone {
+  border-radius: 1.125rem;
+}
+[data-gl-live] .shot-img,
+[data-gl-live] .portrait-img {
+  opacity: 0;
+}
+.shot-kbd {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  height: 1.75rem;
+  gap: 0.375rem;
+  padding: 0 0.5rem;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.shot-button:hover .shot-kbd,
+.shot-button:focus-visible .shot-kbd {
+  opacity: 1;
+}
+.portrait-img {
+  border-radius: 1.5rem;
+}
+
+/* Scroll cue at the bottom of the hero. */
+.scroll-cue {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .scroll-cue {
+    position: absolute;
+    bottom: 1.75rem;
+    left: max(clamp(4.5rem, 7vw, 7.5rem), calc((100vw - 88rem) / 2 + clamp(4.5rem, 7vw, 7.5rem)));
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--graphite);
+  }
+  .scroll-cue-line {
+    position: relative;
+    width: 3rem;
+    height: 1px;
+    overflow: hidden;
+    background: var(--rule-strong);
+  }
+  .scroll-cue-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--signal-text);
+    animation: cue 2.4s var(--ease-pour) infinite;
+  }
+}
+@keyframes cue {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* The contact address: an underline that fills with cobalt from the left. */
+.email-link {
+  width: fit-content;
+  max-width: 100%;
+  background-image: linear-gradient(var(--signal-text), var(--signal-text)), linear-gradient(var(--ink), var(--ink));
+  background-size: 0% 3px, 100% 2px;
+  background-position: 0 100%, 0 100%;
+  background-repeat: no-repeat;
+  padding-bottom: 0.12em;
+  transition: background-size 900ms var(--ease-pour);
+}
+.email-link:hover {
+  background-size: 100% 3px, 100% 2px;
+}
+
+/* Header links: a cobalt stroke that springs out from the left on hover and stays under the
+   current page. */
+.nav-link {
+  position: relative;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.3rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--signal-text);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 520ms var(--ease-spring);
+}
+.nav-link:hover::after,
+.nav-link[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* ------------------------------------------------------------------
+   The HUD (components/hud.tsx): flying section names, the frost pools
+   behind them, and the ruler.
+   ------------------------------------------------------------------ */
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.hud-letters {
+  --hud-font: 650 semi-condensed 100px var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  position: absolute;
+  inset: 0;
+}
+.hud-ltr {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  white-space: pre;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform, opacity;
+  text-shadow: 0 0 16px var(--pool), 0 0 3px var(--pool);
+  transition: color 240ms ease;
+}
+.hud-ltr[data-x] {
+  color: var(--ink-x);
+  text-shadow: 0 0 16px var(--pool-x), 0 0 3px var(--pool-x);
+}
+.hud-pool {
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  transition: opacity 260ms ease;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+}
+/* A frost's tint: the pool, and the opposite theme's pool where the chapter is under it (each layer
+   is clipped to its part by components/hud.tsx). */
+.hud-tint {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--pool) 55%, transparent);
+}
+.hud-tint-x {
+  background: color-mix(in srgb, var(--pool-x) 55%, transparent);
+  clip-path: inset(0 0 100% 0);
+}
+.hud-mapfrost .hud-tint {
+  background: color-mix(in srgb, var(--pool) 80%, transparent);
+}
+.hud-mapfrost .hud-tint-x {
+  background: color-mix(in srgb, var(--pool-x) 80%, transparent);
+}
+.hud-pool-top {
+  top: 4rem;
+  width: min(48vw, 680px);
+  height: 330px;
+  -webkit-mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+  mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+}
+.hud-pool-bottom {
+  bottom: 0;
+  width: 200px;
+  height: min(70vh, 640px);
+  -webkit-mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+  mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+}
+.hud-rail {
+  position: absolute;
+  top: 4rem;
+  right: 0;
+  bottom: 0;
+  width: 56px;
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+.hud-rail > * {
+  pointer-events: none;
+}
+.hud-rail-frost {
+  position: absolute;
+  inset: 0;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  -webkit-mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 65%, transparent);
+  mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 65%, transparent);
+}
+/* While the ruler is a map, a wider frost behind it, so the section names on it never sit on the
+   page's own text; the HUD's flying names step aside at the same time (components/hud.tsx). */
+.hud-mapfrost {
+  position: absolute;
+  top: -4rem;
+  right: 0;
+  bottom: 0;
+  width: 15rem;
+  opacity: 0;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to left, #000 55%, rgb(0 0 0 / 0.55) 78%, transparent);
+  mask-image: linear-gradient(to left, #000 55%, rgb(0 0 0 / 0.55) 78%, transparent);
+}
+.hud-tape,
+.hud-words {
+  position: absolute;
+  inset: -4rem 0 0 0;
+}
+.hud-tick {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 10px;
+  height: 1px;
+  background: var(--ink);
+  opacity: 0.38;
+  transform-origin: right center;
+  will-change: transform;
+}
+.hud-tick-major {
+  width: 20px;
+  opacity: 0.8;
+}
+.hud-tick[data-x] {
+  background: var(--ink-x);
+}
+.hud-tick-n {
+  position: absolute;
+  right: 26px;
+  top: -5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+  color: var(--ink);
+  opacity: 0.8;
+  transition: opacity 160ms ease;
+}
+.hud-tick[data-x] .hud-tick-n {
+  color: var(--ink-x);
+}
+.hud-mapword {
+  position: absolute;
+  right: 62px;
+  top: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 650;
+  font-stretch: 87.5%;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--ink);
+  opacity: 0;
+  text-shadow: 0 0 10px var(--pool), 0 0 2px var(--pool);
+}
+.hud-mapword[data-x] {
+  color: var(--ink-x);
+  text-shadow: 0 0 10px var(--pool-x), 0 0 2px var(--pool-x);
+}
+.hud-bracket {
+  position: absolute;
+  right: 0;
+  top: -4rem;
+  width: 56px;
+  height: 0;
+  opacity: 0;
+  border-block: 1px solid color-mix(in srgb, var(--signal-text) 55%, transparent);
+  background: color-mix(in srgb, var(--signal-text) 12%, transparent);
+}
+.hud-ghost {
+  position: absolute;
+  right: 0;
+  top: -4rem;
+  width: 40px;
+  height: 1px;
+  opacity: 0;
+  background: var(--ink);
+}
+.hud-needle {
+  position: absolute;
+  right: 0;
+  top: -4rem;
+  width: 56px;
+  height: 1px;
+  background: var(--signal-text);
+  box-shadow: 0 0 6px var(--signal-text);
+}
+.hud-readout {
+  position: absolute;
+  right: 4px;
+  top: -13px;
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--signal-text);
+}
+.hud-digit {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+.hud-digit > span {
+  display: flex;
+  flex-direction: column;
+  transition: transform 280ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.hud-pct {
+  margin-left: 1px;
+}
+
+/* The hero's name in flight to the header (components/hud.tsx): above the header, so the letters
+   land on its frosted bar rather than under it. */
+.hud-name {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.hud-name-ltr {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 1;
+  white-space: pre;
+  color: var(--ink);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* The wordmark: "A." in the sans, the surname in the serif, as in the hero. While the name flight
+   runs, its letters show one by one as their twins land, whatever the header's own fade says. */
+.wordmark-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.14em;
+  letter-spacing: -0.01em;
+}
+html[data-name-flight] [data-wordmark] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+html[data-name-flight] [data-wl] {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------
+   The small HUD (components/mobile-hud.tsx): on phones and tablets the
+   section titles fly into a frosted bar under the header.
+   ------------------------------------------------------------------ */
+.mhud-bar {
+  position: fixed;
+  top: 4rem;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  height: 34px;
+  pointer-events: none;
+  opacity: 0;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--pool) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: opacity 300ms ease, background-color 300ms ease, border-color 300ms ease;
+}
+.mhud-tags {
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  height: 100%;
+}
+.mhud-index {
+  position: absolute;
+  left: 0;
+  top: 9px;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 16px;
+  color: var(--signal-text);
+  opacity: 0;
+}
+.mhud-word {
+  margin-left: 0.15rem;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.mhud-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 46;
+  pointer-events: none;
+}
+.mhud-fly {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 1;
+  white-space: pre;
+  color: var(--ink);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* A title letter the small HUD has lifted off leaves its outline behind. */
+[data-mtitle] [data-tl][data-away] {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--rule-strong);
+}
+
+/* ------------------------------------------------------------------
+   The spine (components/spine.tsx): a wire in the left lane and the
+   packet riding it.
+   ------------------------------------------------------------------ */
+.station {
+  display: block;
+  width: 0;
+  height: 0;
+}
+.spine,
+.packet {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .spine {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    width: 1px;
+    height: 0;
+    pointer-events: none;
+    background: var(--rule-strong);
+  }
+  .spine:not([data-placed]) {
+    visibility: hidden;
+  }
+  .spine-lit {
+    position: absolute;
+    inset: 0;
+    background: var(--signal-text);
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+  .spine-node {
+    position: absolute;
+    left: -3.5px;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 999px;
+    background: var(--pool);
+    box-shadow: inset 0 0 0 1.5px var(--rule-strong);
+    transition: background-color 400ms ease, box-shadow 400ms ease, transform 500ms var(--ease-spring);
+  }
+  .spine-node[data-lit] {
+    background: var(--signal-text);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal-text) 20%, transparent);
+    transform: scale(1.15);
+  }
+  /* While requests fail, the wire the packet has run is the fail colour. */
+  .spine[data-failing] .spine-lit,
+  .spine[data-failing] .spine-node[data-lit],
+  .spine[data-failing] .spine-branch {
+    background: var(--fail);
+  }
+  .spine[data-failing] .spine-node[data-lit] {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--fail) 22%, transparent);
+  }
+  /* The end: the wire branches across to the key it delivers to. */
+  .spine-branch {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--signal-text);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 700ms var(--ease-out);
+  }
+  .spine[data-delivered] .spine-branch {
+    transform: none;
+  }
+  .spine-node-end {
+    width: 10px;
+    height: 10px;
+    left: -4.5px;
+    margin-top: -5px;
+  }
+  .packet {
+    display: block;
+    position: fixed;
+    top: 50%;
+    z-index: 30;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+  .packet[data-on="true"] {
+    opacity: 1;
+  }
+}
+/* Reduced motion: the packet rests, delivered, at the end of the wire (components/spine.tsx). */
+@media (min-width: 1024px) {
+  .packet[data-rest] {
+    position: absolute;
+    transition: none;
+  }
+}
+/* The key the packet is delivered to answers once. */
+[data-terminal][data-delivered] {
+  animation: delivered 900ms var(--ease-spring);
+}
+@keyframes delivered {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px color-mix(in srgb, var(--signal) 0%, transparent);
+  }
+}
+.station-end {
+  position: absolute;
+  left: 0;
+  top: 1.4375rem;
+}
+.packet-capsule {
+  position: absolute;
+  left: -3.5px;
+  top: -10px;
+  width: 7px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px var(--pool), 0 0 14px color-mix(in srgb, var(--signal) 55%, transparent);
+  transform: scaleY(var(--stretch, 1));
+  transition: background-color 300ms ease;
+}
+.packet[data-delivered] .packet-capsule {
+  transform: scaleY(0.5);
+}
+.packet[data-state="failing"] .packet-capsule {
+  background: var(--fail);
+  box-shadow: 0 0 0 3px var(--pool), 0 0 14px color-mix(in srgb, var(--fail) 55%, transparent);
+}
+.packet-tag {
+  position: absolute;
+  left: 7px;
+  top: -276px;
+  overflow: visible;
+}
+.packet-tag text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--graphite);
+}
+.packet[data-state="failing"] [data-method] {
+  fill: var(--fail);
+}
+
+/* ------------------------------------------------------------------
+   The cursor (components/cursor.tsx).
+   ------------------------------------------------------------------ */
+html[data-pointer="custom"],
+html[data-pointer="custom"] * {
+  cursor: none !important;
+}
+html[data-pointer="custom"] input,
+html[data-pointer="custom"] textarea,
+html[data-pointer="custom"] [cmdk-input] {
+  cursor: text !important;
+}
+.cursor-ring,
+.cursor-dot {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+}
+.cursor-dot {
+  z-index: 10000;
+}
+.cursor-ring::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: -19px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 70%, transparent);
+  transition: transform 420ms var(--ease-spring), background-color 260ms ease, border-color 260ms ease;
+}
+.cursor-ring[data-x]::before {
+  border-color: color-mix(in srgb, var(--ink-x) 70%, transparent);
+}
+.cursor-ring[data-mode="link"]::before {
+  transform: scale(1.45);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.cursor-ring[data-mode="rail"]::before {
+  transform: scale(0.45);
+}
+.cursor-ring[data-mode="label"]::before {
+  transform: translate(40px, 36px) scale(1.55);
+  border-color: var(--signal);
+  background: var(--signal);
+}
+.cursor-label {
+  position: absolute;
+  left: 40px;
+  top: 36px;
+  transform: translate(-50%, -50%) scale(0.6);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--signal-ink);
+  opacity: 0;
+  transition: opacity 200ms ease, transform 420ms var(--ease-spring);
+}
+.cursor-ring[data-mode="label"] .cursor-label {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+.cursor-dot::before {
+  content: "";
+  position: absolute;
+  left: -3.5px;
+  top: -3.5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--signal);
+  transition: transform 300ms var(--ease-spring);
+}
+.cursor-dot[data-mode="label"]::before {
+  transform: scale(0.85);
+}
+
+/* ------------------------------------------------------------------
+   The intro (components/intro.tsx): only under html[data-intro].
+   ------------------------------------------------------------------ */
+.intro {
+  display: none;
+}
+html[data-intro] .intro {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  animation: intro-gone 1ms linear 1900ms forwards;
+}
+@keyframes intro-gone {
+  0%,
+  100% {
+    visibility: hidden;
+  }
+}
+.intro-sheet {
+  position: absolute;
+  inset: 0 0 -14vh 0;
+  background: var(--pool);
+  animation: intro-lift 900ms cubic-bezier(0.76, 0, 0.24, 1) 1000ms forwards;
+}
+@keyframes intro-lift {
+  0% {
+    transform: translate3d(0, 0, 0);
+    border-radius: 0 0 50% 50% / 0 0 0 0;
+  }
+  55% {
+    border-radius: 0 0 50% 50% / 0 0 14vh 14vh;
+  }
+  100% {
+    transform: translate3d(0, -118vh, 0);
+    border-radius: 0 0 50% 50% / 0 0 6vh 6vh;
+  }
+}
+.intro-center {
+  position: absolute;
+  left: 50%;
+  top: 50vh;
+  width: min(78vw, 26rem);
+  transform: translate(-50%, -50%);
+  animation: intro-center 360ms var(--ease-out) 880ms forwards;
+}
+@keyframes intro-center {
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 2rem));
+  }
+}
+.intro-count {
+  display: flex;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 16vw, 9rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.intro-col {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+.intro-reel > span,
+.odo-reel > span,
+.hud-digit > span > span {
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+.intro-reel {
+  display: flex;
+  flex-direction: column;
+  animation: intro-reel 900ms cubic-bezier(0.65, 0, 0.35, 1) 60ms both;
+}
+@keyframes intro-reel {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(var(--to) * -1em));
+  }
+}
+.intro-bar {
+  display: block;
+  height: 1px;
+  margin-top: 1.25rem;
+  background: var(--signal);
+  transform-origin: left;
+  animation: intro-bar 900ms cubic-bezier(0.65, 0, 0.35, 1) 60ms both;
+}
+@keyframes intro-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+.intro-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+}
+html[data-intro] .rise-line > span,
+html[data-intro] .fade-up {
+  animation-delay: calc(var(--d, 0ms) + 1150ms);
 }
