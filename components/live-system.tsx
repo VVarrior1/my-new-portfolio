@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Slider as SliderPrimitive } from "radix-ui";
 import { LiveSim, MAX_SERVERS, diagnose, type Finished, type Metrics, type SimConfig, type Stage } from "@/lib/live-sim";
 import { emitFlow, setFlowState, strainFrom } from "@/lib/flow-bus";
@@ -558,7 +558,7 @@ export function LiveSystem() {
           <p id="live-system-title" className="text-[0.9375rem] font-[550] leading-tight tracking-[-0.01em] text-ink compact:text-[0.875rem]">
             A small system you can break
           </p>
-          <button type="button" onClick={reset} className="key key-sm font-sans font-[550] compact:min-h-10 compact:px-3.5">
+          <button type="button" onClick={reset} className="key key-sm font-sans font-[550] compact:min-h-10 compact:px-3.5 [@media(pointer:coarse)]:min-h-10">
             Reset
           </button>
         </figcaption>
@@ -568,7 +568,9 @@ export function LiveSystem() {
           <div className="flex flex-col" style={{ height: compact ? DISPLAY_HEIGHT_COMPACT : DISPLAY_HEIGHT }}>
             <div className="flex shrink-0 items-start gap-2.5 border-b border-screen-line px-4 py-3 compact:gap-2 compact:px-3 compact:py-1.5">
               <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full transition-colors" style={{ background: status }} aria-hidden="true" />
-              <p className="text-[0.875rem] leading-[1.4] text-screen-ink compact:text-[0.8125rem] compact:leading-[1.35]" aria-live="polite">
+              {/* Pretty wrapping keeps a lone word off the second line; on phones the line always holds two
+                  rows, so the diagram under it doesn't jump as the demo's lines change length. */}
+              <p className="text-pretty text-[0.875rem] leading-[1.4] text-screen-ink compact:min-h-[2.7em] compact:text-[0.8125rem] compact:leading-[1.35]" aria-live="polite">
                 {demoOn && (
                   <>
                     <span className="sim-tag mr-1.5">Demo</span>{" "}
@@ -780,7 +782,7 @@ function Edge({ from, to, dashed = false }: { from: Point; to: Point; dashed?: b
   return <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} strokeDasharray={dashed ? "3 4" : undefined} />;
 }
 
-/** A box in the diagram: its name, one value, and its load as a level rising inside it. */
+/** A box in the diagram: its name, one value, and its load as a gauge along its foot. */
 function Node({
   at,
   size,
@@ -800,13 +802,13 @@ function Node({
   color?: string;
   state?: "normal" | "off" | "down";
 }) {
-  const clip = `node-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const x = at.x - size.w / 2;
   const y = at.y - size.h / 2;
   const small = compact || size.w < 92;
   const pad = small ? 8 : 12;
   const muted = state === "off";
-  const titleSize = small ? 12.5 : 15;
+  // A narrow box (a 360 px phone) shrinks a long name a little rather than run it into the border.
+  const titleSize = Math.min(small ? 12.5 : 15, (size.w - pad - 6) / (title.length * 0.56));
   const valueSize = small ? 11.5 : 13;
   const stacked = value !== undefined && size.h >= 34;
   // A short box (four servers on a phone) keeps its name and drops the number; the level still shows the load.
@@ -814,21 +816,30 @@ function Node({
   const titleY = stacked ? at.y - (small ? 2 : 4) : at.y + titleSize * 0.36;
   const valueY = at.y + (small ? 12 : 16);
   const level = Math.max(0, Math.min(1, load ?? 0));
-  const alpha = color === "var(--screen-ink)" ? 0.11 : 0.3;
+  // The gauge sits under the text, never behind it, so its edge can't cut through a number.
+  const gaugeH = small ? 2.5 : 3;
+  const gaugeY = y + size.h - (small ? 5.5 : 10);
+  const gaugeW = size.w - pad * 2;
   return (
     <g>
-      <clipPath id={clip}>
-        <rect x={x} y={y} width={size.w} height={size.h} rx={10} />
-      </clipPath>
       {/* Opaque, so requests pass under the box instead of over its label. */}
       <rect x={x} y={y} width={size.w} height={size.h} rx={10} fill="var(--screen)" />
       {!muted && <rect x={x} y={y} width={size.w} height={size.h} rx={10} fill="var(--screen-fill)" />}
       {load !== undefined && (
-        <g clipPath={`url(#${clip})`}>
-          <g className="sim-level" style={{ transform: `translateY(${((1 - level) * size.h).toFixed(1)}px)` }}>
-            <rect x={x} y={y} width={size.w} height={size.h} fill={color} fillOpacity={alpha} />
-          </g>
-        </g>
+        <>
+          <rect x={x + pad} y={gaugeY} width={gaugeW} height={gaugeH} rx={gaugeH / 2} fill="var(--screen-outline)" fillOpacity={0.55} />
+          <rect
+            className="sim-level"
+            x={x + pad}
+            y={gaugeY}
+            width={gaugeW}
+            height={gaugeH}
+            rx={gaugeH / 2}
+            fill={color}
+            fillOpacity={color === "var(--screen-ink)" ? 0.85 : 1}
+            style={{ transformBox: "fill-box", transformOrigin: "left center", transform: `scaleX(${level.toFixed(3)})` }}
+          />
+        </>
       )}
       <rect
         x={x + 0.5}

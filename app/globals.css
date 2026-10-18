@@ -729,7 +729,7 @@ body {
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
   }
-  /* A node's load: a level that rises inside it, eased between the simulator's 200 ms readings. */
+  /* A node's load: a gauge along its foot, eased between the simulator's 200 ms readings. */
   .sim-level {
     transition: transform 240ms var(--ease-out);
   }
