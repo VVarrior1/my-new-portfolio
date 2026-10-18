@@ -4,6 +4,7 @@ import {
   classifyPath,
   emptyAnalytics,
   isBot,
+  isCountedHost,
   normalizeAnalytics,
   normalizeReferrer,
   sanitizeEventName,
@@ -240,5 +241,18 @@ describe("inbox compaction", () => {
     const data = foldInbox(emptyAnalytics(now), [{ key: k1, hit: { nope: true } }], now);
     expect(data.totalViews).toBe(0);
     expect(data.cursor).toBe(k1);
+  });
+});
+
+describe("isCountedHost", () => {
+  it("counts only the real domain, never previews", () => {
+    expect(isCountedHost("abdelrahmanm.dev")).toBe(true);
+    expect(isCountedHost("www.abdelrahmanm.dev")).toBe(true);
+    expect(isCountedHost("abdelrahmanm-git-feat-x-vvarrior1s-projects.vercel.app")).toBe(false);
+    expect(isCountedHost("design-ten-a--abdelrahmanmohamed1.netlify.app")).toBe(false);
+  });
+
+  it("treats a screenshot service as a bot", () => {
+    expect(isBot("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/155.0 Safari/537.36 vercel-screenshot/1.0")).toBe(true);
   });
 });

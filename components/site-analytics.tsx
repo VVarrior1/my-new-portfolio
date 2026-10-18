@@ -6,6 +6,9 @@ import { useEffect, useRef } from "react";
 const ENDPOINT = "/api/analytics/track";
 
 function send(payload: Record<string, unknown>) {
+  // Automated browsers (Playwright, Puppeteer, Selenium, screenshot services) set navigator.webdriver,
+  // even when they send an ordinary Chrome user agent. They are not visitors.
+  if (navigator.webdriver) return;
   const body = JSON.stringify(payload);
   try {
     // keepalive lets the request finish even if the click navigates away.

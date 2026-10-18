@@ -210,7 +210,17 @@ export function sanitizeEventName(input: unknown): string | null {
 }
 
 const BOT_PATTERN =
-  /bot|crawl|spider|slurp|scrap|headless|lighthouse|pagespeed|preview|facebookexternalhit|embedly|quora link|whatsapp|telegram|discord|skype|curl|wget|python|httpclient|okhttp|axios|node-fetch|go-http|java\/|postman|insomnia|monitor|uptime|pingdom|phantom|puppeteer|playwright|selenium/i;
+  /bot|crawl|spider|slurp|scrap|headless|lighthouse|pagespeed|preview|facebookexternalhit|embedly|quora link|whatsapp|telegram|discord|skype|curl|wget|python|httpclient|okhttp|axios|node-fetch|go-http|java\/|postman|insomnia|monitor|uptime|pingdom|phantom|puppeteer|playwright|selenium|vercel|screenshot|prerender/i;
+
+/**
+ * Only the real site counts. Preview deployments (*.vercel.app, branch previews) share the same
+ * store, and they are mostly opened by automated reviewers, so their hits would pass as visitors.
+ */
+export const COUNTED_HOSTS = ["abdelrahmanm.dev", "www.abdelrahmanm.dev"];
+
+export function isCountedHost(host: string): boolean {
+  return COUNTED_HOSTS.includes(host.split(":")[0].toLowerCase());
+}
 
 export function isBot(userAgent: string | null | undefined): boolean {
   if (!userAgent || userAgent.length < 20) return true;

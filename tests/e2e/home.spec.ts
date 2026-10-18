@@ -41,6 +41,8 @@ test.describe("home page", () => {
       await route.fulfill({ status: 204 });
     });
     await page.addInitScript(() => {
+      // Playwright sets navigator.webdriver, which the tracker skips on purpose; look like a person here.
+      Object.defineProperty(navigator, "webdriver", { get: () => false });
       try {
         sessionStorage.setItem("intro", "1");
       } catch {}
@@ -107,6 +109,8 @@ test.describe("home page", () => {
   });
 
   test("sends a page view with the ?ref= tag", async ({ page }) => {
+    // Playwright sets navigator.webdriver, which the tracker skips on purpose; look like a person here.
+    await page.addInitScript(() => Object.defineProperty(navigator, "webdriver", { get: () => false }));
     const sent = page.waitForRequest((request) => request.url().endsWith("/api/analytics/track") && request.method() === "POST");
     await page.goto("/?ref=resume");
     const body = JSON.parse((await sent).postData() ?? "{}");

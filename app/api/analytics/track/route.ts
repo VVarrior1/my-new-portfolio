@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { compactIfDue, enqueueHit } from "@/lib/analytics";
 import {
   isBot,
+  isCountedHost,
   normalizeReferrer,
   sanitizeEventName,
   sanitizePath,
@@ -35,9 +36,9 @@ export async function POST(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
   if (request.cookies.get("pf_optout")) return skip("opted-out");
   if (isBot(request.headers.get("user-agent"))) return skip("bot");
-  if (/^(localhost|127\.0\.0\.1)(:|$)/.test(host) && process.env.ANALYTICS_COUNT_LOCALHOST !== "1") {
-    return skip("localhost");
-  }
+  const local = /^(localhost|127\.0\.0\.1)(:|$)/.test(host);
+  if (local && process.env.ANALYTICS_COUNT_LOCALHOST !== "1") return skip("localhost");
+  if (!local && !isCountedHost(host)) return skip("preview");
 
   const now = new Date().toISOString();
   const day = now.slice(0, 10);
@@ -83,6 +84,12 @@ export async function POST(request: NextRequest) {
     }
   } else {
     return NextResponse.json({ error: "type must be 'view' or 'event'" }, { status: 400 });
+  }
+
+  // A visitor's first view of the day goes to the runtime log with its user agent (no IP), so the
+  // counts can be audited later: `vercel logs --query /api/analytics/track -x`.
+  if (hit.kind === "view" && hit.newToday) {
+    console.log(`analytics visit ${hit.newVisitor ? "new" : "returning"} ${hit.path} ua=${request.headers.get("user-agent")}`);
   }
 
   try {
