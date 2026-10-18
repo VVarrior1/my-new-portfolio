@@ -103,7 +103,8 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
           <span className="absolute -translate-x-1/2 text-signal-text" style={{ left: at(nowAt) }}>
             now
           </span>
-          <span className="absolute right-0 max-lg:hidden">{Math.floor(axisEnd / 12)}</span>
+          {/* The end year, unless "now" is already close enough to say it. */}
+          {(axisEnd - nowAt) / span > 0.14 && <span className="absolute right-0 max-lg:hidden">{Math.floor(axisEnd / 12)}</span>}
         </div>
       </div>
     </div>

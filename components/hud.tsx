@@ -306,8 +306,9 @@ function HudLayer() {
             if (sourceRects) {
               // Hand-off: the page letter shows until its twin leaves.
               const away = d > 0.002;
+              // The page keeps an imprint of the word, outlined, where it lifted off.
               const src = e.source![k];
-              if (src) src.style.opacity = away ? "0" : "";
+              if (src && src.hasAttribute("data-away") !== away) src.toggleAttribute("data-away", away);
               if (!away) alpha = 0;
               if (!sourceRects[k] || sourceRects[k].bottom < -200) alpha *= 1;
             }
@@ -411,7 +412,7 @@ function HudLayer() {
         window.removeEventListener("wheel", onInput);
         window.removeEventListener("keydown", onInput);
         window.removeEventListener("touchstart", onInput);
-        for (const e of entries) e.source?.forEach((el) => (el.style.opacity = ""));
+        for (const e of entries) e.source?.forEach((el) => el.removeAttribute("data-away"));
       };
     };
 

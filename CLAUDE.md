@@ -20,44 +20,50 @@ Run all of them before pushing; `npm run ci` chains them.
 
 ## Design rules
 
-The design is "Liquid": sheets floating on a real fluid simulation, ink on paper (light) or smoke
-on black (dark), with one accent, cobalt. Read `README.md` → Design and the token comments at the
-top of `app/globals.css`.
+The design is "Liquid World": the whole home page floats on a real fluid simulation (marbled ink on
+pale water in light, lit smoke on black in dark), with one accent, cobalt. Read `README.md` →
+Design and the token comments at the top of `app/globals.css`.
 
 - Colors only through the tokens in `app/globals.css` (`paper`, `pool`, `paper-raised`, `key-face`,
   `ink`, `ink-2`, `graphite`, `rule`, `signal`, `signal-text`, `screen-*`, `trace`, `fail`, `go`,
-  `fluid-*`). Every token has a dark value; check both themes. Neutrals sit on one cool hue
-  (OKLCH h≈265, chroma ≤ 0.016). Check new neutrals and contrast with a script, not by eye.
-- One accent. `--signal` (cobalt) fills what you press (the main "Email me", the kill button, the
-  fader cap), marks "now" (the current role's bar, the timeline cursor) and section indexes;
-  `--signal-text` is cobalt text, hover strokes and arrows. The fluid may only paint the neutral
-  dye and the accent (red and green channels of its dye texture); never add a second hue to it.
-  Status colours (`--trace`, `--fail`, `--screen-go`) appear only on the simulator's screen and
-  the /stats chart; `--go` is the availability dot.
-- The liquid (`components/liquid-field.tsx`) is seen only through windows: `data-liquid-window`
-  (the hero, the contact section, and `main` for the rails). Sections are `.sheet`s; give a new
-  sheet `data-liquid-edge` so scrolling drags a wake off it. Text over the liquid needs a
-  `data-liquid-protect` ancestor (the value is how much dye is held back, 0–1).
-- Simulator → liquid goes through `lib/flow-bus.ts` only (`setFlowState`, `emitFlow`). Points
-  are viewport pixels.
+  `fluid-*`, and the `-x` twins). Every token has a dark value, and the inverted chapter re-points
+  them at the opposite theme; check both themes and the chapter in both. Neutrals sit on one cool
+  hue (OKLCH h≈265, chroma ≤ 0.016). Check new neutrals and contrast with a script, not by eye.
+- One accent. `--signal` (cobalt) fills what you press, marks "now", runs the spine, the ruler's
+  needle, the waterline and the wipe reveals, and voices the serif labels. The fluid may only paint
+  the neutral dye and the accent (red and green channels of its dye texture); never add a hue.
+  Status colours (`--trace`, `--fail`, `--screen-go`) mean status: the simulator's screen, the
+  packet's 503, the /stats chart; `--go` is the availability dot.
+- There are no opaque sheets on the home page. Text over the liquid needs a `data-calm` ancestor
+  (the value is how much dye is held back, 0–1; the shader takes the 8 on screen). A section in
+  the opposite theme is `data-chapter="invert"` with a `.chapter-ground` inside (the shader draws
+  its band; the ground is for contrast checks and no-WebGL). Images that should live in the liquid
+  get `data-gl` ("shot" or "portrait") on a wrapper of the `<img>`.
+- Simulator → liquid goes through `lib/flow-bus.ts` only (`setFlowState`, `emitFlow`; `stir` for a
+  push with dye). Points are viewport pixels.
+- Anything per-frame subscribes to `lib/ticker.ts` (`onFrame`), never its own rAF, so it reads the
+  scroll Lenis just set. Smooth scrolls go through `scrollToTarget`.
+- The HUD (`components/hud.tsx`) reads `main [data-hud]`: a section's name queues and flies; an
+  element with `data-hud-source` (a poster built with `<Letters>`) lifts its own letters. Its math is
+  in `lib/hud-math.ts` with tests. It, the cursor and the snap-to-resolve exist only on fine pointers
+  ≥1024px with motion; section heads switch between a big title and the sticky "01 / WORK" bar by
+  the same media query, so nothing moves after load.
 - Motion: springs (`--ease-spring`) for things with weight, `--ease-out` for glides, `--ease-pour`
-  for fills. Animate transform, opacity and clip-path only. Entrances use `data-reveal`
-  (`rise`, `title`, `blot`) and must never be required to read anything: they hide content only
-  under `html[data-motion="on"]`. Every loop pauses in hidden tabs; the liquid also starts on
-  idle after load (LCP), caps DPR, renders one still frame under reduced motion, and must keep
-  60 fps on a laptop (measure with `window.__liquid`).
-- Hover is decoration only (pour fills, lifts, strokes). Nothing is hidden behind hover, so touch
-  loses nothing.
-- Type: Instrument Sans for everything, Instrument Serif italic for at most one or two words in a
-  heading (the surname, "2027?"), JetBrains Mono for data only. The name is sized on its column
-  (`.t-name`, container units) so it always fits on one line per word.
-- Layout: one 12-column grid in an 88rem container; the hero is text 1–6, device 7–12.
-  Experience, Background, Writing and More projects share the 3/9 split. Radii: 10px (nodes),
-  14px (frames, screens), 24–28px (device, sheets, stages); buttons are pills.
+  for fills and wipes. Animate transform, opacity and clip-path only (the wipe also flips
+  `-webkit-text-fill-color`). Entrances use `data-reveal` (`rise`, `title`, `blot`, `wipe`) and must
+  never be required to read anything: they hide content only under `html[data-motion="on"]`. Every
+  loop pauses in hidden tabs; the liquid starts on idle after load, caps DPR, renders one still
+  frame under reduced motion, and must keep 60 fps on a laptop (measure with `window.__liquid`).
+  `?tune` opens a tuner for its constants.
+- Hover is decoration only (tides, ripples, the cursor label). Nothing is hidden behind hover.
+- Type: Instrument Sans for everything (semi-condensed 650 for posters, the odometer, counts and the
+  HUD), Instrument Serif italic for one or two words (the surname, "2027?", the rivers' labels),
+  JetBrains Mono for data and HUD labels. The name is sized on its column (`.t-name`).
+- Layout: one 12-column grid inside `.wrap`; on laptops `.wrap` leaves a left lane for the spine
+  and room on the right for the ruler. Radii: 10px (nodes), 14px (screenshots, screens), 24px
+  (device, portrait); buttons are pills.
 - The name is never printed twice in one viewport: the header wordmark waits on `/` until the h1
   scrolls out.
-- No all-caps eyebrow labels or card grids. Hierarchy comes from scale: the name and section
-  titles are very large, everything else is calm.
 - The simulator's status line and diagram share a fixed height (`DISPLAY_HEIGHT`) so controls
   never move under the pointer, and the diagram flows top to bottom below 560px.
 - shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
@@ -66,9 +72,10 @@ top of `app/globals.css`.
   element resets (`a`, `:focus-visible`) in `@layer base` for the same reason.
 - History: the owner called the typographic versions "bland", rejected stock photos of Calgary
   ("forced and irrelevant"), scored the multi-hue glow version 4/10 ("the colors are off"), found
-  Night Ops (dark, light beams) "mid", and Workbench (warm paper, orange, hardware) "6.5/7,
-  something is missing". Liquid is the answer to "we need some fluid animations". Don't bring back
-  multiple accent hues, glows or stock imagery.
+  Night Ops "mid" and Workbench "6.5/7, something is missing". Of three motion builds they liked
+  Liquid best, then Scroll; Springs had nothing special. Liquid World merges Liquid with Scroll's
+  spine and poster type, and takes its scroll signature from getartcraft.com/apps and its reveals
+  from landonorris.com. Don't bring back multiple accent hues, glows or stock imagery.
 - Public counts under 50 (post reads) aren't shown; the visit total lives on `/stats` only.
 - Don't feature ApplyOps anywhere (the owner doesn't want it shown; the repo is private).
 - Product screenshots: `node scripts/capture-work-shots.mjs` (it also writes the Systemlab dark copy,

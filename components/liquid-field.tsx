@@ -96,6 +96,7 @@ declare global {
   interface Window {
     __liquid?: { frames: number; ms: number; planes: number };
     __liquidTune?: Tuning;
+    __liquidRecolor?: () => void;
   }
 }
 
@@ -391,6 +392,7 @@ export function LiquidField() {
           f.render();
         }
       };
+      window.__liquidRecolor = recolor;
       const themeObserver = new MutationObserver(recolor);
       themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
       const scheme = window.matchMedia("(prefers-color-scheme: dark)");

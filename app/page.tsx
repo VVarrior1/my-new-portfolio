@@ -156,7 +156,7 @@ export default async function Home() {
               <LiveSystem />
             </div>
           </div>
-          <p className="scroll-cue t-mono" aria-hidden="true">
+          <p className="scroll-cue t-mono" aria-hidden="true" data-calm="0.9">
             <span className="scroll-cue-line" />
             Scroll
           </p>
@@ -219,7 +219,9 @@ export default async function Home() {
                       {rest && (
                         <>
                           {" "}
-                          <span className="poster-rest">{rest}</span>
+                          <span className="poster-rest ml-auto w-fit" data-reveal="wipe">
+                            {rest}
+                          </span>
                         </>
                       )}
                     </h3>
@@ -383,7 +385,7 @@ export default async function Home() {
             <Station route="/background" />
             <div className="grid gap-y-14 lg:grid-cols-12 lg:gap-x-8">
               <div className="min-w-0 lg:col-span-5" data-calm="0.95">
-                <p className="tools-count" aria-hidden="true">
+                <p className="tools-count w-fit" aria-hidden="true" data-reveal="wipe">
                   <Count value={String(toolCount)} />
                 </p>
                 <p className="t-mono -mt-2 text-graphite" aria-hidden="true">
@@ -473,7 +475,7 @@ export default async function Home() {
                 <p className="t-mono mb-4 text-graphite" aria-hidden="true">
                   <span className="text-signal-text">05</span> / Contact
                 </p>
-                <h2 id="contact-title" className="t-poster" data-reveal="title">
+                <h2 id="contact-title" className="t-poster w-fit" data-reveal="wipe">
                   Hiring for <span className="t-serif">2027?</span>
                 </h2>
                 <p className="measure mt-7 text-[1.1875rem] leading-relaxed text-ink-2 sm:text-[1.375rem]" data-part>

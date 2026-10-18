@@ -790,6 +790,59 @@ html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
   opacity: 1;
   clip-path: circle(0 at 50% 50%);
 }
+/* The wipe (after landonorris.com): a bar of the accent sweeps across, the words appear under it at
+   the halfway mark, and it pulls away the other side. */
+html[data-motion="on"] [data-reveal="wipe"] {
+  position: relative;
+}
+html[data-motion="on"] [data-reveal="wipe"]:not([data-in]) {
+  opacity: 1;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke-color: transparent;
+}
+html[data-motion="on"] [data-reveal="wipe"]::after {
+  content: "";
+  position: absolute;
+  inset: 0.06em -0.04em 0.02em;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+}
+html[data-motion="on"] [data-reveal="wipe"][data-in]::after {
+  animation: wipe-bar 1000ms var(--ease-pour) var(--d, 0ms) both;
+}
+html[data-motion="on"] [data-reveal="wipe"][data-in] {
+  animation: wipe-text 1000ms linear var(--d, 0ms) both;
+}
+@keyframes wipe-bar {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  48% {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+  52% {
+    transform: scaleX(1);
+    transform-origin: right center;
+  }
+  100% {
+    transform: scaleX(0);
+    transform-origin: right center;
+  }
+}
+@keyframes wipe-text {
+  0%,
+  49% {
+    -webkit-text-fill-color: transparent;
+  }
+  50%,
+  100% {
+    -webkit-text-fill-color: currentColor;
+  }
+}
 [data-reveal] {
   transition: opacity 900ms var(--ease-out), transform 1100ms var(--ease-out), clip-path 1100ms var(--ease-out);
   transition-delay: var(--d, 0ms);
@@ -1217,6 +1270,13 @@ html:has(.liquid-field) body {
 .ltr {
   display: inline-block;
   line-height: 1;
+  transition: color 500ms var(--ease-out);
+}
+/* A letter the HUD has lifted off leaves its outline behind. */
+.ltr[data-away] {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--rule-strong);
+  transition-duration: 120ms;
 }
 .project-head-flip {
   text-align: right;
@@ -1275,7 +1335,7 @@ html:has(.liquid-field) body {
 /* A project's figures: one per line, big number then its label. */
 .stat-stack > div {
   display: grid;
-  grid-template-columns: 5.5ch minmax(0, 1fr);
+  grid-template-columns: 6.75rem minmax(0, 1fr);
   align-items: baseline;
   gap: 1rem;
   padding-block: 0.7rem;
