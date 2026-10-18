@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Archivo, Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { playlist } from "@/lib/playlist";
@@ -25,6 +25,17 @@ const serif = Instrument_Serif({
   style: "italic",
   variable: "--font-instrument-serif",
   display: "swap",
+});
+
+// Archivo, variable on weight and width, is the instrument's voice: the section words that fly
+// along the right-hand rail, the poster numbers and the marquee. It is never the LCP text (the
+// name is Instrument Sans and Serif), so it isn't preloaded and swaps in when it lands.
+const display = Archivo({
+  subsets: ["latin"],
+  axes: ["wdth"],
+  variable: "--font-archivo",
+  display: "swap",
+  preload: false,
 });
 
 const mono = JetBrains_Mono({
@@ -96,7 +107,7 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn(sans.variable, serif.variable, mono.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn(sans.variable, serif.variable, display.variable, mono.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: headScript }} />
         <script

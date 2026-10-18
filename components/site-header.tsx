@@ -15,7 +15,8 @@ const links = [
   { href: "/#contact", label: "Contact" },
 ];
 
-/** `overlay`: the header starts transparent, over the liquid, and turns into frosted paper once you scroll. */
+/** `overlay`: the header starts transparent, over the liquid, and turns into frosted paper once you
+ * scroll; it also lines up with the home page's frame instead of the wider content column. */
 export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -57,10 +58,10 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/80 backdrop-blur-xl" : overlay ? "border-transparent bg-transparent" : "border-transparent bg-paper"
+        scrolled || open ? (overlay ? "border-transparent bg-pool/80 backdrop-blur-xl" : "border-rule bg-paper/80 backdrop-blur-xl") : overlay ? "border-transparent bg-transparent" : "border-transparent bg-paper"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-[88rem] items-center justify-between gap-4 px-4 sm:px-8">
+      <div className={`flex h-16 items-center justify-between gap-4 ${overlay ? "wrap" : "mx-auto max-w-[88rem] px-4 sm:px-8"}`}>
         <Link href="/" className="group flex items-center gap-2.5" aria-label="A. Mohamed, home">
           <span
             aria-hidden="true"

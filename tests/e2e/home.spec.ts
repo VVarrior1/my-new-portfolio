@@ -90,7 +90,68 @@ test.describe("other pages", () => {
   });
 });
 
+test.describe("scroll choreography", () => {
+  test("the section names fly to the top-right corner as their sections arrive", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await expect(page.locator("html")).toHaveAttribute("data-hud", "on");
+    const letters = page.locator('.hud-letter[data-word="0"]');
+    await expect(letters).toHaveCount(4); // W O R K
+    // Before Work arrives its name waits on deck, low on the right.
+    const before = await letters.first().boundingBox();
+    expect(before!.y).toBeGreaterThan(400);
+    await page.locator("#experience").scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollTo(0, document.getElementById("work")!.getBoundingClientRect().top + window.scrollY));
+    await expect.poll(async () => (await letters.first().boundingBox())!.y, { timeout: 8000 }).toBeLessThan(140);
+  });
+
+  test("the packet rides the spine, lights stations and is delivered at the contact section", async ({ page }) => {
+    await page.goto("/");
+    const packet = page.locator(".packet");
+    await expect(packet).toHaveAttribute("data-on", "");
+    const station = page.locator('#work .station');
+    await expect(station).not.toHaveAttribute("data-lit", "");
+    await page.evaluate(() => window.scrollTo(0, document.getElementById("experience")!.getBoundingClientRect().top + window.scrollY));
+    await expect(station).toHaveAttribute("data-lit", "", { timeout: 8000 });
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect(page.locator("[data-terminal]")).toHaveAttribute("data-delivered", "", { timeout: 8000 });
+    await expect(packet.locator("[data-method]")).toHaveText(/200|503/);
+  });
+
+  test("the packet turns to 503 when the simulator fails requests", async ({ page }) => {
+    await page.goto("/");
+    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
+    await sim.getByRole("slider").focus();
+    for (let i = 0; i < 70; i++) await page.keyboard.press("ArrowRight");
+    await sim.getByRole("button", { name: "Kill a server" }).click();
+    await expect(page.locator(".packet")).toHaveAttribute("data-state", "failing", { timeout: 15000 });
+    await expect(page.locator(".packet [data-method]")).toHaveText("503");
+  });
+
+  for (const width of [390, 1024, 1440]) {
+    test(`never scrolls sideways at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      for (const y of [0, 2000, 4000, 6000, 100000]) {
+        await page.evaluate((top) => window.scrollTo(0, top), y);
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflow).toBeLessThanOrEqual(0);
+      }
+    });
+  }
+});
+
 test.describe("reduced motion", () => {
+  test("is a finished drawing: no rail, the plain personal list, the packet delivered", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await expect(page.locator(".packet")).toHaveAttribute("data-delivered", "");
+    await expect(page.locator("html")).not.toHaveAttribute("data-hud", "on");
+    await expect(page.locator(".marquee")).toBeHidden();
+    await expect(page.locator(".offclock-list").getByText("Bullet, rated")).toBeVisible();
+    await expect(page.locator(".section-word").first()).toBeVisible();
+  });
+
   test("shows everything without waiting on an animation", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");

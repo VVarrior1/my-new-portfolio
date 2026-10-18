@@ -19,7 +19,7 @@ const DOTS_PER_SECOND = 36;
 const SEGMENT_MS = 240;
 const SLOW_MS = 150;
 /** Below this screen width the diagram flows top to bottom instead of left to right. */
-const VERTICAL_BELOW = 560;
+const VERTICAL_BELOW = 500;
 /** The status line and the diagram share a fixed height, so a two-line status shrinks the diagram
  * a little instead of pushing the controls down under the pointer. Narrow screens stack the
  * diagram top to bottom, so they get a taller display. */

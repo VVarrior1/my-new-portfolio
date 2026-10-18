@@ -9,14 +9,18 @@
 // or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
 // ANY KIND.
 //
-// Changes from the original: TypeScript, no bloom or sunrays, and two dye channels instead of RGB.
-// Red is the neutral dye (smoke in the dark theme, ink in the light one) and green is the accent,
-// so the display pass can only ever paint the page's neutrals and its one accent colour.
+// Changes from the original: TypeScript, no bloom or sunrays, and the dye's channels are meanings,
+// not colours. Red is the neutral dye (smoke in the dark theme, ink in the light one), green is the
+// accent and blue is failure, so the display pass can only ever paint the page's neutrals, its one
+// accent, and the simulator's fail colour while requests are actually failing.
 
 type Program = { program: WebGLProgram; uniforms: Record<string, WebGLUniformLocation | null> };
 type FBO = { texture: WebGLTexture; fbo: WebGLFramebuffer; width: number; height: number; texelX: number; texelY: number; attach: (id: number) => number };
 type DoubleFBO = { width: number; height: number; texelX: number; texelY: number; read: FBO; write: FBO; swap: () => void };
 type Format = { internal: number; format: number };
+
+/** How many boxes of text the display pass can hold the dye back from at once. */
+export const MAX_RECTS = 16;
 
 export type FluidColors = {
   /** The page colour the fluid sits on. */
@@ -24,11 +28,15 @@ export type FluidColors = {
   /** The neutral dye: smoke (dark theme) or ink (light theme). */
   neutral: [number, number, number];
   accent: [number, number, number];
+  /** The simulator's failure colour: only the packet carries it, and only while requests fail. */
+  fail: [number, number, number];
   /** How strongly each dye can cover the page, 0 to 1. */
   neutralMax: number;
   accentMax: number;
   /** 1 adds a soft relief from the dye's gradient (the liquid's surface), 0 keeps it flat. */
   shading: number;
+  /** 0 to 1: how visible the drafting grid cut into the ink is. */
+  grid: number;
 };
 
 export type FluidConfig = {
@@ -176,33 +184,56 @@ void main () {
   gl_FragColor = vec4(velocity, 0.0, 1.0);
 }`;
 
-// The display pass. Each dye goes through a soft tone curve (so thin wisps stay faint and dense
-// cores saturate instead of clipping), then paints the page colour toward the neutral and then
-// toward the accent. `uProtect` is a rectangle in UV space (the hero's text) where the dye is held
-// back, so the name and the intro always sit on clean paper.
+// The display pass. Each dye goes through a soft tone curve with a floor, so thin haze vanishes
+// instead of greying the page, wisps stay faint and dense cores saturate instead of clipping. It
+// paints the page colour toward the neutral, then the accent, then (only while the simulator is
+// failing) the fail colour. The accent is drawn mostly where its dye has an edge, so a busy system
+// shows bright filaments rather than a flat tinted wash. `uRects` are boxes in canvas pixels
+// (text over the liquid) where the dye is held back by `uRectStrength`, feathered at the edges.
+// `uGrid` cuts a hairline drafting grid into the ink: you only see the grid where the liquid is.
 const DISPLAY = `
 precision highp float; precision highp sampler2D;
 varying vec2 vUv; varying vec2 vL; varying vec2 vR; varying vec2 vT; varying vec2 vB;
-uniform sampler2D uTexture; uniform vec2 texelSize;
-uniform vec3 uBg; uniform vec3 uNeutral; uniform vec3 uAccent;
-uniform float uNeutralMax; uniform float uAccentMax; uniform float uShading;
-uniform vec4 uProtect; uniform float uProtectStrength;
-float tone (float d) { return smoothstep(0.0, 0.65, d); }
+uniform sampler2D uTexture; uniform vec2 texelSize; uniform vec2 uSize; uniform float uDpr;
+uniform vec3 uBg; uniform vec3 uNeutral; uniform vec3 uAccent; uniform vec3 uFail;
+uniform float uNeutralMax; uniform float uAccentMax; uniform float uShading; uniform float uGrid;
+uniform vec4 uRects[${MAX_RECTS}]; uniform float uRectStrength[${MAX_RECTS}]; uniform int uRectCount;
+float tone (float d) { return smoothstep(0.035, 0.7, d); }
 void main () {
   vec3 c = texture2D(uTexture, vUv).rgb;
-  float n = tone(c.r);
-  float a = smoothstep(0.0, 0.45, c.g);
-  vec2 inside = smoothstep(uProtect.xy - 0.06, uProtect.xy + 0.04, vUv) * (1.0 - smoothstep(uProtect.zw - 0.04, uProtect.zw + 0.06, vUv));
-  float guard = 1.0 - uProtectStrength * inside.x * inside.y;
-  n *= guard; a *= mix(1.0, guard, 0.7);
+  vec2 px = vUv * uSize;
+  float hold = 0.0;
+  float feather = 28.0 * uDpr;
+  for (int i = 0; i < ${MAX_RECTS}; i++) {
+    if (i >= uRectCount) break;
+    vec4 r = uRects[i];
+    vec2 lo = smoothstep(r.xy - feather, r.xy + feather * 0.25, px);
+    vec2 hi = 1.0 - smoothstep(r.zw - feather * 0.25, r.zw + feather, px);
+    hold = max(hold, uRectStrength[i] * lo.x * lo.y * hi.x * hi.y);
+  }
+  float guard = 1.0 - hold;
+  float n = tone(c.r) * guard;
+  float gx = texture2D(uTexture, vR).g - texture2D(uTexture, vL).g;
+  float gy = texture2D(uTexture, vT).g - texture2D(uTexture, vB).g;
+  float edge = smoothstep(0.004, 0.03, length(vec2(gx, gy)));
+  float core = smoothstep(0.1, 0.6, c.g);
+  float a = clamp(core * 0.5 + edge * smoothstep(0.05, 0.25, c.g) * 0.45, 0.0, 1.0) * guard;
+  float f = smoothstep(0.04, 0.45, c.b) * mix(1.0, guard, 0.6);
   vec3 col = mix(uBg, uNeutral, n * uNeutralMax);
   col = mix(col, uAccent, a * uAccentMax);
+  col = mix(col, uFail, f * 0.9);
+  if (uGrid > 0.0) {
+    float cell = 32.0 * uDpr;
+    vec2 m = mod(px, cell);
+    float line = 1.0 - smoothstep(0.0, 1.1 * uDpr, min(min(m.x, cell - m.x), min(m.y, cell - m.y)));
+    col = mix(col, uBg, line * uGrid * smoothstep(0.2, 0.9, n) * (1.0 - a));
+  }
   if (uShading > 0.0) {
     float l = tone(texture2D(uTexture, vL).r + texture2D(uTexture, vL).g);
-    float r = tone(texture2D(uTexture, vR).r + texture2D(uTexture, vR).g);
+    float rr = tone(texture2D(uTexture, vR).r + texture2D(uTexture, vR).g);
     float t = tone(texture2D(uTexture, vT).r + texture2D(uTexture, vT).g);
     float b = tone(texture2D(uTexture, vB).r + texture2D(uTexture, vB).g);
-    vec3 normal = normalize(vec3(l - r, b - t, 0.04));
+    vec3 normal = normalize(vec3(l - rr, b - t, 0.04));
     float light = dot(normal, normalize(vec3(-0.4, 0.6, 1.0)));
     col += uShading * (light - 0.86) * 0.32 * (n + a) * guard;
   }
@@ -221,9 +252,10 @@ export class Fluid {
   readonly canvas: HTMLCanvasElement;
   config: FluidConfig;
   colors: FluidColors;
-  /** UV rectangle (x0, y0, x1, y1) where the dye is held back, and how much. */
-  protect: [number, number, number, number] = [0, 0, 0, 0];
-  protectStrength = 0;
+  /** Boxes in viewport CSS pixels (left, top, right, bottom) where the dye is held back, and how much (0 to 1). */
+  protect: Array<{ left: number; top: number; right: number; bottom: number; strength: number }> = [];
+  private rectData = new Float32Array(MAX_RECTS * 4);
+  private rectStrength = new Float32Array(MAX_RECTS);
 
   private constructor(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, ext: Fluid["ext"], config: FluidConfig, colors: FluidColors) {
     this.canvas = canvas;
@@ -286,7 +318,7 @@ export class Fluid {
       const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS) as number;
       for (let i = 0; i < count; i++) {
         const name = gl.getActiveUniform(program, i)!.name;
-        uniforms[name] = gl.getUniformLocation(program, name);
+        uniforms[name.replace(/\[0\]$/, "")] = gl.getUniformLocation(program, name);
       }
       return { program, uniforms };
     };
@@ -494,17 +526,35 @@ export class Fluid {
     const gl = this.gl;
     const p = this.programs.display;
     const c = this.colors;
+    const w = gl.drawingBufferWidth;
+    const h = gl.drawingBufferHeight;
+    const scale = w / Math.max(1, this.canvas.clientWidth);
+    const count = Math.min(MAX_RECTS, this.protect.length);
+    for (let i = 0; i < count; i++) {
+      const r = this.protect[i];
+      // Canvas pixels, y up.
+      this.rectData[i * 4] = r.left * scale;
+      this.rectData[i * 4 + 1] = h - r.bottom * scale;
+      this.rectData[i * 4 + 2] = r.right * scale;
+      this.rectData[i * 4 + 3] = h - r.top * scale;
+      this.rectStrength[i] = r.strength;
+    }
     gl.useProgram(p.program);
-    gl.uniform2f(p.uniforms.texelSize, 1 / gl.drawingBufferWidth, 1 / gl.drawingBufferHeight);
+    gl.uniform2f(p.uniforms.texelSize, 1 / w, 1 / h);
+    gl.uniform2f(p.uniforms.uSize, w, h);
+    gl.uniform1f(p.uniforms.uDpr, scale);
     gl.uniform1i(p.uniforms.uTexture, this.dye.read.attach(0));
     gl.uniform3f(p.uniforms.uBg, ...c.bg);
     gl.uniform3f(p.uniforms.uNeutral, ...c.neutral);
     gl.uniform3f(p.uniforms.uAccent, ...c.accent);
+    gl.uniform3f(p.uniforms.uFail, ...c.fail);
     gl.uniform1f(p.uniforms.uNeutralMax, c.neutralMax);
     gl.uniform1f(p.uniforms.uAccentMax, c.accentMax);
     gl.uniform1f(p.uniforms.uShading, c.shading);
-    gl.uniform4f(p.uniforms.uProtect, ...this.protect);
-    gl.uniform1f(p.uniforms.uProtectStrength, this.protectStrength);
+    gl.uniform1f(p.uniforms.uGrid, c.grid);
+    gl.uniform4fv(p.uniforms.uRects, this.rectData);
+    gl.uniform1fv(p.uniforms.uRectStrength, this.rectStrength);
+    gl.uniform1i(p.uniforms.uRectCount, count);
     this.blit(null);
   }
 
@@ -512,7 +562,7 @@ export class Fluid {
    * Adds a splat at (x, y) in UV space (0..1, y up): a push of (dx, dy) and an amount of each dye.
    * `radius` is a fraction of the shorter side, roughly.
    */
-  splat(x: number, y: number, dx: number, dy: number, neutral: number, accent: number, radius: number) {
+  splat(x: number, y: number, dx: number, dy: number, neutral: number, accent: number, radius: number, fail = 0) {
     const gl = this.gl;
     const p = this.programs.splat;
     const aspect = this.canvas.width / this.canvas.height;
@@ -526,9 +576,9 @@ export class Fluid {
     this.blit(this.velocity.write);
     this.velocity.swap();
 
-    if (neutral > 0 || accent > 0) {
+    if (neutral > 0 || accent > 0 || fail > 0) {
       gl.uniform1i(p.uniforms.uTarget, this.dye.read.attach(0));
-      gl.uniform3f(p.uniforms.color, neutral, accent, 0);
+      gl.uniform3f(p.uniforms.color, neutral, accent, fail);
       this.blit(this.dye.write);
       this.dye.swap();
     }

@@ -48,3 +48,28 @@ export function strainFrom(p99: number, errorRate: number, serverDown: boolean):
   const errors = Math.min(1, errorRate * 6);
   return Math.min(1, Math.max(latency * 0.7, errors, serverDown ? 0.35 : 0));
 }
+
+// The packet: one request riding the spine down the page (components/choreo.tsx). It carries the
+// simulator's health, and the liquid draws its wake: a comet tail of dye that streams back up the
+// page while you scroll, coloured by that health.
+
+export type PacketHealth = "healthy" | "slow" | "failing";
+
+export type PacketState = {
+  /** False while the packet is parked (reduced motion, off the spine, or not on the home page). */
+  on: boolean;
+  /** Viewport pixels. */
+  x: number;
+  y: number;
+  /** How fast the page is moving under it, in px per frame (positive when scrolling down). */
+  speed: number;
+  health: PacketHealth;
+};
+
+const packet: PacketState = { on: false, x: 0, y: 0, speed: 0, health: "healthy" };
+
+export const packetState = (): Readonly<PacketState> => packet;
+
+export function setPacket(next: Partial<PacketState>) {
+  Object.assign(packet, next);
+}

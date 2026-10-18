@@ -18,7 +18,9 @@ function toMonths(label: string, now: Date): number {
  * once) read at a glance. Server-rendered, no JavaScript. It repeats the list below it, so it is
  * hidden from assistive technology.
  */
-export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }) {
+export function SpanStrip({ jobs, until, compact = false }: { jobs: Experience[]; until: string; compact?: boolean }) {
+  // Compact: one column, the lane labels always sit on their lanes (the pinned experience column).
+  const lg = (cls: string) => (compact ? "" : cls);
   const now = new Date();
   const starts = jobs.map((job) => toMonths(job.start, now));
   const axisStart = Math.min(...starts);
@@ -31,10 +33,10 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
   const years = Array.from({ length: lastYear - firstYear + 1 }, (_, i) => firstYear + i);
 
   return (
-    <div aria-hidden="true" className="lg:grid lg:grid-cols-12 lg:gap-x-6">
+    <div aria-hidden="true" className={compact ? "" : "lg:grid lg:grid-cols-12 lg:gap-x-6"} data-strip>
       {/* Lane labels, aligned to the lanes inside the track. Below lg they sit on the lanes instead,
           above each bar, so a two-line name can never drift away from its bar. */}
-      <ul className="hidden py-2.5 lg:col-span-3 lg:block">
+      <ul className={compact ? "hidden" : "hidden py-2.5 lg:col-span-3 lg:block"}>
         {jobs.map((job) => (
           <li
             key={`${job.company}-${job.start}`}
@@ -45,7 +47,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
         ))}
       </ul>
 
-      <div className="min-w-0 lg:col-span-9">
+      <div className={compact ? "min-w-0" : "min-w-0 lg:col-span-9"}>
         <div className="relative rounded-xl border border-rule bg-paper-raised py-2.5 shadow-[var(--panel-highlight)]">
           {/* Year lines, then the "now" cursor: cobalt, because it is the present. */}
           {years.map((year) =>
@@ -55,7 +57,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
           )}
           <span className="absolute inset-y-0 w-px bg-signal-text" style={{ left: at(nowAt) }} />
           <ul className="relative">
-            {jobs.map((job) => {
+            {jobs.map((job, index) => {
               const start = toMonths(job.start, now);
               const current = job.end === "Now";
               // A role runs to the end of its last month; the current one runs to today.
@@ -64,20 +66,20 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
               const late = (start - axisStart) / span > 0.6;
               const first = start === axisStart;
               return (
-                <li key={`${job.company}-${job.start}`} className="relative h-11 lg:h-8">
+                <li key={`${job.company}-${job.start}`} className={`span-lane relative h-11 ${lg("lg:h-8")}`} data-lane={index}>
                   <span
-                    className={`t-mono absolute top-1 whitespace-nowrap leading-4 lg:hidden ${current ? "text-ink" : "text-ink-2"} ${late ? "-translate-x-full" : ""} ${first ? "pl-2" : ""}`}
+                    className={`t-mono absolute top-1 whitespace-nowrap leading-4 ${lg("lg:hidden")} ${current ? "text-ink" : "text-ink-2"} ${late ? "-translate-x-full" : ""} ${first ? "pl-2" : ""}`}
                     style={{ left: late ? at(end) : at(start) }}
                   >
                     {job.company}
                   </span>
                   <span
-                    className={`absolute h-1.5 rounded-full max-lg:bottom-2.5 lg:top-1/2 lg:-translate-y-1/2 ${current ? "bg-signal" : "bg-ink"}`}
+                    className={`span-bar absolute h-1.5 rounded-full ${compact ? "bottom-2.5" : "max-lg:bottom-2.5 lg:top-1/2 lg:-translate-y-1/2"} ${current ? "bg-signal" : "bg-ink"}`}
                     style={{ left: at(start), width: `calc(${at(end)} - ${at(start)})` }}
                   />
                   {current && (
                     <span
-                      className="absolute size-2.5 -translate-x-1/2 rounded-full border-2 border-paper-raised bg-signal max-lg:bottom-2 lg:top-1/2 lg:-translate-y-1/2"
+                      className={`absolute size-2.5 -translate-x-1/2 rounded-full border-2 border-paper-raised bg-signal ${compact ? "bottom-2" : "max-lg:bottom-2 lg:top-1/2 lg:-translate-y-1/2"}`}
                       style={{ left: at(end) }}
                     />
                   )}
@@ -89,7 +91,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
 
         {/* The axis: the first month, the years, today, and the year full-time work starts. */}
         <div className="t-mono relative mt-2 h-5 text-graphite">
-          <span className="absolute left-0 max-lg:hidden">
+          <span className={`absolute left-0 ${compact ? "hidden" : "max-lg:hidden"}`}>
             {MONTHS[axisStart % 12]} {Math.floor(axisStart / 12)}
           </span>
           {years.map((year) =>
@@ -102,7 +104,7 @@ export function SpanStrip({ jobs, until }: { jobs: Experience[]; until: string }
           <span className="absolute -translate-x-1/2 text-signal-text" style={{ left: at(nowAt) }}>
             now
           </span>
-          <span className="absolute right-0 max-lg:hidden">{Math.floor(axisEnd / 12)}</span>
+          <span className={`absolute right-0 ${compact ? "hidden" : "max-lg:hidden"}`}>{Math.floor(axisEnd / 12)}</span>
         </div>
       </div>
     </div>

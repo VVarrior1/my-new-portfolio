@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { setSmooth } from "@/lib/smooth-scroll";
 import { blotPath } from "@/lib/theme";
 
 // Page-wide motion, off entirely under prefers-reduced-motion:
@@ -9,8 +10,9 @@ import { blotPath } from "@/lib/theme";
 //    keyboard still work; Lenis drives the native scroll position.
 // 2. Reveals. Anything with data-reveal starts its entrance when it nears the viewport. Elements
 //    are only hidden once this has run (html[data-motion="on"]), so without JavaScript, or under
-//    reduced motion, everything is simply there. data-reveal="blot" (screenshots, the portrait)
-//    opens like ink spreading from one corner, the same blot as the theme switch.
+//    reduced motion, everything is simply there. data-reveal="blot" (the portrait) opens like ink
+//    spreading from one corner, the same blot as the theme switch; data-reveal="wipe" (poster
+//    lines) is covered by a cobalt bar that sweeps across and pulls away, leaving the words.
 
 export function MotionRoot() {
   const pathname = usePathname();
@@ -19,13 +21,23 @@ export function MotionRoot() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) return;
     let stopped = false;
-    let lenis: { destroy: () => void } | null = null;
+    let lenis: import("lenis").default | null = null;
+    // Modal dialogs (the command menu, an enlarged screenshot) lock the page; Lenis must stop with
+    // them or it keeps scrolling the page behind.
+    const lock = new MutationObserver(() => {
+      if (document.body.hasAttribute("data-scroll-locked")) lenis?.stop();
+      else lenis?.start();
+    });
     import("lenis").then(({ default: Lenis }) => {
       if (stopped) return;
-      lenis = new Lenis({ autoRaf: true, anchors: { offset: -64 }, lerp: 0.11, wheelMultiplier: 0.95, stopInertiaOnNavigate: true });
+      lenis = new Lenis({ autoRaf: true, anchors: { offset: -64 }, lerp: 0.1, wheelMultiplier: 0.95, stopInertiaOnNavigate: true });
+      lock.observe(document.body, { attributes: true, attributeFilter: ["data-scroll-locked"] });
+      setSmooth(lenis);
     });
     return () => {
       stopped = true;
+      lock.disconnect();
+      setSmooth(null);
       lenis?.destroy();
     };
   }, []);
@@ -54,7 +66,7 @@ export function MotionRoot() {
       { rootMargin: "0px 0px -8% 0px", threshold: 0 },
     );
     document.querySelectorAll<HTMLElement>("[data-reveal]:not([data-in])").forEach((node) => {
-      const clipped = node.dataset.reveal === "title" || node.dataset.reveal === "blot";
+      const clipped = node.dataset.reveal === "title" || node.dataset.reveal === "blot" || node.dataset.reveal === "wipe";
       const target = (clipped && node.parentElement) || node;
       targets.set(target, [...(targets.get(target) ?? []), node]);
       io.observe(target);

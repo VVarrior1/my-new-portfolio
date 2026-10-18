@@ -15,18 +15,24 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens: Liquid. The page is a sheet over a pool. Under the hero and
-   the contact section a real fluid simulation shows through (ink on
-   paper in the light theme, smoke on black in the dark one); every
-   other section is an opaque sheet that slides over it.
+   Tokens: Liquid Signal. The home page floats on a real fluid
+   simulation (ink in water in the light theme, lit smoke on black in the
+   dark one). There are no sheets: text sits straight on the pool, and the
+   liquid is held back behind every block of words, so it moves in the
+   margins and between blocks. A packet (one request) rides a wire from
+   the simulator down the page and trails dye into the liquid; a ruler on
+   the right edge carries the section names, which fly to the top-right
+   corner as their sections arrive.
 
    One accent, cobalt (--signal), and neutrals that all sit on one cool
    hue (OKLCH h≈265, chroma ≤ 0.016), so both themes share a temperature.
-   Cobalt fills the things you press, marks "now", and is the only
-   colour the fluid can bloom into (when the simulator is strained or a
-   server dies). Status colours (--trace, --fail, --screen-go) live only
-   on the simulator's screen. Dark follows the OS unless the visitor picks
-   a theme with the toggle (stored as data-theme on <html>).
+   Cobalt fills the things you press, marks "now" (the packet, the
+   rail's needle, the current role) and numbers sections. Status colours
+   (--trace, --fail, --screen-go) live on the simulator's screen; the one
+   exception is the packet, which turns --fail (and trails it into the
+   liquid) only while the simulator is actually failing requests. Dark
+   follows the OS unless the visitor picks a theme with the toggle
+   (stored as data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
   --paper: #f4f4f5;
@@ -66,13 +72,20 @@
   --go: #18723f;
   /* The fluid's two dyes and how far each may cover the paper. The light theme is ink in water,
      flat; the dark theme is lit smoke, with a soft relief from the dye's surface. */
-  /* The pool: what the liquid sits in, a step below the paper, so the sheets read as sheets. */
-  --pool: #e6e7e9;
+  /* The pool: what the liquid sits in, and the home page's paper. */
+  --pool: #efeff1;
   --fluid-neutral: #16181e;
   --fluid-accent: #2a46ff;
-  --fluid-neutral-max: 0.55;
-  --fluid-accent-max: 0.85;
+  /* Only the packet trails it, and only while requests are failing. */
+  --fluid-fail: #e5443a;
+  --fluid-neutral-max: 0.5;
+  --fluid-accent-max: 0.9;
   --fluid-shading: 0;
+  /* The drafting grid cut into the ink: visible only where the liquid is. */
+  --fluid-grid: 0.55;
+  /* The spine: the wire, and the part the packet has passed. */
+  --wire: #c9cbcf;
+  --wire-lit: #0e0f12;
   --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
   --device-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 40px 80px -40px rgb(14 15 18 / 0.55), 0 12px 24px -16px rgb(14 15 18 / 0.35);
   --scrim: rgb(14 15 18 / 0.42);
@@ -120,12 +133,16 @@
     --screen: #101115;
     --screen-raised: #18191e;
     --go: #4fc98a;
-    --pool: #070809;
+    --pool: #08090b;
     --fluid-neutral: #c4c8d2;
-    --fluid-accent: #5470ff;
-    --fluid-neutral-max: 0.58;
+    --fluid-accent: #6079ff;
+    --fluid-fail: #ff5c52;
+    --fluid-neutral-max: 0.5;
     --fluid-accent-max: 0.95;
     --fluid-shading: 0.5;
+    --fluid-grid: 0.4;
+    --wire: #2c2e34;
+    --wire-lit: #eeeff2;
     --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
     --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
     --scrim: rgb(0 0 0 / 0.62);
@@ -149,12 +166,16 @@
   --screen: #101115;
   --screen-raised: #18191e;
   --go: #4fc98a;
-  --pool: #070809;
+  --pool: #08090b;
   --fluid-neutral: #c4c8d2;
-  --fluid-accent: #5470ff;
-  --fluid-neutral-max: 0.58;
+  --fluid-accent: #6079ff;
+  --fluid-fail: #ff5c52;
+  --fluid-neutral-max: 0.5;
   --fluid-accent-max: 0.95;
   --fluid-shading: 0.5;
+  --fluid-grid: 0.4;
+  --wire: #2c2e34;
+  --wire-lit: #eeeff2;
   --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
   --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
   --scrim: rgb(0 0 0 / 0.62);
@@ -164,6 +185,7 @@
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-pool: var(--pool);
   --color-paper-raised: var(--paper-raised);
   --color-key-face: var(--key-face);
   --color-ink: var(--ink);
@@ -764,6 +786,60 @@ html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
 [data-reveal="title"] {
   clip-path: inset(-0.2em -0.2em -0.2em -0.2em);
 }
+/* The wipe: one vocabulary for poster lines. A cobalt bar grows across the words, the words appear
+   under it at its full width, and it pulls away to the right. */
+[data-reveal="wipe"] {
+  transition: none;
+}
+html[data-motion="on"] [data-reveal="wipe"]:not([data-in]) {
+  opacity: 1;
+}
+[data-reveal="wipe"] > span {
+  position: relative;
+  display: inline-block;
+}
+[data-reveal="wipe"] > span::after {
+  content: "";
+  position: absolute;
+  inset: 0.06em -0.04em 0.02em;
+  background: var(--signal);
+  clip-path: inset(0 100% 0 0);
+  pointer-events: none;
+}
+html[data-motion="on"] [data-reveal="wipe"]:not([data-in]) > span {
+  -webkit-text-fill-color: transparent;
+}
+html[data-motion="on"] [data-reveal="wipe"][data-in] > span {
+  animation: wipe-text 1100ms linear both;
+  animation-delay: var(--d, 0ms);
+}
+html[data-motion="on"] [data-reveal="wipe"][data-in] > span::after {
+  animation: wipe-bar 1100ms both;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes wipe-bar {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  50% {
+    clip-path: inset(0 0 0 0);
+    animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+  }
+  100% {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+@keyframes wipe-text {
+  0%,
+  50% {
+    -webkit-text-fill-color: transparent;
+  }
+  50.1%,
+  100% {
+    -webkit-text-fill-color: currentcolor;
+  }
+}
 
 /* The name pours in on load: each line rises inside its own clip. It starts partly visible, so the
    first paint already shows it. */
@@ -773,14 +849,21 @@ html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
   padding-bottom: 0.08em;
   margin-bottom: -0.08em;
 }
-.rise-line > span {
+/* Each letter rises out of its line on its own beat, 28 ms after the one before. */
+.split-word {
   display: inline-block;
-  animation: rise-in 1300ms var(--ease-out) both;
-  animation-delay: var(--d, 0ms);
+  white-space: nowrap;
+}
+.split-ch {
+  display: inline-block;
+}
+.rise-line .split-ch {
+  animation: rise-in 1200ms var(--ease-out) both;
+  animation-delay: calc(60ms + var(--i, 0) * 28ms);
 }
 @keyframes rise-in {
   from {
-    transform: translate3d(0, 55%, 0) skewY(4deg);
+    transform: translate3d(0, 62%, 0) rotate(5deg);
   }
   to {
     transform: none;
@@ -981,58 +1064,952 @@ html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
 }
 
 /* ------------------------------------------------------------------
-   Sheets over the pool. Every section but the hero and contact is an
-   opaque sheet with rounded corners, inset from the viewport by a thin
-   rail, so the liquid shows in the channels around and between them and
-   scrolling drags a wake off their edges (data-liquid-edge).
+   Layout. One frame: a centred column with hairlines down both sides,
+   from under the hero to the contact section. On laptops it leaves room
+   on the right for the rail. --inset is the padding inside the frame;
+   the hero uses the same column, so its text starts where the
+   sections' does. The frame's left hairline is the spine.
    ------------------------------------------------------------------ */
 :root {
-  --rail: clamp(0.5rem, 1vw, 0.875rem);
+  --rail-w: 60px;
+  --gutter: 0.625rem;
+  --inset: 1.125rem;
+  --frame: 76rem;
 }
-.sheet {
+@media (min-width: 640px) {
+  :root {
+    --gutter: 1.5rem;
+    --inset: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --gutter: calc(var(--rail-w) + 1rem);
+    --inset: 3rem;
+  }
+}
+.wrap {
+  width: min(var(--frame), 100% - 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--inset);
+}
+.frame {
   position: relative;
-  margin-inline: var(--rail);
-  margin-top: var(--rail);
-  border-radius: 1.75rem;
-  background: var(--paper);
-  box-shadow: 0 0 0 1px var(--rule);
+  width: min(var(--frame), 100% - 2 * var(--gutter));
+  margin-inline: auto;
+  border-inline: 1px solid var(--rule);
 }
-/* The off-the-clock strip and Work are one sheet. */
-.sheet-top {
-  margin-top: 0;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+.home {
+  position: relative;
 }
-.sheet-join {
-  margin-top: 0;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
+
+/* A section in the frame: a station on the spine, a sticky eyebrow bar, then the body. */
+.chapter {
+  position: relative;
+  padding-bottom: 6rem;
 }
-@media (max-width: 639px) {
-  .sheet {
-    border-radius: 1.25rem;
+@media (min-width: 640px) {
+  .chapter {
+    padding-bottom: 9rem;
   }
-  .sheet-top {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+}
+.chapter-body {
+  padding-inline: var(--inset);
+  padding-top: 2.5rem;
+}
+@media (min-width: 640px) {
+  .chapter-body {
+    padding-top: 4rem;
   }
-  .sheet-join {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+}
+.eyebrow {
+  position: sticky;
+  top: 4rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  height: 2.75rem;
+  padding-inline: var(--inset);
+  border-block: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--pool) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.eyebrow-title,
+.eyebrow-meta,
+.t-hud {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.eyebrow-title {
+  color: var(--ink);
+}
+.eyebrow-index {
+  color: var(--signal-text);
+}
+.eyebrow-slash {
+  padding-inline: 0.6em;
+  color: var(--graphite);
+}
+.eyebrow-meta {
+  color: var(--graphite);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* On laptops with the rail, the section name flies to the top-right corner, so the bar's right
+   end gives way to it. */
+@media (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .eyebrow-meta {
+    margin-right: 15rem;
   }
 }
 
-/* A project's stage: the raised surface its screenshots sit on. */
-.stage {
-  border-radius: 1.5rem;
-  background: var(--paper-raised);
-  padding: 0.75rem 0.75rem 1rem;
+/* The section's name, large, where the rail doesn't carry it (phones, tablets, touch, reduced
+   motion, or no JavaScript on a laptop is fine: the eyebrow still names it). */
+.section-word {
+  padding-inline: var(--inset);
+  padding-top: 2rem;
+  font-family: var(--font-archivo), var(--font-instrument), sans-serif;
+  /* Ten capitals (EXPERIENCE, BACKGROUND) must fit a 320px phone. */
+  font-size: clamp(2.25rem, 10.6vw, 7rem);
+  font-weight: 800;
+  font-stretch: 100%;
+  line-height: 0.86;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--ink);
 }
-@media (min-width: 640px) {
-  .stage {
-    padding: 2rem;
+@media (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .section-word {
+    display: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   The spine (components/choreo.tsx): the wire from the simulator down
+   the frame's left edge, inked behind the packet, and a station (a
+   cross on the wire) at every section that lights as the packet passes.
+   ------------------------------------------------------------------ */
+.spine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 30;
+}
+.spine-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 0;
+  overflow: visible;
+}
+.spine-wire,
+.spine-lit {
+  fill: none;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.spine-wire {
+  stroke: var(--wire);
+  stroke-width: 1px;
+}
+/* On load the wire runs out of the simulator and down the page, once. */
+html[data-choreo="on"] .spine-svg[data-placed] .spine-wire {
+  stroke-dasharray: 1;
+  /* Ease-in: the part on screen draws over the first second, the rest of the page after. */
+  animation: wire-draw 2600ms cubic-bezier(0.55, 0, 1, 0.45) 400ms both;
+}
+@keyframes wire-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.spine-lit {
+  stroke: var(--wire-lit);
+  stroke-width: 1.5px;
+  stroke-dasharray: 0 100000;
+}
+.station {
+  position: absolute;
+  left: -6px;
+  top: calc(1.375rem - 6px);
+  z-index: 25;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+}
+.station::before,
+.station::after {
+  content: "";
+  position: absolute;
+  background: var(--rule-strong);
+  transition: background-color 300ms ease, transform 500ms var(--ease-spring);
+}
+.station::before {
+  left: 0;
+  right: 0;
+  top: 5px;
+  height: 1px;
+}
+.station::after {
+  top: 0;
+  bottom: 0;
+  left: 5px;
+  width: 1px;
+}
+.station[data-lit]::before,
+.station[data-lit]::after {
+  background: var(--signal);
+}
+.station[data-lit] {
+  animation: station-on 700ms var(--ease-spring);
+}
+@keyframes station-on {
+  from {
+    transform: scale(2.2) rotate(45deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* The packet: a cobalt capsule that stretches with speed, and its tag running up the wire. */
+.packet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+}
+.packet[data-on] {
+  opacity: 1;
+}
+.packet-capsule {
+  position: absolute;
+  left: -3.5px;
+  top: -11px;
+  width: 7px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 22%, transparent);
+  transform: scaleY(var(--stretch, 1));
+  transition: background-color 300ms ease, box-shadow 300ms ease;
+}
+.packet[data-side] .packet-capsule {
+  transform: rotate(90deg) scaleY(var(--stretch, 1));
+}
+.packet-tag {
+  position: absolute;
+  right: 9px;
+  bottom: 14px;
+  overflow: visible;
+}
+.packet-tag text {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  fill: var(--graphite);
+}
+.packet-tag [data-method] {
+  fill: var(--signal-text);
+  font-weight: 500;
+}
+.packet[data-state="failing"] .packet-capsule {
+  background: var(--fail);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fail) 25%, transparent);
+  animation: packet-fail 900ms ease-in-out infinite alternate;
+}
+.packet[data-state="failing"] .packet-tag [data-method] {
+  fill: var(--fail);
+}
+@keyframes packet-fail {
+  to {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--fail) 0%, transparent);
+  }
+}
+/* No room for the tag beside the wire on a phone. */
+@media (max-width: 639px) {
+  .packet-tag {
+    display: none;
+  }
+}
+/* The contact key the packet is delivered to. */
+.terminal[data-delivered] {
+  animation: delivered 900ms var(--ease-spring);
+}
+@keyframes delivered {
+  0% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   The rail (components/hud.tsx). Fixed, aria-hidden, laptops only.
+   ------------------------------------------------------------------ */
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+}
+.hud-words {
+  position: absolute;
+  inset: 0;
+}
+.hud-letter {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-archivo), var(--font-instrument), sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  font-stretch: 112%;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: pre;
+  color: var(--ink);
+  text-shadow: 0 0 4px var(--pool), 0 0 10px var(--pool);
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+}
+.hud-letter[data-current] {
+  color: var(--ink);
+}
+.hud-measure {
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-200vw, 0);
+}
+.hud-pool {
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  background: color-mix(in srgb, var(--pool) 55%, transparent);
+}
+.hud-pool-top {
+  top: 4rem;
+  width: 20rem;
+  height: 8rem;
+  -webkit-mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+  mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+}
+.hud-pool-bottom {
+  bottom: 0;
+  width: min(26rem, 36vw);
+  height: 16rem;
+  -webkit-mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+  mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+}
+.hud-rail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--rail-w);
+  pointer-events: auto;
+  cursor: crosshair;
+  overflow: hidden;
+}
+.hud-rail-frost {
+  position: absolute;
+  inset: 0;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  background: color-mix(in srgb, var(--pool) 55%, transparent);
+  -webkit-mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 60%, rgb(0 0 0 / 0.25) 80%, transparent);
+  mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 60%, rgb(0 0 0 / 0.25) 80%, transparent);
+}
+.hud-tape {
+  position: absolute;
+  inset: 0;
+}
+.hud-tick {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 10px;
+  height: 1px;
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+  transform-origin: 100% 50%;
+}
+.hud-tick-major {
+  width: 20px;
+  background: color-mix(in srgb, var(--ink) 80%, transparent);
+}
+.hud-tick-num {
+  position: absolute;
+  right: 26px;
+  top: -6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--graphite);
+}
+.hud-mark {
+  position: absolute;
+  right: 0;
+  top: -1px;
+  width: 30px;
+  height: 3px;
+  background: var(--signal);
+}
+.hud-needle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: var(--rail-w);
+  height: 1px;
+  background: var(--signal);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--signal) 60%, transparent);
+}
+.hud-readout {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--signal-text);
+}
+.hud-digit {
+  display: block;
+  height: 1em;
+  overflow: hidden;
+}
+.hud-digit-strip {
+  display: block;
+  width: 1ch;
+  word-break: break-all;
+  line-height: 1;
+  transition: transform 280ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.hud-pct {
+  margin-left: 1px;
+}
+.hud-bracket {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: var(--rail-w);
+  opacity: 0;
+  border-block: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
+  background: color-mix(in srgb, var(--signal) 9%, transparent);
+}
+.hud-ghost {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: var(--rail-w);
+  height: 1px;
+  opacity: 0;
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+  transition: opacity 200ms ease;
+}
+
+/* ------------------------------------------------------------------
+   Off the clock: two marquee rows, the sans in caps and the serif
+   italic, running opposite ways (components/choreo.tsx speeds them up
+   while you scroll). Under reduced motion they stop and the plain list
+   shows instead.
+   ------------------------------------------------------------------ */
+.offclock {
+  position: relative;
+  padding-block: 1.5rem 3.5rem;
+}
+.offclock-list {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.marquee {
+  margin-top: 1rem;
+  overflow: hidden;
+  pointer-events: none;
+}
+.marquee-row {
+  display: flex;
+  width: max-content;
+  animation: marquee 46s linear infinite;
+}
+.marquee-serif {
+  margin-top: 0.4rem;
+  animation-duration: 72s;
+  animation-direction: reverse;
+}
+.marquee-copy {
+  display: flex;
+  flex-shrink: 0;
+}
+.marquee-item {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+.marquee-sans {
+  font-family: var(--font-archivo), var(--font-instrument), sans-serif;
+  font-size: clamp(2.5rem, 7.2vw, 6.25rem);
+  font-weight: 800;
+  font-stretch: 100%;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.marquee-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(1.75rem, 4.4vw, 3.75rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
+}
+.marquee-label {
+  align-self: flex-start;
+  margin-right: 0.9rem;
+  padding-top: 0.55em;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--graphite);
+}
+.marquee-star {
+  padding-inline: 0.45em;
+  color: var(--signal-text);
+  font-size: 0.6em;
+  transform: translateY(-0.12em);
+}
+.marquee-dash {
+  padding-inline: 0.6em;
+  color: var(--graphite);
+}
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    display: none;
+  }
+  .offclock-list {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin-top: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 640px) {
+  .offclock-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------------
+   Work. Each project opens on a hairline bar (a cobalt number chip, the
+   role, the figure), then the screenshot and the text side by side.
+   The screenshot opens like a window as it rises (--open, set by the
+   choreography; 1 without it) and the image settles inside it.
+   ------------------------------------------------------------------ */
+.project + .project {
+  margin-top: 6rem;
+}
+@media (min-width: 640px) {
+  .project + .project {
+    margin-top: 9rem;
+  }
+}
+.project-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+.project-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+  padding-top: 2rem;
+}
+@media (min-width: 1024px) {
+  .project-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 2.5rem;
+    padding-top: 2.5rem;
+  }
+  .project-shot {
+    grid-column: 1 / span 7;
+    position: sticky;
+    top: 9.5rem;
+    align-self: start;
+  }
+  .project-text {
+    grid-column: 8 / span 5;
+  }
+  .project[data-flip] .project-shot {
+    grid-column: 6 / span 7;
+    grid-row: 1;
+  }
+  .project[data-flip] .project-text {
+    grid-column: 1 / span 5;
+    grid-row: 1;
+  }
+}
+.shot-window {
+  --closed: calc(1 - var(--open, 1));
+  clip-path: inset(calc(var(--closed) * 14%) calc(var(--closed) * 24%) calc(var(--closed) * 14%) calc(var(--closed) * 24%) round calc(14px + var(--closed) * 48px));
+  will-change: clip-path;
+}
+.shot-window img {
+  transform: scale(calc(1 + var(--closed) * 0.16));
+  transform-origin: 50% 40%;
+}
+.t-project {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4.25rem);
+  font-weight: 600;
+  font-stretch: 94%;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+.t-project .t-serif {
+  font-size: 1.08em;
+  letter-spacing: -0.03em;
+}
+
+/* A project's numbers: a hairline grid of big Archivo figures over mono labels. */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 2rem;
+  border-block: 1px solid var(--rule);
+}
+.stat-grid > div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  padding: 1rem 0.75rem 1rem 0;
+}
+.stat-grid > div + div {
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--rule);
+}
+.stat-grid dd {
+  font-family: var(--font-archivo), var(--font-instrument), sans-serif;
+  font-size: clamp(1.875rem, 3.2vw, 2.75rem);
+  font-weight: 700;
+  font-stretch: 100%;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stat-grid dt {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--graphite);
+}
+.count {
+  display: inline-grid;
+}
+.count > * {
+  grid-area: 1 / 1;
+}
+.count > [data-run] {
+  visibility: hidden;
+}
+.count[data-counting] > [data-final] {
+  visibility: hidden;
+}
+.count[data-counting] > [data-run] {
+  visibility: visible;
+}
+.hard-part {
+  margin-top: 2rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--ink);
+}
+
+/* Mono tags with a hairline border, and the cobalt number chip. */
+.tag-mono {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.375rem;
+  padding: 0 0.4rem;
+  background: var(--signal);
+  color: var(--signal-ink);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+/* Mono links with an arrow: Try it, Code, All posts. */
+.hud-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color 200ms ease, color 200ms ease;
+}
+.hud-link:hover {
+  text-decoration-color: var(--signal-text);
+}
+.hud-link:hover .link-arrow {
+  color: var(--signal-text);
+  transform: translate(0.12em, -0.12em);
+}
+
+/* The lineup: the smaller projects as cards on one hairline grid. */
+.lineup {
+  margin-top: 6rem;
+}
+@media (min-width: 640px) {
+  .lineup {
+    margin-top: 9rem;
+  }
+}
+.lineup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+@media (min-width: 640px) {
+  .lineup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .lineup-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.lineup-card {
+  position: relative;
+  isolation: isolate;
+  padding: 1.25rem 1.25rem 1.5rem;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  min-height: 17rem;
+}
+.lineup-name {
+  margin-top: 1.5rem;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* Hover fills that come in from the edge the pointer crossed (--from, set by the choreography).
+   Decoration only: on touch screens nothing is hidden behind them. */
+[data-dir-hover] {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+[data-dir-hover]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--paper-raised);
+  transform: translate3d(0, var(--from, 101%), 0);
+  transition: transform 560ms var(--ease-pour);
+}
+.lineup-card[data-dir-hover]::before {
+  border-top: 2px solid var(--signal);
+}
+@media (hover: hover) {
+  [data-dir-hover]:hover::before {
+    transform: none;
+  }
+}
+.dir-row {
+  margin-inline: calc(-1 * var(--inset));
+  padding-inline: var(--inset);
+}
+
+/* Experience: the strip pins beside the roles on laptops and lights the one you're reading. */
+.exp-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3rem;
+}
+@media (min-width: 1024px) {
+  .exp-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 3rem;
+  }
+  .exp-pin {
+    grid-column: 1 / span 5;
+    position: sticky;
+    top: 9.5rem;
+    align-self: start;
+  }
+  .exp-list {
+    grid-column: 6 / span 7;
+  }
+}
+.poster-figure {
+  font-family: var(--font-archivo), var(--font-instrument), sans-serif;
+  font-size: clamp(6rem, 14vw, 11rem);
+  font-weight: 800;
+  font-stretch: 100%;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  color: var(--ink);
+}
+.exp-role {
+  padding-block: 2rem;
+  border-bottom: 1px solid var(--rule);
+}
+.exp-role:first-child {
+  padding-top: 0;
+}
+.span-lane {
+  transition: opacity 400ms ease;
+}
+[data-strip][data-active] .span-lane:not([data-on]) {
+  opacity: 0.32;
+}
+[data-strip] .span-lane[data-on] .span-bar {
+  transform: scaleY(1.6);
+}
+.span-bar {
+  transition: transform 500ms var(--ease-spring);
+}
+
+/* Background: the toolkits on the same hairline grid as the lineup. */
+.tools {
+  margin-top: 4rem;
+}
+.tools-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+@media (min-width: 640px) {
+  .tools-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .tools-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.tools-cell {
+  padding: 1.25rem;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* Contact: the poster line, revealed by a cobalt bar that sweeps across and pulls away. */
+.t-poster {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 10vw, 8.75rem);
+  font-weight: 600;
+  font-stretch: 94%;
+  line-height: 0.88;
+  letter-spacing: -0.05em;
+}
+.t-poster .t-serif {
+  font-size: 1.08em;
+  letter-spacing: -0.035em;
+}
+.contact-card {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+@media (min-width: 640px) {
+  .contact-card {
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  /* Starts below the pile of section names in the top-right corner. */
+  .contact-card {
+    display: block;
+    padding-top: 7.5rem;
+  }
+  .contact-card .spec {
+    margin-top: 1.5rem;
+  }
+}
+.chapter-contact {
+  padding-bottom: 7rem;
+}
+
 /* Screenshots have weight: they lift on a spring when you point at them. */
 .lift {
   transition: transform 700ms var(--ease-spring), box-shadow 500ms ease;
@@ -1084,8 +2061,13 @@ html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
   transform: scaleX(1);
 }
 
-/* On the home page the body is the pool, so the hero matches the liquid before it fades in (and
+/* On the home page the body is the pool, so the page matches the liquid before it fades in (and
    without WebGL). */
 html:has(.liquid-field) body {
   background: var(--pool);
+}
+
+/* The contact spec sits in a narrow column beside the portrait on phones, so its values may wrap. */
+.contact-card .spec dd {
+  white-space: normal;
 }

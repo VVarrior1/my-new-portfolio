@@ -1,20 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Fluid, type FluidColors, type FluidConfig } from "@/lib/fluid";
-import { flowState, onFlow, type FlowEvent } from "@/lib/flow-bus";
+import { Fluid, MAX_RECTS, type FluidColors, type FluidConfig } from "@/lib/fluid";
+import { flowState, onFlow, packetState, type FlowEvent } from "@/lib/flow-bus";
 
-// The liquid under the page. One fixed canvas sits behind everything; the hero and the contact
-// section are transparent "windows" onto it, and every other section is an opaque sheet sliding
-// over it. What moves it:
+// The liquid under the page. One fixed canvas sits behind the whole home page and the page is
+// transparent over it; behind every block of text ([data-liquid-protect]) the dye is held back, so
+// words always sit on clean paper while the liquid moves in the margins and between blocks.
+// What moves it:
 // - the hero simulator: incoming traffic is a current flowing into the device, strain makes it
 //   turbulent and tints it with the accent, and a killed server blooms the accent at the node;
+// - the packet riding the spine (lib/flow-bus.ts, packetState): while you scroll it trails a comet
+//   tail of dye back up the page, neutral with a cobalt core when the system is healthy, more
+//   turbulent when it's slow, and the fail colour while requests are failing;
 // - the pointer (and touch), which stirs it;
-// - scrolling, which drags a wake off the edge of the sheet that slides over it;
+// - screenshots ([data-liquid-edge]) moving through it, which drag a wake off their edges;
 // - the theme toggle, which drops ink into it.
-// It starts after the page has loaded and gone idle, runs only while a window is on screen and the
-// tab is visible, and caps the pixel ratio. Under reduced motion it renders one still frame and
-// never animates; without WebGL the windows simply show the paper.
+// It starts after the page has loaded and gone idle, runs only while the tab is visible, and caps
+// the pixel ratio. Under reduced motion it renders one still frame and never animates; without
+// WebGL the page simply shows the paper.
 
 const DESKTOP: FluidConfig = {
   simResolution: 128,
@@ -41,9 +45,11 @@ function readColors(): FluidColors {
     bg: hex(v("--pool"), [0.04, 0.04, 0.05]),
     neutral: hex(v("--fluid-neutral"), [0.8, 0.8, 0.82]),
     accent: hex(v("--fluid-accent"), [0.3, 0.4, 1]),
+    fail: hex(v("--fluid-fail"), [1, 0.36, 0.32]),
     neutralMax: parseFloat(v("--fluid-neutral-max")) || 0.6,
     accentMax: parseFloat(v("--fluid-accent-max")) || 0.9,
     shading: parseFloat(v("--fluid-shading")) || 0,
+    grid: parseFloat(v("--fluid-grid")) || 0,
   };
 }
 
@@ -69,31 +75,28 @@ export function LiquidField() {
     let disposed = false;
     const cleanups: Array<() => void> = [];
 
-    // Anything the liquid shows through: the hero, the contact section, and the rails and channels
-    // around the sheets (the page body itself, on the home page).
-    const windows = () => Array.from(document.querySelectorAll<HTMLElement>("[data-liquid-window]"));
-    const visibleWindows = new Set<Element>();
-
     const dpr = () => Math.min(window.devicePixelRatio || 1, coarse ? 1.25 : 1.5);
 
     /** Viewport px to the fluid's UV (y up). */
     const uv = (x: number, y: number) => [x / window.innerWidth, 1 - y / window.innerHeight] as const;
 
+    // Text over the liquid. The list is static on the home page; it's re-read on resize.
+    let guarded: HTMLElement[] = [];
+    let edges: HTMLElement[] = [];
+    const collect = () => {
+      guarded = Array.from(document.querySelectorAll<HTMLElement>("[data-liquid-protect]"));
+      edges = Array.from(document.querySelectorAll<HTMLElement>("[data-liquid-edge]"));
+    };
     const updateProtect = (f: Fluid) => {
       const vh = window.innerHeight;
-      const el = Array.from(document.querySelectorAll<HTMLElement>("[data-liquid-protect]")).find((node) => {
-        const r = node.getBoundingClientRect();
-        return r.bottom > 0 && r.top < vh;
-      });
-      if (!el) {
-        f.protectStrength = 0;
-        return;
+      const rects: Fluid["protect"] = [];
+      for (const el of guarded) {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < -40 || r.top > vh + 40 || r.width === 0) continue;
+        rects.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom, strength: parseFloat(el.dataset.liquidProtect || "") || 0.9 });
+        if (rects.length === MAX_RECTS) break;
       }
-      const r = el.getBoundingClientRect();
-      const [x0, y1] = uv(r.left, r.top);
-      const [x1, y0] = uv(r.right, r.bottom);
-      f.protect = [x0, y0, x1, y1];
-      f.protectStrength = parseFloat(el.dataset.liquidProtect || "") || 0.75;
+      f.protect = rects;
     };
 
     // Things that happened since the last frame, applied at the start of the next one.
@@ -135,7 +138,7 @@ export function LiquidField() {
         if (failBudget < 1) return;
         failBudget -= 1;
         const a = rand() * Math.PI * 2;
-        f.splat(x, y, Math.cos(a) * 300, Math.sin(a) * 300, 0, 0.3, 0.18);
+        f.splat(x, y, Math.cos(a) * 300, Math.sin(a) * 300, 0, 0.18, 0.14);
       } else {
         for (let i = 0; i < 7; i++) {
           const a = (i / 7) * Math.PI * 2 + rand();
@@ -166,13 +169,13 @@ export function LiquidField() {
         const angle = Math.atan2(ty - yy, Math.max(0.2, tx - x)) * 0.6 + (rand() - 0.5) * strain * 0.6;
         const speed = (260 + q * 640) * (0.85 + rand() * 0.3);
         const ink = (0.045 + q * 0.045) * (dt * 60);
-        f.splat(x + 0.015, yy, Math.cos(angle) * speed, Math.sin(angle) * speed, ink * (1 - strain * 0.25), ink * strain * 0.4, 0.2 + q * 0.12);
+        f.splat(x + 0.015, yy, Math.cos(angle) * speed, Math.sin(angle) * speed, ink * (1 - strain * 0.25), ink * strain * 0.22, 0.2 + q * 0.12);
       }
       // A strained system boils near the device: accent rising through the current.
       if (strain > 0.25 && rand() < strain * dt * 6) {
         const [x, y] = uv(targetX + (rand() - 0.2) * 260, targetY + (rand() - 0.5) * 240);
         const a = rand() * Math.PI * 2;
-        f.splat(x, y, Math.cos(a) * 420 * strain, Math.sin(a) * 420 * strain, 0.02, 0.18 * strain, 0.22);
+        f.splat(x, y, Math.cos(a) * 420 * strain, Math.sin(a) * 420 * strain, 0.02, 0.1 * strain, 0.18);
       }
     };
 
@@ -203,22 +206,64 @@ export function LiquidField() {
     };
 
     let lastScroll = window.scrollY;
-    const wake = (f: Fluid) => {
-      const delta = window.scrollY - lastScroll;
-      lastScroll = window.scrollY;
+    const wake = (f: Fluid, delta: number) => {
       if (Math.abs(delta) < 0.5) return;
       const vh = window.innerHeight;
-      const push = Math.max(-40, Math.min(40, delta)) * 14;
-      // The edges of the sheets that slide over the liquid drag a wake behind them.
-      for (const el of document.querySelectorAll<HTMLElement>("[data-liquid-edge]")) {
+      const push = Math.max(-40, Math.min(40, delta)) * 12;
+      // Screenshots moving through the liquid drag a wake off their top and bottom edges.
+      for (const el of edges) {
         const r = el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh) continue;
         for (const edge of [r.top, r.bottom]) {
           if (edge <= 8 || edge >= vh - 8) continue;
-          for (let i = 0; i < 5; i++) {
-            const [x, y] = uv(((i + 0.5) / 5) * window.innerWidth, edge);
-            f.splat(x, y, (Math.random() - 0.5) * 160, push, Math.min(0.14, Math.abs(delta) * 0.003), 0, 0.35);
+          for (let i = 0; i < 4; i++) {
+            const [x, y] = uv(r.left + ((i + 0.5) / 4) * r.width, edge);
+            f.splat(x, y, (Math.random() - 0.5) * 140, push, Math.min(0.1, Math.abs(delta) * 0.0025), 0, 0.3);
           }
         }
+      }
+    };
+
+    // The packet's tail: dye released at the packet while the page moves under it, pushed back the
+    // way the page is going, so it streams off the packet like a comet's tail and curls when you stop.
+    let pulse = 0;
+    const trail = (f: Fluid, dt: number, delta: number, rand: () => number) => {
+      const p = packetState();
+      if (!p.on) return;
+      const vh = window.innerHeight;
+      if (p.y < -20 || p.y > vh + 20) return;
+      const [x, y] = uv(p.x, p.y);
+      const speed = Math.min(1, Math.abs(delta) / 28);
+      const dir = delta >= 0 ? 1 : -1;
+      const failing = p.health === "failing";
+      const slow = p.health === "slow";
+      pulse += dt;
+      // At rest it only breathes: one small puff a second, the request still waiting on the wire.
+      if (speed < 0.02) {
+        if (pulse > 1.1) {
+          pulse = 0;
+          f.splat(x, y, (rand() - 0.5) * 120, (rand() - 0.5) * 120, failing ? 0 : 0.05, failing ? 0 : 0.05, 0.05, failing ? 0.12 : 0);
+        }
+        return;
+      }
+      const wobble = (rand() - 0.5) * (slow ? 620 : failing ? 420 : 200) * speed;
+      const vy = dir * (260 + speed * 1100);
+      const ink = speed * dt * 60;
+      // A fan of three: the core on the wire, two softer wisps either side, so the tail spreads
+      // into a comet instead of a pencil line.
+      for (let i = -1; i <= 1; i++) {
+        const side = i === 0 ? 1 : 0.45;
+        const ux = x + i * 0.006;
+        f.splat(
+          ux,
+          y,
+          wobble + i * 140 * speed,
+          vy * (i === 0 ? 1 : 0.8),
+          (failing ? 0.03 : 0.11) * ink * side,
+          failing ? 0 : (slow ? 0.08 : 0.05) * ink * side,
+          i === 0 ? 0.14 : 0.1,
+          failing ? 0.16 * ink * side : 0,
+        );
       }
     };
 
@@ -248,6 +293,7 @@ export function LiquidField() {
       const base = { ...f.config };
       f.resize(dpr());
       const rand = seeded(11);
+      collect();
       updateProtect(f);
 
       const recolor = () => {
@@ -266,16 +312,8 @@ export function LiquidField() {
         scheme.removeEventListener("change", recolor);
       });
 
-      const io = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) visibleWindows.add(entry.target);
-          else visibleWindows.delete(entry.target);
-        }
-      });
-      windows().forEach((el) => io.observe(el));
-      cleanups.push(() => io.disconnect());
-
       const onResize = () => {
+        collect();
         if (f.resize(dpr()) && motion.matches) {
           updateProtect(f);
           f.render();
@@ -308,41 +346,38 @@ export function LiquidField() {
       });
 
       let last = performance.now();
-      let tick = 0;
       const stats = { frames: 0, ms: 0 };
       (window as unknown as { __liquid?: typeof stats }).__liquid = stats;
 
       const loop = (now: number) => {
         frame = requestAnimationFrame(loop);
         const dt = Math.min(1 / 20, (now - last) / 1000);
-        if (document.hidden || visibleWindows.size === 0) {
+        last = now;
+        if (document.hidden) {
           queue.length = 0;
           pointer.moved = false;
           lastScroll = window.scrollY;
           return;
         }
-        // With only the thin rails between sheets in view, the liquid runs at half rate.
-        const open = Array.from(visibleWindows).some((el) => el.tagName !== "MAIN");
-        tick++;
-        if (!open && tick % 2 === 1) {
-          lastScroll = window.scrollY;
-          return;
-        }
-        last = now;
         const t0 = performance.now();
+        const delta = window.scrollY - lastScroll;
+        lastScroll = window.scrollY;
         updateProtect(f);
         const { strain } = flowState();
         curlBoost = Math.max(0, curlBoost - dt * 0.6);
-        f.config.curl = 5 + strain * 32 + curlBoost * 30;
+        const health = packetState().health;
+        f.config.curl = 5 + strain * 32 + curlBoost * 30 + (health === "slow" ? 8 : 0);
         // More traffic pours in more dye, so it also clears faster: the field stays a current with
-        // clean water around it instead of silting up.
+        // clean water around it instead of silting up into a grey wash.
         const q = Math.min(1, flowState().rate / 900);
-        f.config.densityDissipation = base.densityDissipation * (1 + q * 0.5 + strain * 0.2);
+        f.config.densityDissipation = base.densityDissipation * (1 + q * 0.9 + strain * 0.6);
         failBudget = Math.min(failBudget + dt * 10, 3);
 
         while (queue.length) applyEvent(f, queue.shift()!, rand);
-        inflow(f, dt, rand);
-        wake(f);
+        // The current into the simulator only runs while the hero is in view.
+        if (window.scrollY < window.innerHeight * 1.1) inflow(f, dt, rand);
+        wake(f, delta);
+        trail(f, dt, delta, rand);
         if (pointer.moved) {
           const [x, y] = uv(pointer.x, pointer.y);
           const speed = Math.hypot(pointer.dx, pointer.dy);
