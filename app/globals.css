@@ -440,9 +440,11 @@ body {
     text-decoration: none;
     white-space: nowrap;
     user-select: none;
-    transition: transform 420ms var(--ease-spring), border-color 200ms ease, color 260ms ease, background-color 200ms ease;
+    transition: transform 420ms var(--ease-spring), border-color 200ms ease, color 120ms ease, background-color 200ms ease;
   }
-  /* The pour: a disc wider than the key, risen from below. */
+  /* The pour: a disc wider than the key, risen from below. It rises fast and settles slowly, so it
+     has covered the label (about 70 ms in) before the label turns; on the way out the label turns
+     back at once, while the fill is still over it. */
   .key::before {
     content: "";
     position: absolute;
@@ -454,15 +456,19 @@ body {
     border-radius: 50%;
     background: var(--pour, var(--ink));
     transform: translateY(100%);
-    transition: transform 620ms var(--ease-pour);
+    transition: transform 560ms var(--ease-out);
   }
   @media (hover: hover) {
     .key:hover {
       color: var(--pour-ink, var(--paper));
       border-color: var(--pour, var(--ink));
+      transition: transform 420ms var(--ease-spring), border-color 200ms ease, color 90ms ease 60ms, background-color 200ms ease;
     }
     .key:hover::before {
       transform: translateY(-18%);
+    }
+    .key:hover {
+      --graphite: color-mix(in srgb, var(--pour-ink, var(--paper)) 72%, transparent);
     }
   }
   .key:active,
@@ -1072,7 +1078,9 @@ html[data-motion="on"] [data-reveal="wipe"][data-in] {
    colours. Until the liquid runs it is a solid band; once it runs the
    shader draws the band and its waterline instead.
    ------------------------------------------------------------------ */
-[data-chapter="invert"] {
+[data-chapter="invert"],
+[data-site-header][data-x],
+[data-mhud][data-x] {
   --paper: #0b0c0e;
   --paper-raised: #141518;
   --key-face: #1b1c20;
@@ -1090,7 +1098,9 @@ html[data-motion="on"] [data-reveal="wipe"][data-in] {
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) [data-chapter="invert"] {
+  :root:not([data-theme="light"]) [data-chapter="invert"],
+  :root:not([data-theme="light"]) [data-site-header][data-x],
+  :root:not([data-theme="light"]) [data-mhud][data-x] {
     --paper: #f4f4f5;
     --paper-raised: #e3e4e7;
     --key-face: #ffffff;
@@ -1107,7 +1117,9 @@ html[data-motion="on"] [data-reveal="wipe"][data-in] {
     color-scheme: light;
   }
 }
-:root[data-theme="dark"] [data-chapter="invert"] {
+:root[data-theme="dark"] [data-chapter="invert"],
+:root[data-theme="dark"] [data-site-header][data-x],
+:root[data-theme="dark"] [data-mhud][data-x] {
   --paper: #f4f4f5;
   --paper-raised: #e3e4e7;
   --key-face: #ffffff;
@@ -1122,6 +1134,10 @@ html[data-motion="on"] [data-reveal="wipe"][data-in] {
   --go: #18723f;
   --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
   color-scheme: light;
+}
+/* The header takes the chapter's tokens while the chapter runs under it (components/choreo.tsx). */
+[data-site-header] {
+  color: var(--ink);
 }
 .chapter-invert {
   position: relative;
@@ -1427,6 +1443,11 @@ html:has(.liquid-field) body {
   overflow: hidden;
   padding-block: 4rem 4.5rem;
 }
+@media (min-width: 1024px) {
+  .offclock {
+    padding-top: 1rem;
+  }
+}
 .offclock-list {
   position: absolute;
   width: 1px;
@@ -1535,31 +1556,33 @@ html[data-marquee="js"] .marquee-row {
   background: var(--ink);
   transform: translate3d(0, 101%, 0);
 }
-.tide-row[data-tide="pre"] .tide-fill {
-  transform: translate3d(0, var(--from, 101%), 0);
-}
-.tide-row[data-tide="in"] .tide-fill {
-  transform: none;
-  transition: transform 560ms var(--ease-pour);
-}
-.tide-row[data-tide="out"] .tide-fill {
-  transform: translate3d(0, var(--to, 101%), 0);
-  transition: transform 560ms var(--ease-pour);
+@media (hover: hover) and (pointer: fine) {
+  .tide-row[data-tide="pre"] .tide-fill {
+    transform: translate3d(0, var(--from, 101%), 0);
+  }
+  .tide-row[data-tide="in"] .tide-fill {
+    transform: none;
+    transition: transform 560ms var(--ease-pour);
+  }
+  .tide-row[data-tide="out"] .tide-fill {
+    transform: translate3d(0, var(--to, 101%), 0);
+    transition: transform 560ms var(--ease-pour);
+  }
+  .tide-row[data-tide="in"] > :not(.tide-fill) {
+    --ink: var(--paper);
+    --ink-2: color-mix(in srgb, var(--paper) 84%, transparent);
+    --graphite: color-mix(in srgb, var(--paper) 72%, transparent);
+    --signal-text: var(--paper);
+  }
 }
 .tide-row > div:not(.tide-fill),
 .tide-row > a {
-  transition: color 300ms ease, padding 560ms var(--ease-pour);
-}
-.tide-row[data-tide="in"] > :not(.tide-fill) {
-  --ink: var(--paper);
-  --ink-2: color-mix(in srgb, var(--paper) 84%, transparent);
-  --graphite: color-mix(in srgb, var(--paper) 72%, transparent);
-  --signal-text: var(--paper);
+  transition: color 120ms ease 60ms, padding 560ms var(--ease-pour);
 }
 .tide-row .t-row,
 .tide-row p,
 .tide-row span {
-  transition: color 300ms ease;
+  transition: color 120ms ease 60ms;
 }
 .tide-link {
   color: inherit;
@@ -1576,16 +1599,142 @@ html[data-marquee="js"] .marquee-row {
   color: var(--graphite);
   transition: transform 520ms var(--ease-spring), color 200ms ease;
 }
-.tide-row[data-tide="in"] .tide-arrow {
-  transform: translateX(0.3em);
-  color: var(--signal-text);
-}
-.tide-row[data-tide="in"] .link-arrow {
-  color: var(--paper);
+@media (hover: hover) and (pointer: fine) {
+  .tide-row[data-tide="in"] .tide-arrow {
+    transform: translateX(0.3em);
+    color: var(--signal-text);
+  }
+  .tide-row[data-tide="in"] .link-arrow {
+    color: var(--paper);
+  }
 }
 .tide-row > a,
 .tide-row > div:not(.tide-fill) {
   color: var(--ink);
+}
+
+/* ------------------------------------------------------------------
+   The lineup (more projects): cards on one hairline grid, after
+   getartcraft.com/apps. A cobalt number chip, the name, a line, mono
+   bordered tags. On hover a raised fill comes in from the edge the
+   pointer crossed, topped with a cobalt rule. Decoration only.
+   ------------------------------------------------------------------ */
+.t-hud {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.lineup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+@media (min-width: 640px) {
+  .lineup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .lineup-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.lineup-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 17rem;
+  padding: 1.25rem 1.25rem 1.5rem;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.lineup-name {
+  margin-top: 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 1.375rem;
+  padding: 0 0.4rem;
+  background: var(--signal);
+  color: var(--signal-ink);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.tag-mono {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  padding: 0 0.45rem;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.hud-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--ink) 25%, transparent);
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color 200ms ease, color 200ms ease;
+}
+.hud-link:hover {
+  text-decoration-color: var(--signal-text);
+}
+.hud-link:hover .link-arrow {
+  color: var(--signal-text);
+  transform: translate(0.12em, -0.12em);
+}
+/* The whole card is the link's target when it has one. */
+.lineup-card .hud-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+[data-dir-hover]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-top: 2px solid var(--signal);
+  background: var(--paper-raised);
+  transform: translate3d(0, var(--from, 101%), 0);
+  transition: transform 560ms var(--ease-pour);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-dir-hover]:hover::before {
+    transform: none;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -1754,13 +1903,26 @@ html[data-marquee="js"] .marquee-row {
   position: absolute;
   right: 0;
   opacity: 0;
-  transition: opacity 260ms ease, background-color 300ms ease;
+  transition: opacity 260ms ease;
   -webkit-backdrop-filter: blur(9px);
   backdrop-filter: blur(9px);
+}
+/* A frost's tint: the pool, and the opposite theme's pool where the chapter is under it (each layer
+   is clipped to its part by components/hud.tsx). */
+.hud-tint {
+  position: absolute;
+  inset: 0;
   background: color-mix(in srgb, var(--pool) 55%, transparent);
 }
-.hud-pool[data-x] {
+.hud-tint-x {
   background: color-mix(in srgb, var(--pool-x) 55%, transparent);
+  clip-path: inset(0 0 100% 0);
+}
+.hud-mapfrost .hud-tint {
+  background: color-mix(in srgb, var(--pool) 80%, transparent);
+}
+.hud-mapfrost .hud-tint-x {
+  background: color-mix(in srgb, var(--pool-x) 80%, transparent);
 }
 .hud-pool-top {
   top: 4rem;
@@ -1797,6 +1959,20 @@ html[data-marquee="js"] .marquee-row {
   -webkit-mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 65%, transparent);
   mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 65%, transparent);
 }
+/* While the ruler is a map, a wider frost behind it, so the section names on it never sit on the
+   page's own text; the HUD's flying names step aside at the same time (components/hud.tsx). */
+.hud-mapfrost {
+  position: absolute;
+  top: -4rem;
+  right: 0;
+  bottom: 0;
+  width: 15rem;
+  opacity: 0;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to left, #000 55%, rgb(0 0 0 / 0.55) 78%, transparent);
+  mask-image: linear-gradient(to left, #000 55%, rgb(0 0 0 / 0.55) 78%, transparent);
+}
 .hud-tape,
 .hud-words {
   position: absolute;
@@ -1829,6 +2005,7 @@ html[data-marquee="js"] .marquee-row {
   line-height: 1;
   color: var(--ink);
   opacity: 0.8;
+  transition: opacity 160ms ease;
 }
 .hud-tick[data-x] .hud-tick-n {
   color: var(--ink-x);
@@ -1846,6 +2023,10 @@ html[data-marquee="js"] .marquee-row {
   color: var(--ink);
   opacity: 0;
   text-shadow: 0 0 10px var(--pool), 0 0 2px var(--pool);
+}
+.hud-mapword[data-x] {
+  color: var(--ink-x);
+  text-shadow: 0 0 10px var(--pool-x), 0 0 2px var(--pool-x);
 }
 .hud-bracket {
   position: absolute;
@@ -1900,6 +2081,107 @@ html[data-marquee="js"] .marquee-row {
   margin-left: 1px;
 }
 
+/* The hero's name in flight to the header (components/hud.tsx): above the header, so the letters
+   land on its frosted bar rather than under it. */
+.hud-name {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.hud-name-ltr {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 1;
+  white-space: pre;
+  color: var(--ink);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* The wordmark: "A." in the sans, the surname in the serif, as in the hero. While the name flight
+   runs, its letters show one by one as their twins land, whatever the header's own fade says. */
+.wordmark-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.14em;
+  letter-spacing: -0.01em;
+}
+html[data-name-flight] [data-wordmark] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+html[data-name-flight] [data-wl] {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------
+   The small HUD (components/mobile-hud.tsx): on phones and tablets the
+   section titles fly into a frosted bar under the header.
+   ------------------------------------------------------------------ */
+.mhud-bar {
+  position: fixed;
+  top: 4rem;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  height: 34px;
+  pointer-events: none;
+  opacity: 0;
+  border-bottom: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--pool) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: opacity 300ms ease, background-color 300ms ease, border-color 300ms ease;
+}
+.mhud-tags {
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  height: 100%;
+}
+.mhud-index {
+  position: absolute;
+  left: 0;
+  top: 9px;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 16px;
+  color: var(--signal-text);
+  opacity: 0;
+}
+.mhud-word {
+  margin-left: 0.15rem;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.mhud-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 46;
+  pointer-events: none;
+}
+.mhud-fly {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 1;
+  white-space: pre;
+  color: var(--ink);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* A title letter the small HUD has lifted off leaves its outline behind. */
+[data-mtitle] [data-tl][data-away] {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--rule-strong);
+}
+
 /* ------------------------------------------------------------------
    The spine (components/spine.tsx): a wire in the left lane and the
    packet riding it.
@@ -1951,6 +2233,35 @@ html[data-marquee="js"] .marquee-row {
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal-text) 20%, transparent);
     transform: scale(1.15);
   }
+  /* While requests fail, the wire the packet has run is the fail colour. */
+  .spine[data-failing] .spine-lit,
+  .spine[data-failing] .spine-node[data-lit],
+  .spine[data-failing] .spine-branch {
+    background: var(--fail);
+  }
+  .spine[data-failing] .spine-node[data-lit] {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--fail) 22%, transparent);
+  }
+  /* The end: the wire branches across to the key it delivers to. */
+  .spine-branch {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--signal-text);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 700ms var(--ease-out);
+  }
+  .spine[data-delivered] .spine-branch {
+    transform: none;
+  }
+  .spine-node-end {
+    width: 10px;
+    height: 10px;
+    left: -4.5px;
+    margin-top: -5px;
+  }
   .packet {
     display: block;
     position: fixed;
@@ -1966,10 +2277,29 @@ html[data-marquee="js"] .marquee-row {
     opacity: 1;
   }
 }
-@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
-  .packet {
-    display: none;
+/* Reduced motion: the packet rests, delivered, at the end of the wire (components/spine.tsx). */
+@media (min-width: 1024px) {
+  .packet[data-rest] {
+    position: absolute;
+    transition: none;
   }
+}
+/* The key the packet is delivered to answers once. */
+[data-terminal][data-delivered] {
+  animation: delivered 900ms var(--ease-spring);
+}
+@keyframes delivered {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px color-mix(in srgb, var(--signal) 0%, transparent);
+  }
+}
+.station-end {
+  position: absolute;
+  left: 0;
+  top: 1.4375rem;
 }
 .packet-capsule {
   position: absolute;
@@ -1982,6 +2312,9 @@ html[data-marquee="js"] .marquee-row {
   box-shadow: 0 0 0 3px var(--pool), 0 0 14px color-mix(in srgb, var(--signal) 55%, transparent);
   transform: scaleY(var(--stretch, 1));
   transition: background-color 300ms ease;
+}
+.packet[data-delivered] .packet-capsule {
+  transform: scaleY(0.5);
 }
 .packet[data-state="failing"] .packet-capsule {
   background: var(--fail);
@@ -2052,16 +2385,16 @@ html[data-pointer="custom"] [cmdk-input] {
   transform: scale(0.45);
 }
 .cursor-ring[data-mode="label"]::before {
-  transform: scale(2.3);
+  transform: translate(40px, 36px) scale(1.55);
   border-color: var(--signal);
   background: var(--signal);
 }
 .cursor-label {
   position: absolute;
-  left: 0;
-  top: 0;
+  left: 40px;
+  top: 36px;
   transform: translate(-50%, -50%) scale(0.6);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
   color: var(--signal-ink);
@@ -2084,7 +2417,7 @@ html[data-pointer="custom"] [cmdk-input] {
   transition: transform 300ms var(--ease-spring);
 }
 .cursor-dot[data-mode="label"]::before {
-  transform: scale(0);
+  transform: scale(0.85);
 }
 
 /* ------------------------------------------------------------------

@@ -26,3 +26,14 @@ export function quad(p0: Point, c: Point, p1: Point, d: number): Point {
   const u = 1 - d;
   return { x: u * u * p0.x + 2 * u * d * c.x + d * d * p1.x, y: u * u * p0.y + 2 * u * d * c.y + d * d * p1.y };
 }
+
+/**
+ * Where on screen the spine's packet rides (components/spine.tsx): the middle of the screen, until
+ * the last screen of scroll, where it drifts down so that it meets the end station (at document y
+ * `endY`) exactly when the page bottoms out, even when that station sits low on the last screen.
+ */
+export function packetScreenY(scrollY: number, limit: number, vh: number, endY: number): number {
+  const short = Math.max(0, endY - limit - vh * 0.5);
+  const ramp = clamp01((scrollY - (limit - vh)) / vh);
+  return vh * 0.5 + short * ramp;
+}

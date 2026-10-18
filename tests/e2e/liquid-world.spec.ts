@@ -102,6 +102,93 @@ test.describe("liquid world", () => {
       expect(violations).toEqual([]);
     });
   }
+
+  test("the hero's name flies into the header's wordmark and back", async ({ page }) => {
+    await skipIntro(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await expect(page.locator(".hud-name-ltr")).toHaveCount(18); // Abdelrahman + Mohamed
+    const firstOfName = page.locator("[data-name] [data-nl]").first();
+    const wordmarkA = page.locator("[data-wordmark] [data-wl]").first();
+    await expect(wordmarkA).toHaveCSS("opacity", "0");
+    await page.evaluate(() => window.scrollTo(0, 700));
+    await expect(wordmarkA).toHaveCSS("opacity", "1");
+    await expect(firstOfName).toHaveCSS("visibility", "hidden");
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(firstOfName).toHaveCSS("visibility", "visible");
+    await expect(wordmarkA).toHaveCSS("opacity", "0");
+  });
+
+  test("the packet is delivered beside Email me at the bottom of the page", async ({ page }) => {
+    await skipIntro(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const packet = page.locator(".packet");
+    await expect(packet).toHaveAttribute("data-delivered", "");
+    await expect(packet.locator("[data-route]")).toHaveText("/contact");
+    await expect(packet.locator("[data-method]")).toHaveText("200");
+    // It sits level with the key it delivers to.
+    const key = await page.locator("[data-terminal]").boundingBox();
+    const capsule = await packet.locator(".packet-capsule").boundingBox();
+    expect(Math.abs(capsule!.y + capsule!.height / 2 - (key!.y + key!.height / 2))).toBeLessThan(12);
+  });
+
+  test("the docked names never sit on the portrait, and step aside for the ruler's map", async ({ page }) => {
+    await skipIntro(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(1500);
+    const overlaps = () =>
+      page.evaluate(() => {
+        const p = document.querySelector("[data-hud-avoid]")!.getBoundingClientRect();
+        return Array.from(document.querySelectorAll(".hud-ltr"))
+          .filter((el) => Number(getComputedStyle(el).opacity) > 0.05)
+          .map((el) => el.getBoundingClientRect())
+          .filter((l) => l.left < p.right && l.right > p.left && l.top < p.bottom && l.bottom > p.top).length;
+      });
+    expect(await overlaps()).toBe(0);
+    await page.mouse.move(1415, 450);
+    await expect.poll(() => page.evaluate(() => Math.max(...Array.from(document.querySelectorAll(".hud-ltr")).map((el) => Number(getComputedStyle(el).opacity))))).toBeLessThan(0.05);
+    await expect.poll(() => page.locator(".hud-mapword").first().evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.9);
+  });
+
+  test("on a phone, section titles fly into the bar under the header", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await context.addInitScript(() => sessionStorage.setItem("intro", "1"));
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await expect(page.locator(".mhud-fly").first()).toBeAttached();
+    await page.evaluate(() => {
+      const title = document.getElementById("work-title")!;
+      window.scrollTo(0, title.getBoundingClientRect().top + window.scrollY - 40);
+    });
+    await expect(page.locator(".mhud-bar")).toHaveCSS("opacity", "1");
+    await expect(page.locator("#work-title [data-tl]").first()).toHaveAttribute("data-away", "");
+    const box = await page.locator(".mhud-fly").first().boundingBox();
+    expect(box!.y).toBeLessThan(110);
+    await expect(page.locator(".hud-ltr")).toHaveCount(0);
+    await context.close();
+  });
+
+  test("on a touch screen, tapping a row never leaves it filled", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await context.addInitScript(() => sessionStorage.setItem("intro", "1"));
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    const row = page.locator("#writing .tide-row a").first();
+    await row.scrollIntoViewIfNeeded();
+    await row.evaluate((el) => el.addEventListener("click", (e) => e.preventDefault(), { once: true }));
+    await row.tap();
+    await page.waitForTimeout(700);
+    expect(await page.locator("#writing .tide-row[data-tide]").count()).toBe(0);
+    await context.close();
+  });
 });
 
 test.describe("liquid world, reduced motion", () => {
@@ -116,5 +203,69 @@ test.describe("liquid world, reduced motion", () => {
     await expect(page.locator(".marquee")).toBeHidden();
     await expect(page.locator(".offclock-list").getByText("Bullet, rated")).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Experience" })).toHaveCSS("opacity", "1");
+  });
+
+  for (const scheme of ["light", "dark"] as const) {
+    test(`the inverted chapter is readable when it is scrolled to (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce", colorScheme: scheme });
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto("/");
+      await page.waitForLoadState("load");
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => {
+        const e = document.getElementById("experience")!;
+        window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY + 200);
+      });
+      await page.waitForTimeout(1200);
+      const title = page.locator("#experience .t-role").first();
+      const box = (await title.boundingBox())!;
+      const color = await title.evaluate((el) => getComputedStyle(el).color);
+      // The ground just right of the role's name, as painted (the liquid's still frame included).
+      const shot = await page.screenshot({ clip: { x: Math.round(box.x + box.width + 12), y: Math.round(box.y), width: 40, height: Math.round(box.height) } });
+      const ratio = await page.evaluate(
+        async ({ data, color }) => {
+          const img = new Image();
+          img.src = "data:image/png;base64," + data;
+          await img.decode();
+          const c = document.createElement("canvas");
+          c.width = img.width;
+          c.height = img.height;
+          const g = c.getContext("2d")!;
+          g.drawImage(img, 0, 0);
+          const d = g.getImageData(0, 0, c.width, c.height).data;
+          let r = 0, gg = 0, b = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            r += d[i];
+            gg += d[i + 1];
+            b += d[i + 2];
+          }
+          const n = d.length / 4;
+          const lum = (rgb: number[]) => {
+            const [R, G, B] = rgb.map((v) => {
+              const s = v / 255;
+              return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+          };
+          const text = color.match(/\d+/g)!.slice(0, 3).map(Number);
+          const a = lum(text);
+          const bg = lum([r / n, gg / n, b / n]);
+          return (Math.max(a, bg) + 0.05) / (Math.min(a, bg) + 0.05);
+        },
+        { data: shot.toString("base64"), color },
+      );
+      expect(ratio).toBeGreaterThan(4.5);
+    });
+  }
+
+  test("the spine is a finished drawing: lit, with the packet delivered", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    const packet = page.locator(".packet");
+    await expect(packet).toHaveAttribute("data-rest", "");
+    await expect(packet).toHaveAttribute("data-delivered", "");
+    await expect(packet.locator("[data-method]")).toHaveText("200");
   });
 });

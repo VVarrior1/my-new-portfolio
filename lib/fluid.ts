@@ -38,9 +38,6 @@ export type FluidColors = Palette & {
   fill: number;
   lines: number;
   steps: number;
-  /** The two-tone print colours for the portrait plane. */
-  ink: [number, number, number];
-  paper: [number, number, number];
 };
 
 /** One image drawn into the liquid, in CSS px of the viewport. */
@@ -54,8 +51,7 @@ export type PlaneDraw = {
   mouse: { x: number; y: number };
   hover: number;
   reveal: number;
-  /** 0 a screenshot, 1 the portrait (a two-tone print the ink washes into colour). */
-  mode: number;
+  /** How much the liquid's current refracts it: 0 at rest, so a still image is sharp. */
   refract: number;
 };
 
@@ -220,6 +216,11 @@ float sdBox (vec2 p, vec2 c, vec2 h, float r) {
   vec2 q = abs(p - c) - h + r;
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
+float calmHash (vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float calmNoise (vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(calmHash(i), calmHash(i + vec2(1.0, 0.0)), f.x), mix(calmHash(i + vec2(0.0, 1.0)), calmHash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
 float calmAt (vec2 px) {
   float keep = 1.0;
   for (int i = 0; i < ${8}; i++) {
@@ -228,7 +229,10 @@ float calmAt (vec2 px) {
     if (s <= 0.0) continue;
     vec2 c = 0.5 * (r.xy + r.zw);
     vec2 h = 0.5 * abs(r.zw - r.xy);
-    float d = sdBox(px, c, h, uFeather * 0.6);
+    // The shore is ragged, not ruled: the edge wanders outward (never into the text) with a noise
+    // that travels with the block.
+    float wob = calmNoise((px - r.xy) / (uFeather * 1.7)) + 0.5 * calmNoise((px - r.xy) / (uFeather * 0.7) + 7.3);
+    float d = sdBox(px, c, h, uFeather * 0.6) + (wob - 1.5) * uFeather * 0.7;
     float inside = 1.0 - smoothstep(-uFeather * 0.35, uFeather, d);
     keep *= 1.0 - s * inside;
   }
@@ -305,7 +309,7 @@ void main () {
 
   // Fill: thin wisps stay faint, dense cores saturate gently instead of clipping.
   float n = smoothstep(0.0, 0.9, c.r) * guard;
-  float a = smoothstep(0.02, 0.6, c.g) * mix(1.0, guard, 0.85);
+  float a = smoothstep(0.02, 0.6, c.g) * guard;
 
   // Contours: the density in steps, one line every 1/uSteps of dye.
   float sn = uSteps;
@@ -313,7 +317,7 @@ void main () {
   float ln = lineAt(c.r * sn, gn) * smoothstep(0.015, 0.09, c.r) * guard;
   float sa = uSteps * 0.8;
   float ga = 0.5 * length(vec2(cr.g - cl.g, ct.g - cb.g)) * sa;
-  float la = lineAt(c.g * sa, ga) * smoothstep(0.02, 0.12, c.g) * mix(1.0, guard, 0.85);
+  float la = lineAt(c.g * sa, ga) * smoothstep(0.02, 0.12, c.g) * guard;
 
   vec3 col = mix(bg, neutral, n * uNeutralMax * uFill);
   col = mix(col, neutral, ln * uLines * 0.55);
@@ -348,16 +352,17 @@ void main () {
 }`;
 
 // A product screenshot (or the portrait) drawn into the liquid. The plane bows with scroll speed
-// like a sheet dragged through water, the current under it refracts it, the pointer drops ripples
-// into it, and it condenses out of the ink when it first appears. The portrait mode shows a
-// two-tone print that the ink washes back into colour.
+// like a sheet dragged through water, the current under it refracts it while the page moves, the
+// pointer drops ripples into it, and it condenses out of the ink when it first appears. At rest it
+// is the image itself, sharp and in its own colours: every distortion scales with uAgitate (scroll
+// speed, decaying within half a second of rest) or with the pointer over it.
 const PLANE = `
 precision highp float; precision highp sampler2D;
 varying vec2 vLocal; varying vec2 vScreen;
-uniform sampler2D uImage; uniform sampler2D uVelocity; uniform sampler2D uDye;
+uniform sampler2D uImage; uniform sampler2D uVelocity;
 uniform vec2 uSize; uniform float uMargin; uniform float uRadius;
 uniform float uBend; uniform vec2 uMouse; uniform float uHover; uniform float uReveal; uniform float uTime;
-uniform float uDpr; uniform float uMode; uniform vec3 uAccent; uniform vec3 uInk; uniform vec3 uPaper; uniform float uRefract;
+uniform float uDpr; uniform vec3 uAccent; uniform float uRefract;
 float hash (vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
 float noise (vec2 p) {
   vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -372,7 +377,7 @@ void main () {
   // Bow: the middle of the plane lags the edges, more the faster you scroll.
   float across = clamp(q.x / uSize.x, 0.0, 1.0);
   q.y -= uBend * sin(3.14159 * across) * 46.0 * uDpr;
-  // Refraction from the liquid's current at this point of the screen.
+  // Refraction from the liquid's current at this point of the screen, only while things move.
   vec2 v = texture2D(uVelocity, vScreen).xy;
   q += vec2(-v.x, v.y) * 0.010 * uDpr * uRefract;
   // Ripples from the pointer.
@@ -387,9 +392,10 @@ void main () {
   float shape = 1.0 - smoothstep(-0.75 * uDpr, 0.75 * uDpr, sd);
   vec2 uv = q / uSize;
 
-  // Condense out of the ink: a noisy front sweeps up from the bottom.
+  // Condense out of the ink: a noisy front sweeps up from the bottom, and is past every point of
+  // the image (field tops out at 1.2) well before uReveal reaches 1.
   float n = fbm(uv * vec2(3.0, 2.2) + vec2(0.0, uTime * 0.05));
-  float front = uReveal * 1.45 - 0.25;
+  float front = uReveal * 1.7 - 0.3;
   float field = (1.0 - uv.y) * 0.65 + n * 0.55;
   float shown = smoothstep(field - 0.04, field + 0.04, front);
   float rim = smoothstep(field - 0.035, field - 0.01, front) * (1.0 - shown) * 0.7;
@@ -398,18 +404,9 @@ void main () {
   float split = clamp(abs(uBend), 0.0, 1.0) * 0.006;
   vec3 img = vec3(texture2D(uImage, uv + vec2(0.0, split)).r, texture2D(uImage, uv).g, texture2D(uImage, uv - vec2(0.0, split)).b);
 
-  if (uMode > 0.5) {
-    float lum = dot(img, vec3(0.299, 0.587, 0.114));
-    vec3 print = mix(uInk, uPaper, smoothstep(0.08, 0.92, lum));
-    vec4 d = texture2D(uDye, vScreen);
-    float wash = smoothstep(0.04, 0.5, d.r + d.g * 1.4) + 0.55 * uHover * exp(-dist / (160.0 * uDpr));
-    img = mix(print, img, clamp(wash, 0.0, 1.0));
-  }
-
   float alpha = shape * shown;
-  vec3 col = img;
   float rimA = shape * rim;
-  gl_FragColor = vec4(col * alpha + uAccent * rimA, alpha + rimA);
+  gl_FragColor = vec4(img * alpha + uAccent * rimA, alpha + rimA);
 }`;
 
 export class Fluid {
@@ -831,7 +828,6 @@ export class Fluid {
     gl.bindTexture(gl.TEXTURE_2D, d.texture);
     gl.uniform1i(p.uniforms.uImage, 0);
     gl.uniform1i(p.uniforms.uVelocity, this.velocity.read.attach(1));
-    gl.uniform1i(p.uniforms.uDye, this.dye.read.attach(2));
     gl.uniform2f(p.uniforms.uSize, d.rect.width * k, d.rect.height * k);
     gl.uniform1f(p.uniforms.uMargin, margin * k);
     gl.uniform1f(p.uniforms.uRadius, d.radius * k);
@@ -841,14 +837,8 @@ export class Fluid {
     gl.uniform1f(p.uniforms.uReveal, d.reveal);
     gl.uniform1f(p.uniforms.uTime, this.time);
     gl.uniform1f(p.uniforms.uDpr, k);
-    gl.uniform1f(p.uniforms.uMode, d.mode);
     gl.uniform1f(p.uniforms.uRefract, d.refract);
     gl.uniform3f(p.uniforms.uAccent, ...this.colors.accent);
-    // The print is always dark shadows on light paper, whichever theme's ink is the dark one.
-    const lum = (c: [number, number, number]) => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
-    const [shadow, light] = lum(this.colors.ink) < lum(this.colors.paper) ? [this.colors.ink, this.colors.paper] : [this.colors.paper, this.colors.ink];
-    gl.uniform3f(p.uniforms.uInk, ...shadow);
-    gl.uniform3f(p.uniforms.uPaper, ...light);
     gl.viewport(0, 0, W, H);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);

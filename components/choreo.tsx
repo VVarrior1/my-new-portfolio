@@ -16,9 +16,31 @@ import { onFrame } from "@/lib/ticker";
  */
 export function Choreo() {
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // The header takes the chapter's colours while the chapter runs under it, the way the whole
+    // page turns over at the waterline. Not motion, so it runs under reduced motion too.
+    const header = document.querySelector<HTMLElement>("[data-site-header]");
+    const chapter = document.querySelector<HTMLElement>('[data-chapter="invert"]');
+    let headerOff: () => void = () => undefined;
+    if (header && chapter) {
+      let under = false;
+      const check = () => {
+        const r = chapter.getBoundingClientRect();
+        const next = r.top < 32 && r.bottom > 32;
+        if (next !== under) {
+          under = next;
+          header.toggleAttribute("data-x", next);
+        }
+      };
+      check();
+      window.addEventListener("scroll", check, { passive: true });
+      headerOff = () => {
+        window.removeEventListener("scroll", check);
+        header.removeAttribute("data-x");
+      };
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return headerOff;
     const root = document.documentElement;
-    const cleanups: Array<() => void> = [];
+    const cleanups: Array<() => void> = [headerOff];
 
     // Counts.
     const counts = Array.from(document.querySelectorAll<HTMLElement>("[data-count]"));
@@ -75,8 +97,10 @@ export function Choreo() {
       cleanups.push(() => delete root.dataset.marquee);
     }
 
-    // Tide rows: the fill comes in from the edge the pointer entered by.
-    const tides = Array.from(document.querySelectorAll<HTMLElement>(".tide-row"));
+    // Tide rows and cards: the fill comes in from the edge the pointer entered by. Only with a real
+    // hover (a mouse or trackpad); touch screens get none of it, so nothing can stick.
+    const hover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const tides = hover ? Array.from(document.querySelectorAll<HTMLElement>(".tide-row")) : [];
     const onEnter = (e: PointerEvent) => {
       if (e.pointerType === "touch") return;
       const row = e.currentTarget as HTMLElement;
@@ -104,6 +128,25 @@ export function Choreo() {
         row.removeEventListener("pointerleave", onLeave);
       }),
     );
+    const cards = hover ? Array.from(document.querySelectorAll<HTMLElement>("[data-dir-hover]")) : [];
+    const onCard = (e: PointerEvent) => {
+      const card = e.currentTarget as HTMLElement;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty("--from", e.clientY < r.top + r.height / 2 ? "-101%" : "101%");
+      if (e.type === "pointerenter") emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: e.clientY < r.top + r.height / 2 ? 260 : -260, ink: 0.08, accent: 0.04, radius: 0.07 });
+    };
+    cards.forEach((card) => {
+      card.addEventListener("pointerenter", onCard);
+      card.addEventListener("pointerleave", onCard);
+    });
+    cleanups.push(() =>
+      cards.forEach((card) => {
+        card.removeEventListener("pointerenter", onCard);
+        card.removeEventListener("pointerleave", onCard);
+      }),
+    );
+
+
 
     // Experience: the odometer and the lit lane follow the role you're reading.
     const exp = document.querySelector<HTMLElement>("[data-experience]");
@@ -153,7 +196,8 @@ export function Choreo() {
 
     // The intro ends with a drop landing in the pool.
     if (root.hasAttribute("data-intro")) {
-      const t = window.setTimeout(() => emitFlow({ kind: "drop", x: window.innerWidth * 0.5, y: window.innerHeight * 0.92, size: 1.1 }), 1250);
+      // Ink only: the accent is kept for what the simulator does.
+      const t = window.setTimeout(() => emitFlow({ kind: "drop", x: window.innerWidth * 0.5, y: window.innerHeight * 0.96, size: 0.9, accent: 0.04 }), 1250);
       cleanups.push(() => window.clearTimeout(t));
     }
 

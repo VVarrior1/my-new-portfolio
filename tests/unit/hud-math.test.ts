@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { easeInOutCubic, flipProgress, letterProgress, quad } from "@/lib/hud-math";
+import { easeInOutCubic, flipProgress, letterProgress, packetScreenY, quad } from "@/lib/hud-math";
 
 describe("flipProgress", () => {
   const vh = 900;
@@ -45,5 +45,22 @@ describe("curves", () => {
     expect(quad(a, c, b, 0)).toEqual(a);
     expect(quad(a, c, b, 1)).toEqual(b);
     expect(quad(a, c, b, 0.5).x).toBeLessThan((a.x + b.x) / 2);
+  });
+});
+
+describe("packetScreenY", () => {
+  const vh = 900;
+  const limit = 9000;
+  it("rides the middle of the screen until the last screen of scroll", () => {
+    expect(packetScreenY(0, limit, vh, 9700)).toBe(450);
+    expect(packetScreenY(limit - vh, limit, vh, 9700)).toBe(450);
+  });
+  it("meets an end station that sits low on the last screen exactly at the bottom of the page", () => {
+    // The station is 700px down the last screen: at the bottom of the page the packet is on it.
+    expect(packetScreenY(limit, limit, vh, limit + 700)).toBe(700);
+    expect(packetScreenY(limit - vh / 2, limit, vh, limit + 700)).toBe(575);
+  });
+  it("stays in the middle when the station is reached before the page ends", () => {
+    expect(packetScreenY(limit, limit, vh, limit + 300)).toBe(450);
   });
 });

@@ -9,7 +9,7 @@ import { LiquidField } from "@/components/liquid-field";
 import { LiveSystem } from "@/components/live-system";
 import { PageFx } from "@/components/page-fx";
 import { ProjectShot } from "@/components/project-shot";
-import { Count, Letters, Section } from "@/components/section";
+import { Count, InlineLetters, Letters, Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SpanStrip } from "@/components/span-strip";
@@ -98,18 +98,23 @@ export default async function Home() {
         {/* Hero. The name and the facts on the left, held calm; the simulator floating on the right,
             with the current flowing into it. */}
         <section id="top" aria-labelledby="hero-name" className="relative">
-          <div className="wrap grid min-h-[calc(100svh-4rem)] content-center gap-y-12 pb-20 pt-8 sm:pb-24 sm:pt-12 lg:grid-cols-12 lg:gap-x-8 lg:pb-24 lg:pt-4">
+          {/* On laptops the hero stops short of the fold, so the first river of type below peeks in. */}
+          <div className="wrap grid min-h-[calc(100svh-4rem)] content-center gap-y-12 pb-20 pt-8 sm:pb-24 sm:pt-12 lg:min-h-[calc(100svh-12.5rem)] lg:grid-cols-12 lg:gap-x-8 lg:pb-16 lg:pt-4">
             <div data-calm="0.92" className="@container min-w-0 lg:col-span-6 lg:self-center">
               <p className="t-mono fade-up text-graphite" style={{ ["--d" as string]: "80ms" }}>
                 {profile.role} · {profile.location}
               </p>
-              <h1 id="hero-name" className="t-display t-name mt-5 sm:mt-6">
+              {/* On laptops the name's letters lift off as you scroll out of the hero and fly into the
+                  header's wordmark (components/hud.tsx). */}
+              <h1 id="hero-name" className="t-display t-name mt-5 sm:mt-6" data-name>
                 <span className="rise-line">
-                  <span>{profile.firstName}</span>
+                  <span>
+                    <InlineLetters text={profile.firstName} mark="nl" />
+                  </span>
                 </span>
                 <span className="rise-line">
                   <span className="t-serif pr-[0.06em]" style={{ ["--d" as string]: "90ms" }}>
-                    {profile.lastName}
+                    <InlineLetters text={profile.lastName} mark="nl" />
                   </span>
                 </span>
               </h1>
@@ -261,37 +266,37 @@ export default async function Home() {
           </div>
 
           <div className="mt-28 sm:mt-40">
-            <h3 className="t-mono text-graphite" data-calm="0.9">
-              More projects
-            </h3>
-            <ul className="mt-5 border-t border-rule" data-calm="0.9">
+            <div className="flex items-baseline justify-between gap-4" data-calm="0.9">
+              <h3 className="t-hud text-ink-2">More projects</h3>
+              <p className="t-hud text-graphite">{otherProjects.length} more</p>
+            </div>
+            {/* The smaller projects as cards on one hairline grid, after getartcraft.com/apps. */}
+            <ul className="lineup-grid" data-calm="0.9">
               {otherProjects.map((project, i) => (
-                <li key={project.name} className="tide-row" data-reveal="rise" style={{ ["--d" as string]: `${i * 60}ms` }}>
-                  <div className="tide-fill" aria-hidden="true" />
-                  <div className={`${ROW} relative py-6 sm:py-7`}>
-                    <p className={`${ROW_LABEL} tide-num`} aria-hidden="true">
-                      {String(i + 3).padStart(2, "0")}
-                    </p>
-                    <div className={`${ROW_BODY} grid gap-x-6 gap-y-2 lg:grid-cols-9`}>
-                      <h4 className="t-row lg:col-span-4">
-                        {project.href ? (
-                          <a href={project.href} target="_blank" rel="noreferrer" className="tide-link" data-cursor="Open">
-                            {project.name}
-                            <span className="link-arrow" aria-hidden="true">
-                              ↗
-                            </span>
-                            <span className="sr-only"> (opens in a new tab)</span>
-                          </a>
-                        ) : (
-                          project.name
-                        )}
-                        {project.note && <span className="t-mono ml-2.5 align-middle font-normal text-graphite">{project.note}</span>}
-                      </h4>
-                      <div className="min-w-0 lg:col-span-5">
-                        <p className="text-[0.9375rem] leading-relaxed text-ink-2">{project.summary}</p>
-                        <DotList items={project.stack.split(", ")} label="Stack" className="t-mono mt-2 text-graphite" />
-                      </div>
-                    </div>
+                <li key={project.name} className="lineup-card" data-dir-hover="" data-reveal="rise" style={{ ["--d" as string]: `${(i % 4) * 80}ms` }}>
+                  <p className="flex items-center justify-between gap-3">
+                    <span className="chip">{String(featured.length + i + 1).padStart(2, "0")}</span>
+                    {project.note && <span className="t-hud text-graphite">{project.note}</span>}
+                  </p>
+                  <h4 className="lineup-name">{project.name}</h4>
+                  <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-2">{project.summary}</p>
+                  <div className="mt-auto pt-5">
+                    <ul aria-label="Stack" className="flex flex-wrap gap-1.5">
+                      {project.stack.split(", ").map((item) => (
+                        <li key={item} className="tag-mono">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    {project.href && (
+                      <a href={project.href} target="_blank" rel="noreferrer" className="hud-link mt-5" data-cursor="Open">
+                        Code
+                        <span className="link-arrow" aria-hidden="true">
+                          ↗
+                        </span>
+                        <span className="sr-only"> for {project.name} (opens in a new tab)</span>
+                      </a>
+                    )}
                   </div>
                 </li>
               ))}
@@ -468,15 +473,22 @@ export default async function Home() {
 
         {/* Contact: the page ends where it began, on open water. The card assembles as it arrives. */}
         <section id="contact" aria-labelledby="contact-title" className="relative scroll-mt-16" data-hud="Contact" data-hud-index="05">
-          <Station route="/contact" role="end" />
+          <Station route="/contact" />
           <div className="wrap pb-24 pt-20 sm:pb-36 sm:pt-32">
-            <div className="grid gap-x-12 gap-y-12 lg:grid-cols-12" data-contact>
-              <div className="min-w-0 lg:col-span-8" data-calm="0.94">
-                <p className="t-mono mb-4 text-graphite" aria-hidden="true">
+            {/* On laptops the right two columns stay open: that corner is where the HUD's names dock. */}
+            <div className="grid gap-x-10 gap-y-12 lg:grid-cols-12" data-contact>
+              <div className="min-w-0 lg:col-span-7" data-calm="0.94">
+                <p className="t-mono mb-4 text-graphite" aria-hidden="true" data-mtitle="05" data-mword="Contact">
                   <span className="text-signal-text">05</span> / Contact
                 </p>
-                <h2 id="contact-title" className="t-poster w-fit" data-reveal="wipe">
-                  Hiring for <span className="t-serif">2027?</span>
+                {/* The wipe runs line by line, after landonorris.com. */}
+                <h2 id="contact-title" className="t-poster">
+                  <span className="block w-fit" data-reveal="wipe">
+                    Hiring for
+                  </span>{" "}
+                  <span className="block w-fit" data-reveal="wipe" style={{ ["--d" as string]: "140ms" }}>
+                    <span className="t-serif">2027?</span>
+                  </span>
                 </h2>
                 <p className="measure mt-7 text-[1.1875rem] leading-relaxed text-ink-2 sm:text-[1.375rem]" data-part>
                   I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or
@@ -492,8 +504,10 @@ export default async function Home() {
                   {profile.email.split("@")[0]}
                   <wbr />@{profile.email.split("@")[1]}
                 </a>
-                <div className="mt-9 flex flex-wrap gap-2.5" data-part>
-                  <a href={`mailto:${profile.email}`} className="key key-signal" data-track="email">
+                <div className="relative mt-9 flex flex-wrap gap-2.5" data-part>
+                  {/* The end of the spine: the packet is delivered beside the key that sends the email. */}
+                  <Station route="/contact" role="end" className="station-end" />
+                  <a href={`mailto:${profile.email}`} className="key key-signal" data-track="email" data-terminal>
                     Email me
                   </a>
                   <CopyEmail email={profile.email} className="key" />
@@ -507,14 +521,14 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-4 lg:block lg:pt-10" data-part>
-                <div className="portrait relative w-full" data-gl="portrait">
+              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-3 lg:block lg:pt-10" data-part>
+                <div className="portrait relative w-full" data-gl="portrait" data-hud-avoid>
                   <Image
                     src="/portrait-snow.jpg"
                     width={1200}
                     height={1500}
                     alt="Abdelrahman Mohamed smiling outdoors in the snow"
-                    sizes="(min-width: 1024px) 360px, (min-width: 640px) 176px, 104px"
+                    sizes="(min-width: 1024px) 300px, (min-width: 640px) 176px, 104px"
                     className="portrait-img block aspect-[4/5] h-auto w-full object-cover object-top"
                   />
                 </div>

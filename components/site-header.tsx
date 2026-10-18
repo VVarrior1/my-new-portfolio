@@ -56,6 +56,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
 
   return (
     <header
+      data-site-header=""
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
         scrolled || open ? "border-rule bg-paper/80 backdrop-blur-xl" : overlay ? "border-transparent bg-transparent" : "border-transparent bg-paper"
       }`}
@@ -68,13 +69,23 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
           >
             AM
           </span>
+          {/* Letter by letter, so on the home page the hero's name can fly into it (components/hud.tsx). */}
           <span
             aria-hidden="true"
-            className={`t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
+            data-wordmark=""
+            className={`wordmark t-wide text-[0.9375rem] font-[650] tracking-[-0.01em] transition-[opacity,transform] duration-200 motion-reduce:transition-none ${
               hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
             }`}
           >
-            A. Mohamed
+            <span data-wl="">A</span>
+            <span data-wl="">.</span>{" "}
+            <span className="wordmark-serif">
+              {Array.from("Mohamed").map((ch, i) => (
+                <span key={i} data-wl="">
+                  {ch}
+                </span>
+              ))}
+            </span>
           </span>
         </Link>
 

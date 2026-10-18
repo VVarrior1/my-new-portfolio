@@ -70,7 +70,8 @@ export function toggleTheme(origin?: { x: number; y: number }): Theme {
   const transition = doc.startViewTransition(() => apply(next));
   transition.ready
     .then(() => {
-      emitFlow({ kind: "drop", x, y: Math.max(y, 80), size: 1 });
+      // The drop lands below the header (whose band is calm water), so the nav stays readable.
+      emitFlow({ kind: "drop", x: Math.min(x, window.innerWidth - 160), y: Math.max(y, 190), size: 0.8, accent: 0.3 });
       const steps = 14;
       const frames = Array.from({ length: steps + 1 }, (_, i) => {
         const t = i / steps;

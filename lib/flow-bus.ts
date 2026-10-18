@@ -19,8 +19,8 @@ export type FlowEvent =
   | { kind: "restart"; x: number; y: number }
   /** A request failed at this point. */
   | { kind: "fail"; x: number; y: number }
-  /** An ink drop, e.g. from the theme toggle. */
-  | { kind: "drop"; x: number; y: number; size: number }
+  /** An ink drop, e.g. from the theme toggle; `accent` is how much cobalt it carries (0.35 default). */
+  | { kind: "drop"; x: number; y: number; size: number; accent?: number }
   /** A push through the liquid (a flying letter, the spine's packet, a row you point at): velocity
    * in px/s, and how much of each dye it leaves. */
   | { kind: "stir"; x: number; y: number; dx: number; dy: number; ink: number; accent: number; radius: number };

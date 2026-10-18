@@ -65,8 +65,6 @@ function readColors(): FluidColors {
     fill: num("--fluid-fill", 0.5),
     lines: num("--fluid-lines", 0.8),
     steps: num("--fluid-steps", 7),
-    ink: hex(v("--ink"), [0.05, 0.06, 0.07]),
-    paper: hex(v("--paper"), [0.96, 0.96, 0.96]),
   };
 }
 
@@ -131,6 +129,10 @@ export function LiquidField() {
 
     const gather = (f: Fluid, vh: number, vw: number) => {
       const calm: Fluid["calm"] = [];
+      // The header's band and, where the HUD runs, the ruler's lane on the right edge are always
+      // calm water: the nav and the tick tape never sit on ink, and dye can't pile up by the rail.
+      calm.push({ left: -60, top: -60, right: vw + 60, bottom: 52, strength: 0.8 });
+      if (document.documentElement.dataset.hudActive !== undefined) calm.push({ left: vw - 112, top: -60, right: vw + 60, bottom: vh + 60, strength: 0.9 });
       for (const el of calmList) {
         const r = el.getBoundingClientRect();
         if (r.bottom < -40 || r.top > vh + 40 || r.width === 0) continue;
@@ -190,10 +192,11 @@ export function LiquidField() {
       } else if (e.kind === "stir") {
         f.splat(x, y, e.dx, -e.dy, e.ink, e.accent, e.radius);
       } else {
+        const accent = e.accent ?? 0.35;
         for (let i = 0; i < 7; i++) {
           const a = (i / 7) * Math.PI * 2 + rand();
           const speed = 300 + rand() * 600 * e.size;
-          f.splat(x, y, Math.cos(a) * speed, Math.sin(a) * speed, 0.5 * e.size, 0.35 * e.size, 0.2 + 0.3 * e.size);
+          f.splat(x, y, Math.cos(a) * speed, Math.sin(a) * speed, 0.5 * e.size, accent * e.size, 0.2 + 0.3 * e.size);
         }
       }
     };
@@ -222,7 +225,8 @@ export function LiquidField() {
         const speed = (260 + q * 600) * (0.85 + rand() * 0.3);
         // More traffic pours in more ink but in thinner jets, so it reads as more lines, not a wash.
         const ink = (0.05 + q * 0.03) * (dt * 60);
-        f.splat(x + 0.015, yy, Math.cos(angle) * speed, Math.sin(angle) * speed, ink * (1 - strain * 0.2), ink * strain * 0.3, 0.16 + q * 0.06);
+        // A thread of the accent rides the current, thicker the more traffic there is.
+        f.splat(x + 0.015, yy, Math.cos(angle) * speed, Math.sin(angle) * speed, ink * (1 - strain * 0.2), ink * (0.14 + q * 0.5 + strain * 0.3), 0.16 + q * 0.06);
       }
       if (strain > 0.25 && rand() < strain * dt * 6) {
         const [x, y] = uv(targetX + (rand() - 0.2) * 260, targetY + (rand() - 0.5) * 240);
@@ -294,8 +298,8 @@ export function LiquidField() {
         const inside = f.calm.some((r) => px > r.left - 30 && px < r.right + 30 && py > r.top - 30 && py < r.bottom + 30);
         if (inside) continue;
         const [x, y] = uv(px, py);
-        const accent = rand() < 0.28;
-        f.splat(x, y, (rand() - 0.5) * 120, (rand() - 0.5) * 120, accent ? 0.12 : 0.5, accent ? 0.45 : 0, 0.06 + rand() * 0.09);
+        const accent = rand() < 0.16;
+        f.splat(x, y, (rand() - 0.5) * 120, (rand() - 0.5) * 120, accent ? 0.12 : 0.5, accent ? 0.3 : 0, 0.06 + rand() * 0.09);
         break;
       }
     };
@@ -316,8 +320,10 @@ export function LiquidField() {
         const [x, y] = uv(side * vw, yy * vh);
         const angle = Math.sin(weather * 0.5 + side * 3) * 0.5;
         const speed = 240 + 80 * Math.sin(weather * 0.9 + side);
-        const ink = 0.03 * dt * 60 * tune.drip;
-        const accent = rand() < 0.08 ? 0.12 : 0;
+        // Only the left current carries ink: the right one is a push from behind the ruler, so dye
+        // never collects by the rail.
+        const ink = side === 0 ? 0.03 * dt * 60 * tune.drip : 0;
+        const accent = side === 0 && rand() < 0.08 ? 0.12 : 0;
         f.splat(x + dir * 0.01, y, dir * Math.cos(angle) * speed, Math.sin(angle) * speed, ink, accent * dt * 60, 0.12);
       }
     };
@@ -364,6 +370,7 @@ export function LiquidField() {
 
     let lastY = window.scrollY;
     let bend = 0;
+    let agitate = 0;
 
     const start = async () => {
       if (disposed) return;
@@ -430,6 +437,22 @@ export function LiquidField() {
         prewarm(90);
         f.render();
         canvas.dataset.ready = "still";
+        // Nothing moves, but the chapter's band and the calm water under text follow the page: one
+        // display pass per scrolled frame, no simulation.
+        let queued = 0;
+        const redraw = () => {
+          queued = 0;
+          gather(f, window.innerHeight, window.innerWidth);
+          f.render();
+        };
+        const onScroll = () => {
+          if (!queued) queued = requestAnimationFrame(redraw);
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        cleanups.push(() => {
+          window.removeEventListener("scroll", onScroll);
+          cancelAnimationFrame(queued);
+        });
         return;
       }
 
@@ -506,8 +529,12 @@ export function LiquidField() {
         f.step(dt);
         f.render();
 
-        // Planes, on top of the liquid, at their elements' boxes this frame.
+        // Planes, on top of the liquid, at their elements' boxes this frame. They bow and refract
+        // only while the page moves (agitate rises at once and settles within half a second of
+        // rest), so a still image is always sharp.
         bend += (Math.max(-1, Math.min(1, fr.velocity / 2600)) - bend) * (1 - Math.exp(-8 * dt));
+        agitate = Math.max(Math.min(1, Math.abs(fr.velocity) / 900), agitate * Math.exp(-dt / 0.16));
+        if (agitate < 0.002) agitate = 0;
         let drawn = 0;
         for (const plane of planes) {
           if (!plane.texture || !plane.img) continue;
@@ -526,8 +553,7 @@ export function LiquidField() {
             mouse: { x: pointer.x - r.left, y: pointer.y - r.top },
             hover: plane.hover,
             reveal: 1 - Math.pow(1 - plane.reveal, 2.2),
-            mode: plane.mode,
-            refract: tune.refract,
+            refract: tune.refract * Math.max(agitate, plane.hover * 0.5),
           });
           drawn++;
         }

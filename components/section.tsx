@@ -42,13 +42,33 @@ export function SectionHead({ id, index, title, meta }: { id: string; index: str
             <span className="text-signal-text">{index}</span>
             <span className="sec-slash"> / </span>
           </p>
-          <h2 id={`${id}-title`} className="sec-title t-section" data-reveal="title">
-            {title}
+          <h2 id={`${id}-title`} className="sec-title t-section" data-reveal="title" data-mtitle={index}>
+            {typeof title === "string" ? <InlineLetters text={title} mark="tl" /> : title}
           </h2>
           {meta && <p className="sec-meta t-mono text-graphite">{meta}</p>}
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * A name set as inline letters, so the HUD can lift each one off the page (the hero's name, the
+ * section titles) without changing how it's set: inline spans keep the kerning. Read once by
+ * screen readers. `mark` names the data attribute each letter carries.
+ */
+export function InlineLetters({ text, mark }: { text: string; mark: string }) {
+  return (
+    <>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">
+        {Array.from(text).map((ch, i) => (
+          <span key={i} {...{ [`data-${mark}`]: "" }}>
+            {ch}
+          </span>
+        ))}
+      </span>
+    </>
   );
 }
 
