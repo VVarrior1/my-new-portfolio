@@ -39,9 +39,12 @@ Design and the token comments at the top of `app/globals.css`.
   packet's 503 and the wire behind it while requests fail, the /stats chart; `--go` is the
   availability dot.
 - There are no opaque sheets on the home page. Text over the liquid needs a `data-calm` ancestor
-  (the value is how much dye is held back, 0–1; the shader takes the 8 on screen, after two fixed
+  (the value is how much dye is held back, 0–1; the shader takes the 10 on screen, after two fixed
   ones: the header's band and, where the HUD runs, the ruler's lane). Calm edges are ragged on
-  purpose (noise that only ever widens the calm). A section in the opposite theme is
+  purpose (noise that only ever widens the calm). Calm covers an element's content box, not its
+  padding, so put `data-calm` on the text blocks themselves, not on whole sections. The current is
+  only gently dragged inside calm (`#play` not at all, since the river leaves from it): a strong
+  drag chokes the channels between blocks and the ink banks up against their shores. A section in the opposite theme is
   `data-chapter="invert"` with a `.chapter-ground` inside (the shader draws its band; the ground is
   for contrast checks and no-WebGL). Under reduced motion the still frame is redrawn as the page
   scrolls so the band stays under the chapter. Images that should live in the liquid get `data-gl`

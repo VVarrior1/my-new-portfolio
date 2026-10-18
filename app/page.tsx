@@ -161,7 +161,7 @@ export default async function Home() {
               <LiveSystem />
             </div>
           </div>
-          <p className="scroll-cue t-mono" aria-hidden="true" data-calm="0.9">
+          <p className="scroll-cue t-mono" aria-hidden="true" data-calm="0.97">
             <span className="scroll-cue-line" />
             Scroll
           </p>
@@ -169,11 +169,11 @@ export default async function Home() {
         </section>
 
         {/* Off the clock: the personal line as one quiet row of four facts, each rising in on its own beat. */}
-        <section aria-labelledby="off-the-clock" className="offclock relative" data-calm="0.7">
-          <h2 id="off-the-clock" className="wrap t-mono text-graphite">
+        <section aria-labelledby="off-the-clock" className="offclock relative">
+          <h2 id="off-the-clock" className="wrap t-mono text-graphite" data-calm="0.97">
             Off the clock
           </h2>
-          <dl className="offclock-list wrap">
+          <dl className="offclock-list wrap" data-calm="0.96">
             {profile.offTheClock.map((row, i) => (
               <div key={row.label} className="offclock-item min-w-0" data-reveal="rise" style={{ ["--d" as string]: `${i * 90}ms` }}>
                 <dt className="t-mono text-graphite">{row.label}</dt>

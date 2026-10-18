@@ -13,9 +13,13 @@ const KNOBS: Knob[] = [
   { key: "scrollStir", label: "scroll stir", min: 0, max: 3, step: 0.05, kind: "tune" },
   { key: "drip", label: "drips and weather", min: 0, max: 3, step: 0.05, kind: "tune" },
   { key: "refract", label: "image refraction", min: 0, max: 4, step: 0.1, kind: "tune" },
+  { key: "ambient", label: "ambient stir", min: 0, max: 4, step: 0.05, kind: "tune" },
+  { key: "current", label: "river speed", min: 0, max: 3, step: 0.05, kind: "tune" },
+  { key: "ink", label: "river ink", min: 0, max: 4, step: 0.05, kind: "tune" },
   { key: "--fluid-fill", label: "ink fill", min: 0, max: 1.5, step: 0.02, kind: "css" },
   { key: "--fluid-lines", label: "contour lines", min: 0, max: 1.5, step: 0.02, kind: "css" },
   { key: "--fluid-steps", label: "lines per dye", min: 1, max: 16, step: 0.5, kind: "css" },
+  { key: "--fluid-calm-lines", label: "lines behind text", min: 0, max: 1, step: 0.02, kind: "css" },
 ];
 
 export function TunePanel() {

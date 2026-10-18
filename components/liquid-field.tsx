@@ -15,8 +15,13 @@ import { onFrame, type Frame } from "@/lib/ticker";
 //   a wobbling waterline the current pushes around; scrolling into it is a liquid hand-off.
 // - [data-gl] images (the product screenshots, the portrait) are drawn as planes in the same
 //   context, so the current refracts them, the pointer ripples them and scroll speed bows them.
-// - The hero simulator drives a current into the device (lib/flow-bus.ts), flying HUD letters and
-//   the spine's packet stir it, a killed server blooms the accent, and an idle drip keeps it alive.
+// - In the hero the current comes out of the simulator: a river of ink leaves from under the
+//   device's lower-left corner, runs beneath the hero copy and turns up the left lane beside the
+//   name, with a cobalt thread in it that thickens with traffic (lib/flow-bus.ts). More traffic is a
+//   faster, denser river; a killed server sends one accent bloom down it, which settles back.
+//   An ambient curl-noise stir keeps the pool moving when nothing touches it, flying HUD letters
+//   and the spine's packet stir it, and below the hero two slow currents and the odd drip keep the
+//   gutters alive.
 // It starts after the page has loaded and gone idle, pauses with the tab, caps the pixel ratio,
 // and under reduced motion renders one still frame. Without WebGL the page is plain paper.
 
@@ -27,12 +32,14 @@ const DESKTOP: FluidConfig = {
   velocityDissipation: 0.4,
   pressure: 0.8,
   pressureIterations: 18,
-  curl: 6,
+  curl: 1,
 };
 const MOBILE: FluidConfig = { ...DESKTOP, simResolution: 96, dyeResolution: 640, pressureIterations: 12 };
 
 /** How far the pool travels per pixel the page scrolls: under 1, so it sits below the page. */
 const PARALLAX = 0.62;
+/** The ambient curl-noise stir, in sim texels/s² (see FORCE in lib/fluid.ts). */
+const AMBIENT = 1.6;
 
 function hex(value: string, fallback: [number, number, number]): [number, number, number] {
   const m = value.trim().match(/^#([0-9a-f]{6})$/i);
@@ -65,6 +72,7 @@ function readColors(): FluidColors {
     fill: num("--fluid-fill", 0.5),
     lines: num("--fluid-lines", 0.8),
     steps: num("--fluid-steps", 7),
+    calmLines: num("--fluid-calm-lines", 0.05),
   };
 }
 
@@ -90,7 +98,7 @@ type Plane = {
   mode: number;
 };
 
-type Tuning = { parallax: number; scrollStir: number; drip: number; refract: number };
+type Tuning = { parallax: number; scrollStir: number; drip: number; refract: number; ambient: number; current: number; ink: number };
 
 declare global {
   interface Window {
@@ -112,7 +120,7 @@ export function LiquidField() {
     let fluid: Fluid | null = null;
     let disposed = false;
     const cleanups: Array<() => void> = [];
-    const tune: Tuning = { parallax: PARALLAX, scrollStir: 1, drip: 1, refract: 1 };
+    const tune: Tuning = { parallax: PARALLAX, scrollStir: 1, drip: 1, refract: 1, ambient: 1, current: 1, ink: 1 };
     window.__liquidTune = tune;
 
     const dpr = () => Math.min(window.devicePixelRatio || 1, coarse ? 1.25 : 1.5);
@@ -122,11 +130,22 @@ export function LiquidField() {
     // Calm rectangles: the blocks of text on screen. Strength is the attribute's value.
     const calmNodes = () => Array.from(document.querySelectorAll<HTMLElement>("[data-calm]"));
     let calmList = calmNodes();
+    // Each block is calm over its content box, not its padding (a .wrap's side lanes, a section's
+    // breathing room), so the liquid can come up to the text rather than stop a lane short of it.
+    const insets = new WeakMap<HTMLElement, [number, number, number, number]>();
+    const measureInsets = () => {
+      for (const el of calmList) {
+        const cs = getComputedStyle(el);
+        insets.set(el, [parseFloat(cs.paddingLeft) || 0, parseFloat(cs.paddingTop) || 0, parseFloat(cs.paddingRight) || 0, parseFloat(cs.paddingBottom) || 0]);
+      }
+    };
+    measureInsets();
     const chapterList = () => Array.from(document.querySelectorAll<HTMLElement>('[data-chapter="invert"]'));
     let chapters = chapterList();
     const refreshNodes = () => {
       calmList = calmNodes();
       chapters = chapterList();
+      measureInsets();
     };
 
     const gather = (f: Fluid, vh: number, vw: number) => {
@@ -138,8 +157,10 @@ export function LiquidField() {
       for (const el of calmList) {
         const r = el.getBoundingClientRect();
         if (r.bottom < -40 || r.top > vh + 40 || r.width === 0) continue;
-        calm.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom, strength: parseFloat(el.dataset.calm || "") || 0.9 });
-        if (calm.length >= 8) break; // MAX_CALM in lib/fluid.ts
+        const [pl, pt, pr, pb] = insets.get(el) ?? [0, 0, 0, 0];
+        const strength = parseFloat(el.dataset.calm || "") || 0.9;
+        calm.push({ left: r.left + pl, top: r.top + pt, right: r.right - pr, bottom: r.bottom - pb, strength, hold: el.id === "play" ? 0 : strength });
+        if (calm.length >= 10) break; // MAX_CALM in lib/fluid.ts
       }
       f.calm = calm;
       const bands: Fluid["bands"] = [];
@@ -154,43 +175,43 @@ export function LiquidField() {
 
     // Things that happened since the last frame, applied at the start of the next one.
     const queue: FlowEvent[] = [];
-    let failBudget = 0;
     let curlBoost = 0;
+    /** A killed server's bloom travelling down the river, 1 at the kill and settling to 0. */
+    let pulse = 0;
+    /** Failing requests: they tint the river's thread rather than spatter the pool. */
+    let failGlow = 0;
+
+    // The device (the simulator's figure) and the name's block, read fresh each frame.
+    const deviceBox = () => document.querySelector<HTMLElement>("#play figure")?.getBoundingClientRect() ?? null;
+    const nameBox = () => document.querySelector<HTMLElement>("[data-name]")?.closest<HTMLElement>("[data-calm]")?.getBoundingClientRect() ?? null;
+    /** Where the river leaves the device, in viewport px. */
+    const mouth = (dev: DOMRect) => ({ x: dev.left + 28, y: Math.min(dev.bottom - 18, window.innerHeight - 40) });
+
+    const ring = (f: Fluid, px: number, py: number, count: number, speed: number, ink: number, accent: number, radius: number, rand: () => number) => {
+      const [x, y] = uv(px, py);
+      for (let i = 0; i < count; i++) {
+        const a = (i / count) * Math.PI * 2 + rand() * 0.3;
+        f.splat(x, y, Math.cos(a) * speed, Math.sin(a) * speed, 0, 0, radius);
+      }
+      f.ink(x, y, ink, accent, radius * 2.2);
+    };
 
     const applyEvent = (f: Fluid, e: FlowEvent, rand: () => number) => {
       const [x, y] = uv(e.x, e.y);
       if (e.kind === "kill") {
+        // One clean accent bloom where the current leaves the device; the river then carries it
+        // off and the pulse settles back over a second or so.
         curlBoost = 1;
-        for (let i = 0; i < 9; i++) {
-          const a = (i / 9) * Math.PI * 2 + rand() * 0.5;
-          const speed = 500 + rand() * 500;
-          f.splat(x, y, Math.cos(a) * speed, Math.sin(a) * speed, 0.12, 0.28, 0.1 + rand() * 0.1);
-        }
-        f.splat(x, y, 0, 0, 0.2, 0.6, 0.35);
-        // The device hides the node, so the bloom also bursts out of its edges.
-        if (e.device) {
-          const d = e.device;
-          const out: Array<[number, number, number, number]> = [
-            [e.x, d.top - 6, 0, 1],
-            [e.x, d.bottom + 6, 0, -1],
-            [d.right + 6, e.y, 1, 0],
-            [d.left - 6, e.y, -1, 0],
-          ];
-          for (const [px, py, vx, vy] of out) {
-            const [ux, uy] = uv(px, py);
-            f.splat(ux, uy, vx * 900 + (rand() - 0.5) * 300, vy * 1000 + (rand() - 0.5) * 300, 0.15, 0.45, 0.3);
-          }
-        }
+        pulse = 1;
+        const dev = e.device ? new DOMRect(e.device.left, e.device.top, e.device.right - e.device.left, e.device.bottom - e.device.top) : deviceBox();
+        const m = dev ? mouth(dev) : { x: e.x, y: e.y };
+        ring(f, m.x - 30, m.y + 26, 8, 150, 0.08, 0.55, 0.06, rand);
       } else if (e.kind === "restart") {
-        for (let i = 0; i < 8; i++) {
-          const a = (i / 8) * Math.PI * 2;
-          f.splat(x, y, Math.cos(a) * 320, Math.sin(a) * 320, 0.25, 0, 0.1);
-        }
+        const dev = deviceBox();
+        const m = dev ? mouth(dev) : { x: e.x, y: e.y };
+        ring(f, m.x - 30, m.y + 26, 6, 90, 0.18, 0, 0.05, rand);
       } else if (e.kind === "fail") {
-        if (failBudget < 1) return;
-        failBudget -= 1;
-        const a = rand() * Math.PI * 2;
-        f.splat(x, y, Math.cos(a) * 300, Math.sin(a) * 300, 0, 0.3, 0.18);
+        failGlow = Math.min(1, failGlow + 0.06);
       } else if (e.kind === "stir") {
         f.splat(x, y, e.dx, -e.dy, e.ink, e.accent, e.radius);
       } else {
@@ -203,42 +224,53 @@ export function LiquidField() {
       }
     };
 
-    // The incoming current: jets from the left edge, aimed at the simulator's inlet while it is on
-    // screen. Off screen the simulator pauses and the jets stop.
+    // The river: requests leaving the simulator. Beside the name (laptops) it leaves from under the
+    // device's lower-left corner, runs left beneath the copy and is drawn up the left lane beside the
+    // name; stacked (phones, tablets) it wells up from the device's top edge. Returns false while
+    // the device is off screen, so the page's own weather takes over.
     let phase = 0;
-    const inflow = (f: Fluid, dt: number, rand: () => number) => {
-      const { rate, strain, inlet } = flowState();
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-      const onScreen = inlet && inlet.y > 40 && inlet.y < vh - 40;
-      if (!onScreen && inlet) return;
+    const river = (f: Fluid, dt: number, vw: number, vh: number) => {
+      const dev = deviceBox();
+      if (!dev || dev.width === 0 || dev.bottom < 60 || dev.top > vh - 60) return false;
+      const { rate, strain } = flowState();
       const q = Math.min(1, rate / 900);
-      const targetY = onScreen ? inlet!.y : vh * (coarse ? 0.7 : 0.58);
-      const targetX = onScreen ? inlet!.x : vw * 0.62;
-      phase += dt * (0.6 + q * 1.6 + strain * 2.5);
-      const jets = coarse ? 2 : 3;
-      for (let j = 0; j < jets; j++) {
-        const spread = (j - (jets - 1) / 2) * (coarse ? 0.09 : 0.075);
-        const wobble = Math.sin(phase * (1 + j * 0.37) + j * 2.1) * (0.03 + strain * 0.06);
-        const [x, y] = uv(0, targetY);
-        const yy = y + spread + wobble;
-        const [tx, ty] = uv(targetX, targetY);
-        const angle = Math.atan2(ty - yy, Math.max(0.2, tx - x)) * 0.6 + (rand() - 0.5) * strain * 0.6;
-        const speed = (260 + q * 600) * (0.85 + rand() * 0.3);
-        // More traffic pours in more ink but in thinner jets, so it reads as more lines, not a wash.
-        const ink = (0.05 + q * 0.03) * (dt * 60);
-        // A thread of the accent rides the current, thicker the more traffic there is.
-        f.splat(x + 0.015, yy, Math.cos(angle) * speed, Math.sin(angle) * speed, ink * (1 - strain * 0.2), ink * (0.14 + q * 0.5 + strain * 0.3), 0.16 + q * 0.06);
+      const k = dt * 60 * tune.ink;
+      phase += dt * (0.45 + q * 0.9 + strain * 1.6);
+      const speed = (52 + q * 64) * (1 + pulse * 0.6) * tune.current;
+      const ink = (0.09 + q * 0.06) * k;
+      const thread = (0.12 + q * 0.18 + strain * 0.08 + failGlow * 0.15 + pulse * 0.5) * k;
+      const sway = (Math.sin(phase) * 0.1 + Math.sin(phase * 0.43 + 1.3) * 0.07) * (1 + strain * 0.6);
+      const name = nameBox();
+      const beside = !!name && name.right <= dev.left + 8;
+      if (beside && name) {
+        const m = mouth(dev);
+        const tx = name.left + 30;
+        const ty = Math.min(vh - 50, name.bottom + 56);
+        const angle = Math.atan2(-(ty - m.y), tx - m.x) + sway;
+        const [x, y] = uv(m.x, m.y);
+        f.splat(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, ink, 0, 0.085);
+        f.ink(x, y, 0, thread, 0.016);
+        // The turn: in the left lane the current is drawn up alongside the name, then eases right
+        // under the header, so the river frames the name instead of banking up on the edge.
+        const lx = Math.max(40, name.left - 36);
+        const [ax, ay] = uv(lx, name.bottom + 10);
+        f.splat(ax, ay, -speed * 0.1, speed * 0.4, 0, 0, 0.12);
+        const [bx, by] = uv(lx, name.top + 60);
+        f.splat(bx, by, speed * 0.2, speed * 0.25, 0, 0, 0.12);
+      } else {
+        for (const side of [0.22, 0.78]) {
+          const [x, y] = uv(dev.left + dev.width * side, dev.top + 10);
+          const out = side < 0.5 ? -1 : 1;
+          const angle = Math.PI / 2 + out * (0.55 + sway);
+          f.splat(x, y, Math.cos(angle) * speed * 0.8, Math.sin(angle) * speed * 0.8, ink * 0.7, 0, 0.1);
+          f.ink(x, y, 0, thread * 0.7, 0.02);
+        }
       }
-      if (strain > 0.25 && rand() < strain * dt * 6) {
-        const [x, y] = uv(targetX + (rand() - 0.2) * 260, targetY + (rand() - 0.5) * 240);
-        const a = rand() * Math.PI * 2;
-        f.splat(x, y, Math.cos(a) * 420 * strain, Math.sin(a) * 420 * strain, 0.04 * strain, 0.08 * strain, 0.16);
-      }
+      return true;
     };
 
     // Pointer stirring.
-    const pointer = { x: -1, y: -1, dx: 0, dy: 0, moved: false, has: false, idle: 0 };
+    const pointer = { x: -1, y: -1, dx: 0, dy: 0, moved: false, has: false };
     const onMove = (x: number, y: number) => {
       if (pointer.has) {
         pointer.dx += x - pointer.x;
@@ -248,7 +280,6 @@ export function LiquidField() {
       pointer.x = x;
       pointer.y = y;
       pointer.has = true;
-      pointer.idle = 0;
     };
     const onPointer = (e: PointerEvent) => e.pointerType !== "touch" && onMove(e.clientX, e.clientY);
     const onTouch = (e: TouchEvent) => {
@@ -319,29 +350,16 @@ export function LiquidField() {
         [1, 0.5 + 0.34 * Math.sin(weather * 0.17 + 2.1), -1],
       ];
       for (const [side, yy, dir] of sides) {
-        const [x, y] = uv(side * vw, yy * vh);
+        // From just inside the edge, so the ink starts on screen rather than banked against its side.
+        const [x, y] = uv((side === 0 ? 0.05 : 0.95) * vw, yy * vh);
         const angle = Math.sin(weather * 0.5 + side * 3) * 0.5;
         const speed = 240 + 80 * Math.sin(weather * 0.9 + side);
         // Only the left current carries ink: the right one is a push from behind the ruler, so dye
         // never collects by the rail.
-        const ink = side === 0 ? 0.03 * dt * 60 * tune.drip : 0;
+        const ink = side === 0 ? 0.022 * dt * 60 * tune.drip : 0;
         const accent = side === 0 && rand() < 0.08 ? 0.12 : 0;
-        f.splat(x + dir * 0.01, y, dir * Math.cos(angle) * speed, Math.sin(angle) * speed, ink, accent * dt * 60, 0.12);
+        f.splat(x, y, dir * Math.cos(angle) * speed, Math.sin(angle) * speed, ink, accent * dt * 60, 0.12);
       }
-    };
-
-    // An idle pointer still moves the water: a slow figure-eight near where it rests.
-    let idleT = 0;
-    const idleStir = (f: Fluid, dt: number, vw: number, vh: number) => {
-      pointer.idle += dt;
-      if (pointer.idle < 2.4 || coarse) return;
-      idleT += dt * 0.55;
-      const cx = vw * 0.5 + Math.sin(idleT) * vw * 0.36;
-      const cy = vh * 0.55 + Math.sin(idleT * 2) * vh * 0.16;
-      const vx = Math.cos(idleT) * vw * 0.36 * 0.55;
-      const vy = Math.cos(idleT * 2) * 2 * vh * 0.16 * 0.55;
-      const [x, y] = uv(cx, cy);
-      f.splat(x, y, vx * 0.6, -vy * 0.6, 0.012, 0, 0.18);
     };
 
     // Image planes.
@@ -450,22 +468,22 @@ export function LiquidField() {
       window.addEventListener("resize", onResize);
       cleanups.push(() => window.removeEventListener("resize", onResize));
 
+      // Runs the river (or, with the device off screen, the page's weather) for a while, so the
+      // first frame is an established current rather than a blank pool.
       const prewarm = (steps: number) => {
         const vh = window.innerHeight;
         const vw = window.innerWidth;
-        for (let i = 0; i < 4; i++) {
-          const [x, y] = uv(vw * (0.1 + i * 0.22), vh * (0.45 + (rand() - 0.5) * 0.4));
-          f.splat(x, y, 400 + rand() * 400, (rand() - 0.5) * 600, 0.45 + rand() * 0.3, i === 2 ? 0.25 : 0, 0.1 + rand() * 0.1);
-        }
+        f.ambient = AMBIENT * tune.ambient;
         for (let i = 0; i < steps; i++) {
-          inflow(f, 1 / 60, rand);
+          f.time += 1 / 60;
+          if (!river(f, 1 / 60, vw, vh)) ambient(f, 1 / 60, rand, vw, vh);
           f.obstruct();
           f.step(1 / 60);
         }
       };
 
       if (motion.matches) {
-        prewarm(90);
+        prewarm(320);
         f.render();
         canvas.dataset.ready = "still";
         // Nothing moves, but the chapter's band and the calm water under text follow the page: one
@@ -487,7 +505,7 @@ export function LiquidField() {
         return;
       }
 
-      prewarm(36);
+      prewarm(150);
       f.colors = { ...colors, fill: 0, lines: 0 };
       f.render();
       canvas.dataset.ready = "live";
@@ -535,28 +553,43 @@ export function LiquidField() {
         f.shift = Math.max(-0.2, Math.min(0.2, (delta / vh) * tune.parallax));
 
         const { strain, rate } = flowState();
-        curlBoost = Math.max(0, curlBoost - dt * 0.6);
-        f.config.curl = 5 + strain * 30 + curlBoost * 30;
+        curlBoost = Math.max(0, curlBoost - dt * 0.8);
+        pulse = Math.max(0, pulse - dt * 0.7);
+        failGlow = Math.max(0, failGlow - dt * 0.5);
+        f.config.curl = base.curl + strain * 2.5 + curlBoost * 4;
         const q = Math.min(1, rate / 900);
-        f.config.densityDissipation = base.densityDissipation * (1 + q * 0.7 + strain * 0.3);
-        failBudget = Math.min(failBudget + dt * 10, 3);
+        // A busier system turns over its ink faster, so more traffic reads as more current, not
+        // more mud.
+        f.config.densityDissipation = base.densityDissipation * (1 + q * 0.9 + strain * 0.3);
+        f.ambient = AMBIENT * tune.ambient * (1 + q * 0.6);
 
         while (queue.length) applyEvent(f, queue.shift()!, rand);
-        inflow(f, dt, rand);
+        const heroLive = river(f, dt, vw, vh);
         wake(f, delta, vh, vw);
-        drip(f, dt, rand, vw, vh);
-        ambient(f, dt, rand, vw, vh);
-        idleStir(f, dt, vw, vh);
+        if (!heroLive) {
+          drip(f, dt, rand, vw, vh);
+          ambient(f, dt, rand, vw, vh);
+        }
         if (pointer.moved) {
-          const [x, y] = uv(pointer.x, pointer.y);
-          const speed = Math.hypot(pointer.dx, pointer.dy);
-          const force = coarse ? 9 : 7;
-          f.splat(x, y, pointer.dx * force, -pointer.dy * force, Math.min(0.22, speed * 0.0032), 0, coarse ? 0.4 : 0.26);
+          // The cursor stirs along its whole path this frame (a fast sweep is several overlapping
+          // splats, not a dotted line), with splats that grow with its speed.
+          const dist = Math.hypot(pointer.dx, pointer.dy);
+          const v = Math.min(4000, dist / Math.max(dt, 1 / 240));
+          const n = Math.min(4, Math.max(1, Math.ceil(dist / 36)));
+          const radius = (coarse ? 0.16 : 0.07) + Math.min(1, v / 2600) * (coarse ? 0.22 : 0.17);
+          const push = (coarse ? 0.15 : 0.11) * Math.min(1, 0.4 + v / 1600);
+          // A faint smoke of ink: enough to see the stroke, too little to draw contour lines of its own.
+          const ink = Math.min(0.03, v * 0.000012) / n;
+          for (let i = 0; i < n; i++) {
+            const t = (i + 1) / n;
+            const [x, y] = uv(pointer.x - pointer.dx * (1 - t), pointer.y - pointer.dy * (1 - t));
+            f.splat(x, y, (pointer.dx / dt) * push / n * 1.1, (-pointer.dy / dt) * push / n * 1.1, ink, 0, radius);
+          }
         }
         pointer.dx = pointer.dy = 0;
         pointer.moved = false;
 
-        f.obstruct();
+        f.obstruct(dt);
         f.step(dt);
         f.render();
 

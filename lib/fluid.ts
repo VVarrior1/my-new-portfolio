@@ -9,7 +9,8 @@
 // or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
 // ANY KIND.
 //
-// Changes from the original: TypeScript, no bloom or sunrays, and two dye channels instead of RGB.
+// Changes from the original: TypeScript, no bloom or sunrays, two dye channels instead of RGB, an
+// ambient curl-noise force, and a display that traces contours on a blurred copy of the dye.
 // Red is the neutral dye (smoke in the dark theme, ink in the light one) and green is the accent,
 // so the display pass can only ever paint the page's neutrals and its one accent colour.
 
@@ -38,6 +39,8 @@ export type FluidColors = Palette & {
   fill: number;
   lines: number;
   steps: number;
+  /** How much of the contour lines still shows through calm water (behind text), 0 to 1. */
+  calmLines?: number;
 };
 
 /** One image drawn into the liquid, in CSS px of the viewport. */
@@ -118,8 +121,9 @@ void main () {
   vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize - uShift;
   vec4 result = texture2D(uSource, coord);
 #endif
-  // What scrolls in from beyond the edge is clean water, not a smear of the last row.
-  if (coord.y < 0.0 || coord.y > 1.0) result = vec4(0.0);
+  // What comes in from beyond any edge is clean water, not a smear of the last row or column, so
+  // dye never banks up against the side of the screen.
+  if (coord.y < 0.0 || coord.y > 1.0 || coord.x < 0.0 || coord.x > 1.0) result = vec4(0.0);
   float decay = 1.0 + dissipation * dt;
   gl_FragColor = result / decay;
 }`;
@@ -203,14 +207,61 @@ void main () {
   gl_FragColor = vec4(velocity, 0.0, 1.0);
 }`;
 
+// Ambient life: a slow, divergence-free stir from curl noise. The stream function is two layers
+// of gradient noise drifting in different directions, so the eddies morph rather than slide, and
+// its curl is added to the current as a gentle force. This is what keeps the pool moving from
+// second to second when nothing else touches it.
+const FORCE = `
+precision highp float; precision highp sampler2D;
+varying vec2 vUv;
+uniform sampler2D uVelocity; uniform float uTime; uniform float uAmp; uniform float uScale; uniform float uAspect;
+uniform vec2 uDrift; uniform float dt;
+vec2 grad2 (vec2 i) { float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453) * 6.2831853; return vec2(cos(a), sin(a)); }
+float gnoise (vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p);
+  vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  float a = dot(grad2(i), f);
+  float b = dot(grad2(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
+  float c = dot(grad2(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
+  float d = dot(grad2(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+float psi (vec2 p) {
+  float t = uTime;
+  return gnoise(p + vec2(t * 0.045, -t * 0.03)) + 0.5 * gnoise(p * 2.07 + vec2(-t * 0.06, t * 0.04) + 5.2);
+}
+void main () {
+  vec2 p = vec2(vUv.x * uAspect, vUv.y) * uScale;
+  float e = 0.02;
+  float dy = psi(p + vec2(0.0, e)) - psi(p - vec2(0.0, e));
+  float dx = psi(p + vec2(e, 0.0)) - psi(p - vec2(e, 0.0));
+  vec2 curl = vec2(dy, -dx) / (2.0 * e);
+  vec2 v = texture2D(uVelocity, vUv).xy;
+  gl_FragColor = vec4(v + (curl * uAmp + uDrift) * dt, 0.0, 1.0);
+}`;
+
+// A separable Gaussian (9 taps folded into 5 linear reads), used to make the smooth scalar field
+// the contour lines are traced on. Contours of the raw dye pick up every texel step and every
+// half-float rounding, which is what made the old lines stair-stepped and speckled.
+const BLUR = `
+precision highp float; precision highp sampler2D;
+varying vec2 vUv;
+uniform sampler2D uSource; uniform vec2 uDir;
+void main () {
+  vec4 s = texture2D(uSource, vUv) * 0.2270270270;
+  s += (texture2D(uSource, vUv + uDir * 1.3846153846) + texture2D(uSource, vUv - uDir * 1.3846153846)) * 0.3162162162;
+  s += (texture2D(uSource, vUv + uDir * 3.2307692308) + texture2D(uSource, vUv - uDir * 3.2307692308)) * 0.0702702703;
+  gl_FragColor = s;
+}`;
+
 /** How many calm rectangles (text blocks) the display and the obstacle pass know about. */
-export const MAX_CALM = 8;
+export const MAX_CALM = 10;
 
 // Shared by the display and obstacle passes: how much a point (buffer px, y up) is inside the calm
 // rectangles. Each rect is a rounded box with a soft edge; strength 0 switches a slot off.
 const CALM_GLSL = `
-uniform vec4 uCalm[${8}];
-uniform float uCalmStrength[${8}];
+uniform vec4 uCalm[${MAX_CALM}];
+uniform float uCalmStrength[${MAX_CALM}];
 uniform float uFeather;
 float sdBox (vec2 p, vec2 c, vec2 h, float r) {
   vec2 q = abs(p - c) - h + r;
@@ -223,55 +274,69 @@ float calmNoise (vec2 p) {
 }
 float calmAt (vec2 px) {
   float keep = 1.0;
-  for (int i = 0; i < ${8}; i++) {
+  for (int i = 0; i < ${MAX_CALM}; i++) {
     vec4 r = uCalm[i];
     float s = uCalmStrength[i];
     if (s <= 0.0) continue;
     vec2 c = 0.5 * (r.xy + r.zw);
     vec2 h = 0.5 * abs(r.zw - r.xy);
+    // Far outside the block (beyond the widest the shore can reach) it holds nothing back.
+    vec2 o = abs(px - c) - h;
+    if (max(o.x, o.y) > uFeather * 1.9) continue;
     // The shore is ragged, not ruled: the edge wanders outward (never into the text) with a noise
     // that travels with the block.
     float wob = calmNoise((px - r.xy) / (uFeather * 1.7)) + 0.5 * calmNoise((px - r.xy) / (uFeather * 0.7) + 7.3);
-    float d = sdBox(px, c, h, uFeather * 0.6) + (wob - 1.5) * uFeather * 0.7;
+    float d = sdBox(px, c, h, uFeather * 0.6) + (wob - 1.5) * uFeather * 0.5;
     float inside = 1.0 - smoothstep(-uFeather * 0.35, uFeather, d);
     keep *= 1.0 - s * inside;
   }
   return 1.0 - keep;
 }`;
 
-// Holds the current back inside the calm rectangles, so the liquid flows around text blocks like
-// water round stones instead of through them.
+// Drags the current inside the calm rectangles, so the liquid slows as it passes behind text, like
+// water over a shallow bank. The drag is a rate (uDrag per frame, from dt): stronger than this it
+// chokes every channel between blocks and the ink banks up against their shores.
 const OBSTACLE = `
 precision highp float; precision highp sampler2D;
 varying vec2 vUv;
-uniform sampler2D uVelocity; uniform vec2 uViewport;
+uniform sampler2D uVelocity; uniform vec2 uViewport; uniform float uDrag;
 ${CALM_GLSL}
 void main () {
   vec2 v = texture2D(uVelocity, vUv).xy;
   float calm = calmAt(vUv * uViewport);
-  gl_FragColor = vec4(v * (1.0 - 0.45 * calm), 0.0, 1.0);
+  gl_FragColor = vec4(v * (1.0 - uDrag * calm), 0.0, 1.0);
 }`;
 
-// The display pass: marbling. Each dye is drawn as a faint fill plus thin contour lines at even
+// The display pass: marbling. Each dye is drawn as a soft fill plus hairline contours at even
 // steps of its density (suminagashi, or a topographic map of the ink), so a busy system adds
-// lines, never a wash. Red is the neutral dye, green the accent. The page can hold up to two
-// "inverted" bands (a chapter set in the opposite theme); their edges are a wobbling waterline
-// that the current pushes around. Calm rectangles hold the dye back behind text.
+// lines, never a wash. Red is the neutral dye, green the accent.
+// Everything is read from the smoothed field, never the raw dye: the fill is a clean gradient,
+// and each contour is drawn at a constant width in screen pixels from the field's value and its
+// gradient (the distance to the nearest level, in px), so lines are anti-aliased and evenly
+// weighted however steep the dye is. Levels that crowd closer than a few pixels fade into the
+// fill instead of aliasing, and small isolated islands (whose wide blur stays thin) draw no lines.
+// The page can hold up to two "inverted" bands (a chapter set in the opposite theme); their edges
+// are a wobbling waterline the current pushes around. Calm rectangles hold the fill back behind
+// text; only a faint trace of the lines runs through them, so the map reads as continuous.
 const DISPLAY = `
 precision highp float; precision highp sampler2D;
 varying vec2 vUv;
-uniform sampler2D uTexture; uniform sampler2D uVelocity; uniform vec2 uTexel; uniform vec2 uViewport;
+uniform sampler2D uField; uniform sampler2D uWide; uniform sampler2D uVelocity;
+uniform vec2 uFieldTexel; uniform vec2 uViewport;
 uniform float uTime; uniform float uDpr;
 uniform vec3 uBg; uniform vec3 uNeutral; uniform vec3 uAccent;
 uniform vec3 uBg2; uniform vec3 uNeutral2; uniform vec3 uAccent2;
 uniform float uNeutralMax; uniform float uAccentMax; uniform float uShading; uniform float uShading2;
-uniform float uFill; uniform float uLines; uniform float uSteps;
+uniform float uFill; uniform float uLines; uniform float uSteps; uniform float uCalmLines;
 uniform vec4 uBands;
 ${CALM_GLSL}
-float lineAt (float f, float g) {
-  float dist = abs(fract(f + 0.5) - 0.5);
-  float w = max(g, 1e-4);
-  return 1.0 - smoothstep(0.55, 1.6, dist / w);
+// A hairline on every 1/steps of v: g is v's gradient in buffer px, w the line's half width.
+float contour (float v, float g, float steps, float w) {
+  float f = v * steps;
+  float gs = max(g * steps, 1e-6);
+  float d = abs(fract(f + 0.5) - 0.5) / gs;
+  float l = 1.0 - smoothstep(w - 0.55, w + 0.55, d);
+  return l * (1.0 - smoothstep(0.14, 0.3, gs));
 }
 float edge (float y, float x) {
   float t = uTime;
@@ -293,11 +358,17 @@ float waterline (vec2 px, float y) {
 }
 void main () {
   vec2 px = vUv * uViewport;
-  vec3 c = texture2D(uTexture, vUv).rgb;
-  vec3 cl = texture2D(uTexture, vUv - vec2(uTexel.x, 0.0)).rgb;
-  vec3 cr = texture2D(uTexture, vUv + vec2(uTexel.x, 0.0)).rgb;
-  vec3 ct = texture2D(uTexture, vUv + vec2(0.0, uTexel.y)).rgb;
-  vec3 cb = texture2D(uTexture, vUv - vec2(0.0, uTexel.y)).rgb;
+  vec2 h = uFieldTexel;
+  vec4 c = texture2D(uField, vUv);
+  vec4 fl = texture2D(uField, vUv - vec2(h.x, 0.0));
+  vec4 fr = texture2D(uField, vUv + vec2(h.x, 0.0));
+  vec4 ft = texture2D(uField, vUv + vec2(0.0, h.y));
+  vec4 fb = texture2D(uField, vUv - vec2(0.0, h.y));
+  vec4 wide = texture2D(uWide, vUv);
+  // Gradients in dye per buffer px.
+  vec2 span = 2.0 * h * uViewport;
+  vec2 gn = vec2(fr.r - fl.r, ft.r - fb.r) / span;
+  vec2 ga = vec2(fr.g - fl.g, ft.g - fb.g) / span;
 
   float inv = max(band(px, uBands.x, uBands.y), band(px, uBands.z, uBands.w));
   vec3 bg = mix(uBg, uBg2, inv);
@@ -305,36 +376,42 @@ void main () {
   vec3 accent = mix(uAccent, uAccent2, inv);
   float shading = mix(uShading, uShading2, inv);
 
+  // The dye thins out toward the sides of the screen instead of being cut off by them.
+  float side = 0.04 * uViewport.x;
+  float shore = smoothstep(0.0, side, px.x) * smoothstep(0.0, side, uViewport.x - px.x);
   float guard = 1.0 - calmAt(px);
+  float traceOf = mix(uCalmLines, 1.0, guard) * shore;
 
-  // Fill: thin wisps stay faint, dense cores saturate gently instead of clipping.
-  float n = smoothstep(0.0, 0.9, c.r) * guard;
-  float a = smoothstep(0.02, 0.6, c.g) * guard;
+  // Fill: a smooth ink gradient; thin wisps stay faint, dense cores saturate gently.
+  float n = smoothstep(0.0, 0.95, c.r) * guard * shore;
+  float a = smoothstep(0.03, 0.7, c.g) * guard * shore;
 
-  // Contours: the density in steps, one line every 1/uSteps of dye.
-  float sn = uSteps;
-  float gn = 0.5 * length(vec2(cr.r - cl.r, ct.r - cb.r)) * sn;
-  float ln = lineAt(c.r * sn, gn) * smoothstep(0.015, 0.09, c.r) * guard;
-  float sa = uSteps * 0.8;
-  float ga = 0.5 * length(vec2(cr.g - cl.g, ct.g - cb.g)) * sa;
-  float la = lineAt(c.g * sa, ga) * smoothstep(0.02, 0.12, c.g) * guard;
+  // Contours, hairline thin (about one CSS px), only on bodies of dye that are more than a fleck.
+  // They are traced on a saturating height (1 - e^-1.3x), so a dense core gets a handful of rings,
+  // not a pile of them, however much dye a busy system pours in.
+  float w = max(0.62, 0.55 * uDpr);
+  vec2 hc = 1.0 - exp(-1.3 * c.rg);
+  vec2 hs = 1.3 * exp(-1.3 * c.rg);
+  float ln = contour(hc.x, length(gn) * hs.x, uSteps, w) * smoothstep(0.035, 0.11, wide.r) * smoothstep(0.02, 0.06, c.r) * traceOf;
+  float la = contour(hc.y, length(ga) * hs.y, uSteps * 0.7, w) * smoothstep(0.05, 0.14, wide.g) * smoothstep(0.05, 0.1, c.g) * traceOf;
 
   vec3 col = mix(bg, neutral, n * uNeutralMax * uFill);
-  col = mix(col, neutral, ln * uLines * 0.55);
-  col = mix(col, accent, a * uAccentMax * uFill * 0.55);
+  col = mix(col, neutral, ln * uLines * 0.6);
+  col = mix(col, accent, a * uAccentMax * uFill * 0.3);
   col = mix(col, accent, la * uLines * uAccentMax);
 
   if (shading > 0.0) {
-    float l = cl.r + cl.g; float r = cr.r + cr.g; float t = ct.r + ct.g; float b = cb.r + cb.g;
-    vec3 normal = normalize(vec3(l - r, b - t, 0.025));
+    vec3 normal = normalize(vec3(-(gn + ga) * 70.0, 1.0));
     float light = dot(normal, normalize(vec3(-0.4, 0.6, 1.0)));
-    col += shading * (light - 0.9) * 0.22 * (n + a) * guard;
+    col += shading * (light - 0.81) * 0.3 * (n + a);
   }
 
   // The waterline: a hairline of the accent where a chapter's edge meets the pool.
   float wl = max(max(waterline(px, uBands.x), waterline(px, uBands.y)), max(waterline(px, uBands.z), waterline(px, uBands.w)));
   col = mix(col, accent, wl * 0.85);
 
+  // Less than half a level of 8-bit noise, so long dark gradients don't band.
+  col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 400.0;
   gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }`;
 
@@ -418,20 +495,33 @@ export class Fluid {
   private divergence!: FBO;
   private curlFbo!: FBO;
   private pressure!: DoubleFBO;
+  /** The smoothed dye the display traces (half the dye's size), and a much wider blur of it
+   * (an eighth) that tells a body of dye from a stray fleck. Each has a scratch target for the
+   * separable blur's first pass. */
+  private field!: FBO;
+  private fieldTmp!: FBO;
+  private wide!: FBO;
+  private wideTmp!: FBO;
   readonly canvas: HTMLCanvasElement;
   config: FluidConfig;
   colors: FluidColors;
   /** Calm rectangles in CSS px of the viewport (left, top, right, bottom) and how much dye each
    * holds back, 0 to 1. At most MAX_CALM are used. */
-  calm: Array<{ left: number; top: number; right: number; bottom: number; strength: number }> = [];
+  calm: Array<{ left: number; top: number; right: number; bottom: number; strength: number; hold?: number }> = [];
   /** Inverted chapter bands: viewport CSS px (top, bottom); off-screen edges may lie outside. */
   bands: Array<{ top: number; bottom: number }> = [];
   /** Seconds, for the waterline's wobble and the planes' ripples. */
   time = 0;
   /** CSS px to drawing-buffer px. */
   dpr = 1;
+  /** The ambient curl-noise stir: strength (sim texels/s², 0 is off) and eddies per screen height. */
+  ambient = 0;
+  ambientScale = 2.4;
+  /** A steady push on the whole pool, sim texels/s² (x right, y up). */
+  drift: [number, number] = [0, 0];
   private calmData = new Float32Array(MAX_CALM * 4);
   private calmStrength = new Float32Array(MAX_CALM);
+  private calmHold = new Float32Array(MAX_CALM);
 
   private constructor(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, ext: Fluid["ext"], config: FluidConfig, colors: FluidColors) {
     this.canvas = canvas;
@@ -509,6 +599,8 @@ export class Fluid {
       pressure: make(PRESSURE),
       gradient: make(GRADIENT_SUBTRACT),
       display: make(DISPLAY),
+      force: make(FORCE),
+      blur: make(BLUR),
       obstacle: make(OBSTACLE),
       plane: make(PLANE, [], planeVertex),
     };
@@ -549,6 +641,14 @@ export class Fluid {
     this.divergence = this.createFBO(sim.width, sim.height, formatR, type, gl.NEAREST);
     this.curlFbo = this.createFBO(sim.width, sim.height, formatR, type, gl.NEAREST);
     this.pressure = this.createDouble(sim.width, sim.height, formatR, type, gl.NEAREST);
+    const fw = Math.max(1, Math.round(dye.width / 2));
+    const fh = Math.max(1, Math.round(dye.height / 2));
+    const ww = Math.max(1, Math.round(dye.width / 8));
+    const wh = Math.max(1, Math.round(dye.height / 8));
+    this.field = this.createFBO(fw, fh, formatRGBA, type, filtering);
+    this.fieldTmp = this.createFBO(fw, fh, formatRGBA, type, filtering);
+    this.wide = this.createFBO(ww, wh, formatRGBA, type, filtering);
+    this.wideTmp = this.createFBO(ww, wh, formatRGBA, type, filtering);
   }
 
   private createFBO(w: number, h: number, f: Format, type: number, param: number): FBO {
@@ -657,6 +757,20 @@ export class Fluid {
     this.blit(velocity.write);
     velocity.swap();
 
+    if (this.ambient > 0 || this.drift[0] !== 0 || this.drift[1] !== 0) {
+      gl.useProgram(p.force.program);
+      gl.uniform2f(p.force.uniforms.texelSize, velocity.texelX, velocity.texelY);
+      gl.uniform1i(p.force.uniforms.uVelocity, velocity.read.attach(0));
+      gl.uniform1f(p.force.uniforms.uTime, this.time);
+      gl.uniform1f(p.force.uniforms.uAmp, this.ambient);
+      gl.uniform1f(p.force.uniforms.uScale, this.ambientScale);
+      gl.uniform1f(p.force.uniforms.uAspect, velocity.width / velocity.height);
+      gl.uniform2f(p.force.uniforms.uDrift, this.drift[0], this.drift[1]);
+      gl.uniform1f(p.force.uniforms.dt, dt);
+      this.blit(velocity.write);
+      velocity.swap();
+    }
+
     gl.useProgram(p.divergence.program);
     gl.uniform2f(p.divergence.uniforms.texelSize, velocity.texelX, velocity.texelY);
     gl.uniform1i(p.divergence.uniforms.uVelocity, velocity.read.attach(0));
@@ -710,24 +824,26 @@ export class Fluid {
     const k = this.dpr;
     this.calmData.fill(0);
     this.calmStrength.fill(0);
+    this.calmHold.fill(0);
     this.calm.slice(0, MAX_CALM).forEach((r, i) => {
       this.calmData[i * 4] = r.left * k;
       this.calmData[i * 4 + 1] = h - r.bottom * k;
       this.calmData[i * 4 + 2] = r.right * k;
       this.calmData[i * 4 + 3] = h - r.top * k;
       this.calmStrength[i] = r.strength;
+      this.calmHold[i] = r.hold ?? r.strength;
     });
   }
 
-  private setCalm(p: Program) {
+  private setCalm(p: Program, strength = this.calmStrength) {
     const gl = this.gl;
     gl.uniform4fv(p.uniforms["uCalm[0]"], this.calmData);
-    gl.uniform1fv(p.uniforms["uCalmStrength[0]"], this.calmStrength);
-    gl.uniform1f(p.uniforms.uFeather, 44 * this.dpr);
+    gl.uniform1fv(p.uniforms["uCalmStrength[0]"], strength);
+    gl.uniform1f(p.uniforms.uFeather, 32 * this.dpr);
   }
 
-  /** Holds the current back inside the calm rectangles. Call once per frame before step(). */
-  obstruct() {
+  /** Drags the current inside the calm rectangles. Call once per frame, with its dt, before step(). */
+  obstruct(dt = 1 / 60) {
     this.packCalm();
     if (!this.calm.length) return;
     const gl = this.gl;
@@ -736,9 +852,37 @@ export class Fluid {
     gl.uniform2f(p.uniforms.texelSize, this.velocity.texelX, this.velocity.texelY);
     gl.uniform1i(p.uniforms.uVelocity, this.velocity.read.attach(0));
     gl.uniform2f(p.uniforms.uViewport, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    this.setCalm(p);
+    gl.uniform1f(p.uniforms.uDrag, 1 - Math.exp(-dt * 3));
+    // The current is slowed by each block's hold, not its strength: the device is calm to look at
+    // (its caption sits on the liquid) but lets the river through, since it is where it comes from.
+    this.setCalm(p, this.calmHold);
     this.blit(this.velocity.write);
     this.velocity.swap();
+  }
+
+  /** One pass of the separable blur from `source` (texel size `tx`, `ty`) into `target`. */
+  private blurPass(source: WebGLTexture, target: FBO, dx: number, dy: number) {
+    const gl = this.gl;
+    const p = this.programs.blur;
+    gl.useProgram(p.program);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, source);
+    gl.uniform1i(p.uniforms.uSource, 0);
+    gl.uniform2f(p.uniforms.uDir, dx, dy);
+    this.blit(target);
+  }
+
+  /** Rebuilds the smooth field (and its wide twin) from the dye. */
+  private smooth() {
+    const d = this.dye;
+    const f = this.field;
+    // About 2.5 CSS px of blur: enough to erase texel steps and half-float rounding, small enough
+    // that the lines stay sharp-edged where the dye is.
+    this.blurPass(d.read.texture, this.fieldTmp, d.texelX * 1.6, 0);
+    this.blurPass(this.fieldTmp.texture, f, 0, f.texelY * 0.8);
+    // About 25 CSS px: a stray fleck all but vanishes in it, a body of dye does not.
+    this.blurPass(f.texture, this.wideTmp, f.texelX * 3.2, 0);
+    this.blurPass(this.wideTmp.texture, this.wide, 0, this.wide.texelY * 0.9);
   }
 
   /** Draws the dye to the canvas. */
@@ -748,12 +892,14 @@ export class Fluid {
     const c = this.colors;
     this.packCalm();
     gl.disable(gl.BLEND);
+    this.smooth();
     gl.useProgram(p.program);
     gl.uniform2f(p.uniforms.texelSize, 1 / gl.drawingBufferWidth, 1 / gl.drawingBufferHeight);
-    gl.uniform2f(p.uniforms.uTexel, 1 / gl.drawingBufferWidth, 1 / gl.drawingBufferHeight);
+    gl.uniform2f(p.uniforms.uFieldTexel, this.field.texelX, this.field.texelY);
     gl.uniform2f(p.uniforms.uViewport, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.uniform1i(p.uniforms.uTexture, this.dye.read.attach(0));
+    gl.uniform1i(p.uniforms.uField, this.field.attach(0));
     gl.uniform1i(p.uniforms.uVelocity, this.velocity.read.attach(1));
+    gl.uniform1i(p.uniforms.uWide, this.wide.attach(2));
     gl.uniform1f(p.uniforms.uTime, this.time);
     gl.uniform1f(p.uniforms.uDpr, this.dpr);
     gl.uniform3f(p.uniforms.uBg, ...c.bg);
@@ -769,6 +915,7 @@ export class Fluid {
     gl.uniform1f(p.uniforms.uFill, c.fill);
     gl.uniform1f(p.uniforms.uLines, c.lines);
     gl.uniform1f(p.uniforms.uSteps, c.steps);
+    gl.uniform1f(p.uniforms.uCalmLines, c.calmLines ?? 0);
     const h = gl.drawingBufferHeight;
     const k = this.dpr;
     const b = [0, 0, 0, 0];
@@ -869,6 +1016,22 @@ export class Fluid {
       this.blit(this.dye.write);
       this.dye.swap();
     }
+  }
+
+  /** Adds dye only (no push) at (x, y) in UV space: a thread laid into whatever current is there. */
+  ink(x: number, y: number, neutral: number, accent: number, radius: number) {
+    if (neutral <= 0 && accent <= 0) return;
+    const gl = this.gl;
+    const p = this.programs.splat;
+    const aspect = this.canvas.width / this.canvas.height;
+    gl.useProgram(p.program);
+    gl.uniform1i(p.uniforms.uTarget, this.dye.read.attach(0));
+    gl.uniform1f(p.uniforms.aspectRatio, aspect);
+    gl.uniform2f(p.uniforms.point, x, y);
+    gl.uniform3f(p.uniforms.color, neutral, accent, 0);
+    gl.uniform1f(p.uniforms.radius, aspect > 1 ? (radius / 100) * aspect : radius / 100);
+    this.blit(this.dye.write);
+    this.dye.swap();
   }
 
   /** Resizes the drawing buffer to the canvas's CSS size times `dpr`. Returns true if it changed. */

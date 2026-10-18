@@ -58,11 +58,17 @@ How the liquid behaves:
   shader draws that band of the pool, edged by a wobbling cobalt waterline the current pushes
   around, so entering it is a liquid hand-off. A `.chapter-ground` under the canvas carries the same
   colour for contrast checks and for browsers without WebGL.
-- The hero simulator drives it through `lib/flow-bus.ts`: traffic is a current into the device with
-  a cobalt thread that thickens with load, strain makes it turbulent, a killed server blooms cobalt
-  at the node. The pointer stirs it, the HUD's flying letters and the spine's packet drag it, rows
-  and cards drop ink when you enter them, drips (ink) and a slow current from the left keep it
-  moving below the hero, and an idle pointer still stirs a little.
+- The hero simulator drives it through `lib/flow-bus.ts`: the current comes out of the device, a
+  river of ink that leaves from under its lower-left corner, runs beneath the hero copy and turns up
+  the left lane beside the name, with a cobalt thread that thickens with load. More traffic is a
+  faster, denser river; strain makes it sway; failing requests tint the thread; a killed server
+  sends one cobalt bloom down it that settles back. An ambient curl-noise force keeps the whole
+  pool drifting at idle. The pointer stirs it along its path (splats grow with its speed), the
+  HUD's flying letters and the spine's packet drag it, rows and cards drop ink when you enter
+  them, and below the hero drips (ink) and a slow current from the left keep it moving.
+- The display traces everything on a blurred copy of the dye: the fill is a smooth gradient and
+  each contour is a constant-width, anti-aliased hairline (from the field's value and gradient);
+  levels too close to resolve fade into the fill, and flecks too small to matter draw no lines.
 - The product screenshots and the portrait are drawn into the same GL context (`data-gl`): they
   condense out of the ink as they arrive, bow with scroll speed, are refracted by the current while
   the page moves, and ripple and magnify under the pointer. Within half a second of rest they are
