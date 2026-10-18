@@ -200,7 +200,6 @@ test.describe("liquid world, reduced motion", () => {
     await expect(page.locator("html")).not.toHaveAttribute("data-intro", /.*/);
     await expect(page.locator(".hud-ltr")).toHaveCount(0);
     await expect(page.locator(".cursor-ring")).toHaveCount(0);
-    await expect(page.locator(".marquee")).toBeHidden();
     await expect(page.locator(".offclock-list").getByText("Bullet, rated")).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Experience" })).toHaveCSS("opacity", "1");
   });

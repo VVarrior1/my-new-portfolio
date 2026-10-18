@@ -7,7 +7,6 @@ import { lastFrame, onFrame } from "@/lib/ticker";
 /**
  * The home page's smaller motions, all off under reduced motion (the page is complete without them):
  * - figures count up as they scroll in;
- * - the off-the-clock rivers of type run at the speed you scroll, in opposite directions;
  * - rows (more projects, writing) fill with a tide from the edge the pointer came in by, and leave
  *   by the edge it goes out of, dropping a little ink into the liquid;
  * - the experience odometer rolls to the start date of the role you're reading, and its lane lights;
@@ -71,32 +70,6 @@ export function Choreo() {
     );
     counts.forEach((el) => io.observe(el));
     cleanups.push(() => io.disconnect());
-
-    // Rivers of type.
-    const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-marquee]"));
-    if (rows.length) {
-      root.dataset.marquee = "js";
-      const offsets = rows.map(() => 0);
-      const visible = new Set<Element>();
-      const vio = new IntersectionObserver((entries) => entries.forEach((e) => (e.isIntersecting ? visible.add(e.target) : visible.delete(e.target))));
-      rows.forEach((row) => vio.observe(row));
-      cleanups.push(() => vio.disconnect());
-      cleanups.push(
-        onFrame((fr) => {
-          rows.forEach((row, i) => {
-            if (!visible.has(row)) return;
-            const run = row.firstElementChild as HTMLElement | null;
-            const width = run?.offsetWidth || 1;
-            const dir = Number(row.dataset.marquee) || 1;
-            const speed = 46 + Math.min(1400, Math.abs(fr.velocity)) * 0.42;
-            offsets[i] = (offsets[i] + speed * fr.dt) % width;
-            const x = dir > 0 ? -offsets[i] : offsets[i] - width;
-            row.style.transform = `translate3d(${x.toFixed(1)}px,0,0) skewX(${(-Math.max(-12, Math.min(12, fr.velocity / 120)) * dir).toFixed(2)}deg)`;
-          });
-        }, 50),
-      );
-      cleanups.push(() => delete root.dataset.marquee);
-    }
 
     // Tide rows and cards: the fill comes in from the edge the pointer entered by. Only with a real
     // hover (a mouse or trackpad); touch screens get none of it, so nothing can stick.

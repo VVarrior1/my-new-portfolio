@@ -1263,7 +1263,7 @@ html:has(.liquid-field) body {
 /* ------------------------------------------------------------------
    Poster type. Instrument Sans semi-condensed, heavy, very large: the
    project names (whose letters the HUD lifts off the page), the tools
-   count, the experience odometer, the contact title, the rivers of type.
+   count, the experience odometer, and the contact title.
    ------------------------------------------------------------------ */
 .poster {
   font-family: var(--font-display);
@@ -1443,10 +1443,10 @@ html:has(.liquid-field) body {
 }
 
 /* ------------------------------------------------------------------
-   Off the clock: two rivers of type. Without motion, the plain list.
+   Off the clock: one row of four facts on hairlines. Readable at a glance,
+   no outlines, nothing running behind the rail or the HUD.
    ------------------------------------------------------------------ */
 .offclock {
-  overflow: hidden;
   padding-block: 4rem 4.5rem;
 }
 @media (min-width: 1024px) {
@@ -1455,93 +1455,29 @@ html:has(.liquid-field) body {
   }
 }
 .offclock-list {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.marquee {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem 1.5rem;
   margin-top: 1.25rem;
 }
-.marquee-row {
-  display: flex;
-  width: max-content;
-  white-space: nowrap;
-  will-change: transform;
-  animation: river 46s linear infinite;
-}
-.marquee-row-b {
-  animation-direction: reverse;
-  margin-top: 0.2rem;
-}
-html[data-marquee="js"] .marquee-row {
-  animation: none;
-}
-@keyframes river {
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-.marquee-run {
-  display: flex;
-  flex: none;
-}
-.marquee-item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.28em;
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 8.4vw, 8.25rem);
-  font-weight: 650;
-  font-stretch: 87.5%;
-  line-height: 1.04;
-  letter-spacing: -0.035em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-.marquee-label {
-  font-size: 0.52em;
-  text-transform: none;
-  color: var(--signal-text);
-}
-.marquee-row-b .marquee-item {
-  color: transparent;
-  -webkit-text-stroke: 1.25px var(--ink);
-}
-.marquee-row-b .marquee-label {
-  color: transparent;
-  -webkit-text-stroke: 1px var(--signal-text);
-}
-.marquee-dot {
-  align-self: center;
-  width: 0.14em;
-  height: 0.14em;
-  margin-inline: 0.42em 0.5em;
-  border-radius: 999px;
-  background: var(--signal);
-}
-@media (prefers-reduced-motion: reduce) {
-  .marquee {
-    display: none;
-  }
-  .offclock-list {
-    position: static;
-    width: auto;
-    height: auto;
-    clip-path: none;
-    white-space: normal;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem 1.5rem;
-    margin-top: 1rem;
-  }
-}
-@media (prefers-reduced-motion: reduce) and (min-width: 640px) {
+@media (min-width: 768px) {
   .offclock-list {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+.offclock-item {
+  border-top: 1px solid var(--rule);
+  padding-top: 0.9rem;
+}
+.offclock-value {
+  margin-top: 0.4rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2.1vw, 1.85rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-wrap: balance;
 }
 
 /* ------------------------------------------------------------------

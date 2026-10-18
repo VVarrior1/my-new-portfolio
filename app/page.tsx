@@ -98,7 +98,7 @@ export default async function Home() {
         {/* Hero. The name and the facts on the left, held calm; the simulator floating on the right,
             with the current flowing into it. */}
         <section id="top" aria-labelledby="hero-name" className="relative">
-          {/* On laptops the hero stops short of the fold, so the first river of type below peeks in. */}
+          {/* On laptops the hero stops short of the fold, so the Off the clock row below peeks in. */}
           <div className="wrap grid min-h-[calc(100svh-4rem)] content-center gap-y-12 pb-20 pt-8 sm:pb-24 sm:pt-12 lg:min-h-[calc(100svh-12.5rem)] lg:grid-cols-12 lg:gap-x-8 lg:pb-16 lg:pt-4">
             <div data-calm="0.92" className="@container min-w-0 lg:col-span-6 lg:self-center">
               <p className="t-mono fade-up text-graphite" style={{ ["--d" as string]: "80ms" }}>
@@ -168,37 +168,19 @@ export default async function Home() {
           <Station route="/" role="origin" className="spine-origin" />
         </section>
 
-        {/* Off the clock: the personal line as two rivers of type running in opposite directions, at
-            the speed you scroll. Screen readers (and reduced motion) get the plain list. */}
+        {/* Off the clock: the personal line as one quiet row of four facts, each rising in on its own beat. */}
         <section aria-labelledby="off-the-clock" className="offclock relative" data-calm="0.7">
           <h2 id="off-the-clock" className="wrap t-mono text-graphite">
             Off the clock
           </h2>
           <dl className="offclock-list wrap">
-            {profile.offTheClock.map((row) => (
-              <div key={row.label} className="min-w-0">
+            {profile.offTheClock.map((row, i) => (
+              <div key={row.label} className="offclock-item min-w-0" data-reveal="rise" style={{ ["--d" as string]: `${i * 90}ms` }}>
                 <dt className="t-mono text-graphite">{row.label}</dt>
-                <dd className="mt-0.5 text-[1.0625rem] font-[550] text-ink">{row.value}</dd>
+                <dd className="offclock-value">{row.value}</dd>
               </div>
             ))}
           </dl>
-          <div className="marquee" aria-hidden="true">
-            {[0, 1].map((row) => (
-              <div key={row} className={`marquee-row ${row ? "marquee-row-b" : ""}`} data-marquee={row ? -1 : 1}>
-                {[0, 1].map((copy) => (
-                  <span key={copy} className="marquee-run">
-                    {profile.offTheClock.map((item) => (
-                      <span key={item.label} className="marquee-item">
-                        <span className="t-serif marquee-label">{item.label.toLowerCase()}</span>
-                        <span className="marquee-value">{item.value}</span>
-                        <span className="marquee-dot" />
-                      </span>
-                    ))}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
         </section>
 
         <Section id="work" index="01" hud="Work" title="Work" meta={`${featured.length} featured · ${otherProjects.length} more`}>
