@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { emitFlow } from "@/lib/flow-bus";
-import { onFrame } from "@/lib/ticker";
+import { lastFrame, onFrame } from "@/lib/ticker";
 
 /**
  * The home page's smaller motions, all off under reduced motion (the page is complete without them):
@@ -11,6 +11,7 @@ import { onFrame } from "@/lib/ticker";
  * - rows (more projects, writing) fill with a tide from the edge the pointer came in by, and leave
  *   by the edge it goes out of, dropping a little ink into the liquid;
  * - the experience odometer rolls to the start date of the role you're reading, and its lane lights;
+ * - on laptops the simulator sinks back into the liquid as you leave the hero;
  * - the contact card assembles from its parts as it arrives;
  * - after the intro, one drop lands in the liquid.
  */
@@ -101,8 +102,10 @@ export function Choreo() {
     // hover (a mouse or trackpad); touch screens get none of it, so nothing can stick.
     const hover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const tides = hover ? Array.from(document.querySelectorAll<HTMLElement>(".tide-row")) : [];
+    // A row that slides under a still pointer while the page scrolls isn't being pointed at.
+    const scrolling = () => Math.abs(lastFrame().velocity) > 150;
     const onEnter = (e: PointerEvent) => {
-      if (e.pointerType === "touch") return;
+      if (e.pointerType === "touch" || scrolling()) return;
       const row = e.currentTarget as HTMLElement;
       const r = row.getBoundingClientRect();
       const fromTop = e.clientY < r.top + r.height / 2;
@@ -114,6 +117,7 @@ export function Choreo() {
     };
     const onLeave = (e: PointerEvent) => {
       const row = e.currentTarget as HTMLElement;
+      if (row.dataset.tide !== "in" && row.dataset.tide !== "pre") return;
       const r = row.getBoundingClientRect();
       row.style.setProperty("--to", e.clientY < r.top + r.height / 2 ? "-101%" : "101%");
       row.dataset.tide = "out";
@@ -132,8 +136,17 @@ export function Choreo() {
     const onCard = (e: PointerEvent) => {
       const card = e.currentTarget as HTMLElement;
       const r = card.getBoundingClientRect();
-      card.style.setProperty("--from", e.clientY < r.top + r.height / 2 ? "-101%" : "101%");
-      if (e.type === "pointerenter") emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: e.clientY < r.top + r.height / 2 ? 260 : -260, ink: 0.08, accent: 0.04, radius: 0.07 });
+      const fromTop = e.clientY < r.top + r.height / 2;
+      if (e.type === "pointerenter") {
+        if (e.pointerType === "touch" || scrolling()) return;
+        card.style.setProperty("--from", fromTop ? "-101%" : "101%");
+        void card.offsetWidth;
+        card.toggleAttribute("data-fill", true);
+        emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: fromTop ? 260 : -260, ink: 0.08, accent: 0.04, radius: 0.07 });
+      } else {
+        card.style.setProperty("--from", fromTop ? "-101%" : "101%");
+        card.toggleAttribute("data-fill", false);
+      }
     };
     cards.forEach((card) => {
       card.addEventListener("pointerenter", onCard);
@@ -172,6 +185,26 @@ export function Choreo() {
           exp.dataset.active = String(next);
         }, 60),
       );
+    }
+
+    // Leaving the hero on a laptop: while the name flies into the header, the simulator sinks back
+    // into the liquid, tilting away and settling a little lower, like Lando Norris's head plane
+    // handing over to the page. Scrubbed by the scroll; it is still fully usable at any point.
+    // (The inner box, since #play's own entrance animation holds its transform.)
+    const device = document.getElementById("play")?.firstElementChild as HTMLElement | null | undefined;
+    if (device && window.matchMedia("(min-width: 1024px)").matches) {
+      let last = -1;
+      cleanups.push(
+        onFrame((fr) => {
+          const p = Math.max(0, Math.min(1, fr.y / (fr.vh * 0.85)));
+          if (Math.abs(p - last) < 0.001) return;
+          last = p;
+          const e = p * p * (3 - 2 * p);
+          device.style.transformOrigin = "50% 0%";
+          device.style.transform = e > 0 ? `perspective(1400px) translate3d(0,${(e * 70).toFixed(1)}px,0) rotateX(${(e * 14).toFixed(2)}deg) scale(${(1 - e * 0.08).toFixed(4)})` : "";
+        }, 55),
+      );
+      cleanups.push(() => (device.style.transform = ""));
     }
 
     // Contact: the parts rise into place as the section arrives.

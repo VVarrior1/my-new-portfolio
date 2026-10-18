@@ -521,8 +521,8 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-3 lg:block lg:pt-10" data-part>
-                <div className="portrait relative w-full" data-gl="portrait" data-hud-avoid>
+              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-3 lg:block lg:pt-10" data-part data-hud-avoid>
+                <div className="portrait relative w-full" data-gl="portrait">
                   <Image
                     src="/portrait-snow.jpg"
                     width={1200}

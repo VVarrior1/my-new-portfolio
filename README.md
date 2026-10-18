@@ -51,46 +51,59 @@ accent, cobalt (`--signal`).
 How the liquid behaves:
 
 - The pool scrolls with the page at a parallax (0.62), and scroll speed stirs it.
-- Text sits on calm water: every `data-calm` block is a rectangle where the dye is held back and
-  the current slowed, so the liquid flows around text like water round stones.
+- Text sits on calm water: every `data-calm` block is a rectangle (with a ragged, noisy shore) where
+  both dyes are held back and the current slowed, so the liquid flows around text like water round
+  stones. The header's band and the ruler's lane are always calm.
 - The Experience and Background chapter (`data-chapter="invert"`) is set in the opposite theme. The
   shader draws that band of the pool, edged by a wobbling cobalt waterline the current pushes
   around, so entering it is a liquid hand-off. A `.chapter-ground` under the canvas carries the same
   colour for contrast checks and for browsers without WebGL.
-- The hero simulator drives it through `lib/flow-bus.ts`: traffic is a current into the device,
-  strain makes it turbulent, a killed server blooms cobalt at the node. The pointer stirs it, the
-  HUD's flying letters and the spine's packet drag it, rows drop ink when you enter them, drips and
-  two slow side currents keep it moving below the hero, and an idle pointer still stirs a little.
+- The hero simulator drives it through `lib/flow-bus.ts`: traffic is a current into the device with
+  a cobalt thread that thickens with load, strain makes it turbulent, a killed server blooms cobalt
+  at the node. The pointer stirs it, the HUD's flying letters and the spine's packet drag it, rows
+  and cards drop ink when you enter them, drips (ink) and a slow current from the left keep it
+  moving below the hero, and an idle pointer still stirs a little.
 - The product screenshots and the portrait are drawn into the same GL context (`data-gl`): they
-  condense out of the ink as they arrive, bow with scroll speed, are refracted by the current, and
-  ripple and magnify under the pointer. The portrait is a two-tone print that the ink washes back
-  into colour. The `<img>` keeps its box (and is what phones and no-WebGL browsers see).
+  condense out of the ink as they arrive, bow with scroll speed, are refracted by the current while
+  the page moves, and ripple and magnify under the pointer. Within half a second of rest they are
+  the plain image again, sharp and in colour. The `<img>` keeps its box (and is what phones and
+  no-WebGL browsers see).
 
 On top of it (`components/hud.tsx`, `components/spine.tsx`, `components/cursor.tsx`):
 
-- The HUD, after getartcraft.com/apps: section names wait sideways on the right edge and, as each
+- The HUD, after getartcraft.com/apps: as you leave the hero, the name's letters fly into the
+  header's wordmark ("A. Mohamed"). Section names wait sideways on the right edge and, as each
   section reaches the top, fly letter by letter along curves into the top-right corner, where
   earlier names shrink into a breadcrumb stack. Project names lift off their own poster type on the
   page and leave an outline behind. A flip left half-done when you stop scrolling finishes on its
   own. On the right edge a ruler (tick tape, needle, rolling percent) zooms out into a map of the
-  page when you point at it; click or drag to travel. Laptops with motion only.
-- The spine: a wire in the left lane from the simulator to Contact. A packet rides it at mid-screen,
-  lights each station, leaves a cobalt thread in the liquid, and carries the simulator's health
-  ("GET /work · 84 ms", or "503" in the fail colour once you've broken it).
-- The cursor: a cobalt drop on the pointer with an ink ring that trails and stretches; it swells
-  into a labelled disc ("Enlarge", "Open", "Read") over things that say what they do.
+  page when you point at it, behind its own frost, while the docked names step aside; click or drag
+  to travel. The stack also steps aside rather than sit on the portrait. Laptops with motion only.
+- Phones and tablets get the small HUD (`components/mobile-hud.tsx`): each section's big title lifts
+  off letter by letter, leaving its outline, and flies into a frosted "01 / Work" bar under the header.
+- The spine: a wire in the left lane from the simulator to the contact keys. A packet rides it at
+  mid-screen, lights each station, leaves a cobalt thread in the liquid, and carries the simulator's
+  health ("GET /work · 84 ms", or "503" in the fail colour once you've broken it, with the wire
+  behind it in the fail colour too). At the bottom of the page it is delivered beside "Email me"
+  ("200 /contact") and the wire branches across to the key.
+- The cursor: a cobalt drop on the pointer with an ink ring that trails and stretches; over things
+  that say what they do it puts a labelled disc ("Enlarge", "Open", "Read") just below and right of
+  the pointer, so the word you're pointing at stays readable.
 - The intro (`components/intro.tsx`): once per tab, a counter rolls to the simulator's 160 req/s
   and the sheet lifts away with a bowed edge. Pure CSS, gated by the head script.
 - Smaller motions (`components/choreo.tsx`): count-ups, the off-the-clock "rivers of type" that run
-  at scroll speed, tide rows that fill from the edge the pointer entered by, the experience
-  odometer that rolls to the start date of the role you're reading, the contact card assembling,
-  and cobalt wipe reveals on the poster type.
+  at scroll speed (the first one peeks in under the hero on laptops), tide rows and project cards
+  that fill from the edge the pointer entered by (real hovers only), the experience odometer that
+  rolls to the start date of the role you're reading, the contact card assembling, cobalt wipe
+  reveals on the poster type line by line, and the header turning over to the chapter's colours
+  while the chapter runs under it.
 
 One frame loop (`lib/ticker.ts`) drives Lenis first and then every subscriber, so the canvas, the
 HUD and the DOM always agree on the scroll position. Reveals hide content only after
 `html[data-motion="on"]` is set, so without JavaScript or under `prefers-reduced-motion`
 everything is simply there; reduced motion also drops the HUD, cursor, intro, rivers and Lenis,
-and renders the liquid as one still frame. The fluid engine, the HUD and the cursor are separate
+renders the liquid as one still frame (redrawn as you scroll, so the chapter keeps its ground), and
+shows the spine as a finished drawing with the packet delivered. The fluid engine, the HUD and the cursor are separate
 chunks loaded after hydration (the HUD and cursor only on fine pointers), so the home page's first
 load is the same size as before. The field caps the pixel ratio (1.5 desktop, 1.25 touch), pauses
 in background tabs, and on an M2 Pro uses about 0.2 ms of main-thread time a frame. `?tune` on the
@@ -102,7 +115,7 @@ numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--pool`, 
 `--graphite`, `--rule`, `--signal`, `--screen`, `--fluid-*`, and `-x` twins for the opposite theme)
 exposed to Tailwind as `bg-paper`, `text-graphite` and so on. The object classes (`.wrap`,
 `.sec-head`, `.poster`, `.device`, `.screen`, `.key`, `.keycap`, `.spec`, `.stat-stack`,
-`.tide-row`, `.odometer`, `.marquee`) are in `app/globals.css`.
+`.tide-row`, `.lineup-grid`, `.chip`, `.tag-mono`, `.odometer`, `.marquee`) are in `app/globals.css`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,

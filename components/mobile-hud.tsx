@@ -128,8 +128,9 @@ function MobileHudLayer() {
           const n = e.letters.length;
           const here = inP * (1 - outP);
           presence = Math.max(presence, here);
-          e.tag.style.opacity = here.toFixed(3);
-          e.tag.style.transform = `translate3d(0,${((1 - inP) * 10 - outP * 10).toFixed(1)}px,0)`;
+          // The index rolls like a counter: the old one is gone before the new one is half in.
+          e.tag.style.opacity = clamp01((here - 0.35) / 0.65).toFixed(3);
+          e.tag.style.transform = `translate3d(0,${((1 - inP) * 14 - outP * 14).toFixed(1)}px,0)`;
           for (let k = 0; k < n; k++) {
             const el = e.letters[k];
             const src = e.sources[k];

@@ -68,6 +68,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Before the stylesheet arrives the browser paints its own canvas: in the visitor's scheme, so a
+  // dark first frame is never a white flash.
+  colorScheme: "light dark",
   themeColor: [
     // Equal to --paper in each scheme (app/globals.css).
     { media: "(prefers-color-scheme: light)", color: "#f4f4f5" },

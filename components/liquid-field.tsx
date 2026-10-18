@@ -80,6 +80,8 @@ function seeded(seed: number) {
 type Plane = {
   host: HTMLElement;
   img: HTMLImageElement | null;
+  /** The image whose texture is being made. */
+  pending?: HTMLImageElement;
   texture: WebGLTexture | null;
   src: string;
   reveal: number;
@@ -346,26 +348,55 @@ export function LiquidField() {
     const planes: Plane[] = [];
     const pickImage = (host: HTMLElement) =>
       Array.from(host.querySelectorAll<HTMLImageElement>("img")).find((img) => img.offsetParent !== null || getComputedStyle(img).display !== "none") ?? null;
+    // Textures are made one at a time, each in an idle moment, from a bitmap decoded off the main
+    // thread at the size it's drawn, and the images are fetched as soon as the liquid runs rather
+    // than when they scroll near: so no upload ever lands in the middle of a scroll.
+    const uploads: Array<() => Promise<void>> = [];
+    let uploading = false;
+    const pump = () => {
+      if (uploading || !uploads.length || disposed) return;
+      uploading = true;
+      const job = uploads.shift()!;
+      const run = () =>
+        void job().finally(() => {
+          uploading = false;
+          pump();
+        });
+      if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 1500 });
+      else setTimeout(run, 80);
+    };
     const loadPlane = (f: Fluid, plane: Plane) => {
       const img = pickImage(plane.host);
       if (!img) return;
       const src = img.currentSrc || img.src;
-      if (plane.texture && plane.src === src) return;
+      if ((plane.texture && plane.src === src) || plane.pending === img) return;
+      plane.pending = img;
+      if (img.loading === "lazy") img.loading = "eager";
       const ready = () => {
-        if (disposed) return;
-        try {
-          const texture = f.createTexture(img);
-          if (plane.texture) f.deleteTexture(plane.texture);
-          plane.texture = texture;
-          plane.img = img;
-          plane.src = img.currentSrc || img.src;
-          plane.host.dataset.glLive = "";
-        } catch {
-          // A texture that can't be read stays a plain image.
-        }
+        uploads.push(async () => {
+          if (disposed || plane.pending !== img) return;
+          try {
+            const box = plane.host.getBoundingClientRect().width || img.naturalWidth;
+            const width = Math.max(1, Math.min(img.naturalWidth, Math.ceil(box * dpr() * 1.25)));
+            const height = Math.max(1, Math.round((img.naturalHeight * width) / img.naturalWidth));
+            const source: TexImageSource =
+              typeof createImageBitmap === "function" ? await createImageBitmap(img, { resizeWidth: width, resizeHeight: height, resizeQuality: "high", premultiplyAlpha: "none" }) : img;
+            if (disposed || plane.pending !== img) return;
+            const texture = f.createTexture(source);
+            if (source instanceof ImageBitmap) source.close();
+            if (plane.texture) f.deleteTexture(plane.texture);
+            plane.texture = texture;
+            plane.img = img;
+            plane.src = img.currentSrc || img.src;
+            plane.host.dataset.glLive = "";
+          } catch {
+            // A texture that can't be read stays a plain image.
+          }
+        });
+        pump();
       };
-      if (img.complete && img.naturalWidth) img.decode().then(ready, ready);
-      else img.addEventListener("load", () => img.decode().then(ready, ready), { once: true });
+      if (img.complete && img.naturalWidth) ready();
+      else img.addEventListener("load", ready, { once: true });
     };
 
     let lastY = window.scrollY;
