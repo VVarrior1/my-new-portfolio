@@ -2041,8 +2041,80 @@ html:has(.liquid-field) body {
   opacity: 0;
   will-change: transform, opacity;
 }
-/* The wordmark: "A." in the sans, the surname in the serif, as in the hero. While the name flight
-   runs, its letters show one by one as their twins land, whatever the header's own fade says. */
+/* The brand (components/brand-mark.tsx, components/site-header.tsx): the "Am." mark, then the
+   surname in the serif, as in the hero. The mark is ink (currentColor) with the one accent in its
+   full stop. It writes itself on load: the stop runs the pen route as the dash draws the flick and
+   the m, then settles with a spring. Hover lifts it, lights the m in cobalt and writes it again.
+   Under reduced motion, and whenever no draw runs, it is the complete mark. */
+.am {
+  display: block;
+  overflow: visible;
+  fill: currentColor;
+}
+.am-dot {
+  fill: var(--signal);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.am-m {
+  transition: fill 200ms ease;
+}
+.am-pen {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .am {
+    --am-draw: 950ms;
+    transition: scale 500ms var(--ease-spring);
+  }
+  .am-pen,
+  .am-fill,
+  .am-dot {
+    animation-duration: var(--am-draw);
+    animation-fill-mode: both;
+  }
+  .am-pen {
+    animation-timing-function: var(--ease-pour);
+  }
+  .am-fill,
+  .am-dot {
+    animation-timing-function: linear;
+  }
+  .am-dot {
+    animation-duration: var(--am-draw), 560ms;
+    animation-delay: 0ms, var(--am-draw);
+    animation-timing-function: linear, var(--ease-spring);
+    animation-fill-mode: both, none;
+  }
+  .am[data-draw="a"] .am-pen { animation-name: am-pen-a; }
+  .am[data-draw="a"] .am-fill { animation-name: am-fill-a; }
+  .am[data-draw="a"] .am-dot { animation-name: am-run-a, am-pop-a; }
+  .am[data-draw="b"] .am-pen { animation-name: am-pen-b; }
+  .am[data-draw="b"] .am-fill { animation-name: am-fill-b; }
+  .am[data-draw="b"] .am-dot { animation-name: am-run-b, am-pop-b; }
+  /* On the first view of the home page the mark waits for the intro's sheet to lift. */
+  html[data-intro] .am[data-draw="a"] :is(.am-pen, .am-fill) {
+    animation-delay: 1250ms;
+  }
+  html[data-intro] .am[data-draw="a"] .am-dot {
+    animation-delay: 1250ms, calc(1250ms + var(--am-draw));
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .brand:hover .am {
+    scale: 1.05;
+  }
+  .brand:active .am {
+    scale: 0.95;
+  }
+  .brand:hover .am-m {
+    fill: var(--signal);
+  }
+  .brand:hover .am:not([data-draw]) .am-pen { animation-name: am-pen-h; }
+  .brand:hover .am:not([data-draw]) .am-fill { animation-name: am-fill-h; }
+  .brand:hover .am:not([data-draw]) .am-dot { animation-name: am-run-h, am-pop-h; }
+}
 .wordmark-serif {
   font-family: var(--font-serif);
   font-style: italic;
@@ -2050,11 +2122,13 @@ html:has(.liquid-field) body {
   font-size: 1.14em;
   letter-spacing: -0.01em;
 }
-html[data-name-flight] [data-wordmark] {
+/* While the name flight runs, the surname's letters show one by one as their twins land, whatever
+   the header's own fade says. The mark's A and stop are targets too, but they stay (data-keep). */
+html[data-name-flight] [data-surname] {
   opacity: 1 !important;
   transform: none !important;
 }
-html[data-name-flight] [data-wl] {
+html[data-name-flight] [data-wl]:not([data-keep]) {
   opacity: 0;
 }
 
