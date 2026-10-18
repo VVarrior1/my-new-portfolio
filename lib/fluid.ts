@@ -10,7 +10,8 @@
 // ANY KIND.
 //
 // Changes from the original: TypeScript, no bloom or sunrays, two dye channels instead of RGB, an
-// ambient curl-noise force, and a display that traces contours on a blurred copy of the dye.
+// ambient curl-noise force, a "bed" that holds the hero's river to a path, and a display that
+// traces contours on a blurred copy of the dye.
 // Red is the neutral dye (smoke in the dark theme, ink in the light one) and green is the accent,
 // so the display pass can only ever paint the page's neutrals and its one accent colour.
 
@@ -98,6 +99,34 @@ void main () {
   gl_FragColor = vec4(base + splat, 1.0);
 }`;
 
+/** How many points the river's bed (Fluid.bed) can have. */
+export const MAX_BED = 16;
+
+// The river's bed: a path (screen-height units, x scaled by the aspect) the current is drawn along,
+// so the ink laid into it runs as one laminar ribbon whose contours are parallel lines rather than
+// curls. Parallel offsets of a path carry a divergence-free tangent field, so the pressure solve
+// leaves that flow as it is. bedAt is how near q is to the bed (1 on its line, falling off over
+// uBedWidth) and the bed's direction there, blended across its segments so it turns smoothly.
+const BED_GLSL = `
+uniform vec2 uBed[${MAX_BED}]; uniform float uBedCount; uniform float uBedWidth;
+float bedAt (vec2 q, out vec2 dir) {
+  vec2 acc = vec2(0.0);
+  float near = 0.0;
+  for (int i = 0; i < ${MAX_BED - 1}; i++) {
+    if (float(i) >= uBedCount - 1.0) break;
+    vec2 a = uBed[i];
+    vec2 ab = uBed[i + 1] - a;
+    float len = max(length(ab), 1e-5);
+    vec2 t = ab / len;
+    float d = length(q - a - t * clamp(dot(q - a, t), 0.0, len));
+    float w = exp(-d * d / (uBedWidth * uBedWidth));
+    acc += t * w;
+    near = max(near, w);
+  }
+  dir = acc / max(length(acc), 1e-5);
+  return near;
+}`;
+
 const ADVECTION = `
 precision highp float; precision highp sampler2D;
 varying vec2 vUv; uniform sampler2D uVelocity; uniform sampler2D uSource;
@@ -113,6 +142,11 @@ vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
   return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
 }
 uniform vec2 uShift;
+// While the river's bed runs, ink outside it (torn off the river by the pointer, say) fades
+// uBedFade faster: still water away from the current clears, so a torn-off wisp can't linger as an
+// island. Off when uBedFade is 0 (and always for the velocity).
+${BED_GLSL}
+uniform float uBedFade; uniform float uAspect;
 void main () {
 #ifdef MANUAL_FILTERING
   vec2 coord = vUv - dt * bilerp(uVelocity, vUv, texelSize).xy * texelSize - uShift;
@@ -124,7 +158,12 @@ void main () {
   // What comes in from beyond any edge is clean water, not a smear of the last row or column, so
   // dye never banks up against the side of the screen.
   if (coord.y < 0.0 || coord.y > 1.0 || coord.x < 0.0 || coord.x > 1.0) result = vec4(0.0);
-  float decay = 1.0 + dissipation * dt;
+  float rate = dissipation;
+  if (uBedFade > 0.0) {
+    vec2 dir;
+    rate += uBedFade * (1.0 - smoothstep(0.02, 0.3, bedAt(vec2(vUv.x * uAspect, vUv.y), dir)));
+  }
+  float decay = 1.0 + rate * dt;
   gl_FragColor = result / decay;
 }`;
 
@@ -230,14 +269,24 @@ float psi (vec2 p) {
   float t = uTime;
   return gnoise(p + vec2(t * 0.045, -t * 0.03)) + 0.5 * gnoise(p * 2.07 + vec2(-t * 0.06, t * 0.04) + 5.2);
 }
+${BED_GLSL}
+uniform float uBedSpeed; uniform float uBedRate;
+// Near the bed the current relaxes toward a steady flow along it, which also damps any eddy that
+// drifts into the channel.
+vec2 bed (vec2 q, vec2 v) {
+  vec2 dir;
+  float near = bedAt(q, dir);
+  return mix(v, dir * uBedSpeed, (1.0 - exp(-uBedRate * dt)) * near);
+}
 void main () {
   vec2 p = vec2(vUv.x * uAspect, vUv.y) * uScale;
   float e = 0.02;
   float dy = psi(p + vec2(0.0, e)) - psi(p - vec2(0.0, e));
   float dx = psi(p + vec2(e, 0.0)) - psi(p - vec2(e, 0.0));
   vec2 curl = vec2(dy, -dx) / (2.0 * e);
-  vec2 v = texture2D(uVelocity, vUv).xy;
-  gl_FragColor = vec4(v + (curl * uAmp + uDrift) * dt, 0.0, 1.0);
+  vec2 v = texture2D(uVelocity, vUv).xy + (curl * uAmp + uDrift) * dt;
+  if (uBedCount > 1.0) v = bed(vec2(vUv.x * uAspect, vUv.y), v);
+  gl_FragColor = vec4(v, 0.0, 1.0);
 }`;
 
 // A separable Gaussian (9 taps folded into 5 linear reads), used to make the smooth scalar field
@@ -401,7 +450,7 @@ void main () {
   float w = max(0.62, 0.55 * uDpr);
   vec2 hc = 1.0 - exp(-1.3 * vec2(tn, c.g));
   vec2 hs = 1.3 * exp(-1.3 * vec2(tn, c.g));
-  float ln = contour(hc.x, length(gt) * hs.x, uSteps, w) * smoothstep(0.05, 0.14, wide.r) * smoothstep(0.35, 0.65, wide.r / max(tn, 1e-3)) * smoothstep(0.02, 0.06, c.r) * traceOf;
+  float ln = contour(hc.x, length(gt) * hs.x, uSteps, w) * smoothstep(0.05, 0.14, wide.r) * smoothstep(0.02, 0.06, c.r) * traceOf;
   float la = contour(hc.y, length(ga) * hs.y, uSteps * 0.7, w) * smoothstep(0.07, 0.16, wide.g) * smoothstep(0.05, 0.1, c.g) * traceOf;
 
   vec3 col = mix(bg, neutral, n * uNeutralMax * uFill);
@@ -528,6 +577,12 @@ export class Fluid {
   ambientScale = 2.4;
   /** A steady push on the whole pool, sim texels/s² (x right, y up). */
   drift: [number, number] = [0, 0];
+  /** The river's bed, or null: a path in UV (0..1, y up) the current is drawn along at `speed`
+   * (sim texels/s) within about `width` of it (a fraction of the screen's height), relaxing
+   * toward that flow at `rate` per second. Ink well outside it fades `fade` per second faster.
+   * At most MAX_BED points. */
+  bed: { points: Array<readonly [number, number]>; width: number; speed: number; rate: number; fade: number } | null = null;
+  private bedData = new Float32Array(MAX_BED * 2);
   private calmData = new Float32Array(MAX_CALM * 4);
   private calmStrength = new Float32Array(MAX_CALM);
   private calmHold = new Float32Array(MAX_CALM);
@@ -766,7 +821,20 @@ export class Fluid {
     this.blit(velocity.write);
     velocity.swap();
 
-    if (this.ambient > 0 || this.drift[0] !== 0 || this.drift[1] !== 0) {
+    const bed = this.bed && this.bed.points.length > 1 ? this.bed : null;
+    const aspect = velocity.width / velocity.height;
+    const n = bed ? Math.min(MAX_BED, bed.points.length) : 0;
+    this.bedData.fill(0);
+    for (let i = 0; i < n; i++) {
+      this.bedData[i * 2] = bed!.points[i][0] * aspect;
+      this.bedData[i * 2 + 1] = bed!.points[i][1];
+    }
+    const setBed = (u: Program["uniforms"]) => {
+      gl.uniform2fv(u["uBed[0]"], this.bedData);
+      gl.uniform1f(u.uBedCount, n);
+      gl.uniform1f(u.uBedWidth, bed?.width ?? 1);
+    };
+    if (this.ambient > 0 || this.drift[0] !== 0 || this.drift[1] !== 0 || bed) {
       gl.useProgram(p.force.program);
       gl.uniform2f(p.force.uniforms.texelSize, velocity.texelX, velocity.texelY);
       gl.uniform1i(p.force.uniforms.uVelocity, velocity.read.attach(0));
@@ -776,6 +844,9 @@ export class Fluid {
       gl.uniform1f(p.force.uniforms.uAspect, velocity.width / velocity.height);
       gl.uniform2f(p.force.uniforms.uDrift, this.drift[0], this.drift[1]);
       gl.uniform1f(p.force.uniforms.dt, dt);
+      setBed(p.force.uniforms);
+      gl.uniform1f(p.force.uniforms.uBedSpeed, bed?.speed ?? 0);
+      gl.uniform1f(p.force.uniforms.uBedRate, bed?.rate ?? 0);
       this.blit(velocity.write);
       velocity.swap();
     }
@@ -816,6 +887,9 @@ export class Fluid {
     gl.uniform1f(p.advection.uniforms.dt, dt);
     gl.uniform1f(p.advection.uniforms.dissipation, config.velocityDissipation);
     gl.uniform2f(p.advection.uniforms.uShift, 0, this.shift);
+    setBed(p.advection.uniforms);
+    gl.uniform1f(p.advection.uniforms.uAspect, aspect);
+    gl.uniform1f(p.advection.uniforms.uBedFade, 0);
     this.blit(velocity.write);
     velocity.swap();
 
@@ -823,6 +897,7 @@ export class Fluid {
     gl.uniform1i(p.advection.uniforms.uVelocity, velocity.read.attach(0));
     gl.uniform1i(p.advection.uniforms.uSource, this.dye.read.attach(1));
     gl.uniform1f(p.advection.uniforms.dissipation, config.densityDissipation);
+    gl.uniform1f(p.advection.uniforms.uBedFade, bed?.fade ?? 0);
     this.blit(this.dye.write);
     this.dye.swap();
   }

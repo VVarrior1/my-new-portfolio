@@ -15,10 +15,11 @@ import { onFrame, type Frame } from "@/lib/ticker";
 //   a wobbling waterline the current pushes around; scrolling into it is a liquid hand-off.
 // - [data-gl] images (the product screenshots, the portrait) are drawn as planes in the same
 //   context, so the current refracts them, the pointer ripples them and scroll speed bows them.
-// - In the hero the current comes out of the simulator: a river of ink leaves from under the
-//   device's lower-left corner, runs beneath the hero copy and turns up the left lane beside the
-//   name, with a cobalt thread in it that thickens with traffic (lib/flow-bus.ts). More traffic is a
-//   faster, denser river; a killed server sends one accent bloom down it, which settles back.
+// - In the hero the current comes out of the simulator: on laptops a river of ink runs in a steady
+//   bed (Fluid.bed) from under the device's lower-left corner, beneath the hero copy, up the left
+//   lane and back along the top, so the name sits inside its loop, with a cobalt thread in it that
+//   thickens with traffic (lib/flow-bus.ts). More traffic is a faster, denser river; a killed
+//   server swells the thread, and the swell runs down the river and settles back.
 //   An ambient curl-noise stir keeps the pool moving when nothing touches it, flying HUD letters
 //   and the spine's packet stir it, and below the hero two slow currents and the odd drip keep the
 //   gutters alive.
@@ -40,6 +41,13 @@ const MOBILE: FluidConfig = { ...DESKTOP, simResolution: 96, dyeResolution: 640,
 const PARALLAX = 0.62;
 /** The ambient curl-noise stir, in sim texels/s² (see FORCE in lib/fluid.ts). */
 const AMBIENT = 1.6;
+/** The river's bed: its half width (a fraction of the screen's height) and its speed at rest, in
+ * sim texels/s (see Fluid.bed). */
+const BED_WIDTH = 0.075;
+const BED_SPEED = 34;
+/** How fast the ink fades while the bed runs, as a share of the page's rate: slow enough that the
+ * river reaches round the name before it thins out. */
+const RIVER_FADE = 0.5;
 /** The share of the ambient stir the hero keeps while its river runs. */
 const RIVER_AMBIENT = 0.5;
 
@@ -184,11 +192,30 @@ export function LiquidField() {
     let pulse = 0;
     /** Failing requests: they tint the river's thread rather than spatter the pool. */
     let failGlow = 0;
+    /** Extra ink poured into the bed's river (a restarted server, the intro's drop), as a share of
+     * its usual flow. It is added at once and drains away more slowly than the ink itself fades
+     * (see `settle`), so the river thickens and thins along its length without a lump: a lump of
+     * ink travelling down the current is a closed contour, an island. */
+    let swell = 0;
     /** Whether the hero's river ran last frame (the device is on screen). */
     let riverLive = false;
 
     // The device (the simulator's figure) and the name's block, read fresh each frame.
     const deviceBox = () => document.querySelector<HTMLElement>("#play figure")?.getBoundingClientRect() ?? null;
+    /** The device's box from layout alone, without its transforms: the river's bed is laid from
+     * this, so the device's entrance (it rises into place over the first two seconds) doesn't drag
+     * the river's mouth and kink the current. */
+    const deviceLayout = () => {
+      const el = document.querySelector<HTMLElement>("#play figure");
+      if (!el) return null;
+      let x = 0;
+      let y = 0;
+      for (let e: HTMLElement | null = el; e; e = e.offsetParent as HTMLElement | null) {
+        x += e.offsetLeft;
+        y += e.offsetTop;
+      }
+      return new DOMRect(x - window.scrollX, y - window.scrollY, el.offsetWidth, el.offsetHeight);
+    };
     const nameBox = () => document.querySelector<HTMLElement>("[data-name]")?.closest<HTMLElement>("[data-calm]")?.getBoundingClientRect() ?? null;
     /** Where the river leaves the device, in viewport px. */
     const mouth = (dev: DOMRect) => ({ x: dev.left + 28, y: Math.min(dev.bottom - 18, window.innerHeight - 40) });
@@ -199,11 +226,17 @@ export function LiquidField() {
         // One clean accent bloom: a soft drop of cobalt where the current leaves the device and a
         // swell in the river's thread, which the current carries off; it settles within a couple
         // of seconds. No radial burst: pushes that sharp ripple the whole river.
+        // In the hero's bed the bloom is the thread's swell alone (see `kick` in river): a drop of
+        // cobalt travelling down a laminar river is a closed contour.
         kick = 1;
-        const dev = deviceBox();
-        const m = dev ? mouth(dev) : { x: e.x, y: e.y };
-        const [bx, by] = uv(m.x - 24, m.y + 16);
-        f.ink(bx, by, 0.04, 0.42, 0.07);
+        if (!f.bed) {
+          const dev = deviceBox();
+          const m = dev ? mouth(dev) : { x: e.x, y: e.y };
+          const [bx, by] = uv(m.x - 24, m.y + 16);
+          f.ink(bx, by, 0.04, 0.42, 0.07);
+        }
+      } else if (e.kind === "restart" && f.bed) {
+        swell += 0.6;
       } else if (e.kind === "restart") {
         // The server is back: a quiet drop of ink into the river, no accent.
         const dev = deviceBox();
@@ -214,6 +247,8 @@ export function LiquidField() {
         failGlow = Math.min(1, failGlow + 0.06);
       } else if (e.kind === "stir") {
         f.splat(x, y, e.dx, -e.dy, e.ink, e.accent, e.radius);
+      } else if (e.river && f.bed) {
+        swell += e.size;
       } else if (e.river && riverLive) {
         // A drop meant for the river: poured in where the current leaves the device, like a
         // restarted server's ink, so the current carries it off as one swell.
@@ -236,18 +271,33 @@ export function LiquidField() {
     // name; stacked (phones, tablets) it wells up from the device's top edge. Returns false while
     // the device is off screen, so the page's own weather takes over.
     let phase = 0;
+    /** How fast a swell in the bed's river may drain, per second: under the rate the ink itself
+     * fades. Ink poured in at a rate that falls faster than that leaves a lump downstream. */
+    const settle = (f: Fluid) => 0.8 * f.config.densityDissipation;
     /** The traffic the river carries, eased toward the simulator's rate over about a second: a
      * sudden jump in the current at the mouth rolls the river's front into curls. */
     let carried = -1;
+    let strained = 0;
+    /** The bed's current, sim texels/s. A faster current spreads the same ink over more river,
+     * which thins it like pouring less, so it speeds up no faster than the ink fades. */
+    let flow = 0;
     const river = (f: Fluid, dt: number, vw: number, vh: number) => {
-      const dev = deviceBox();
-      if (!dev || dev.width === 0 || dev.bottom < 60 || dev.top > vh - 60) return false;
+      const dev = deviceLayout();
+      if (!dev || dev.width === 0 || dev.bottom < 60 || dev.top > vh - 60) {
+        f.bed = null;
+        return false;
+      }
       const { rate, strain } = flowState();
       const target = Math.min(1, rate / 900);
-      carried = carried < 0 ? target : carried + (target - carried) * Math.min(1, dt * 1.2);
+      // In the bed less traffic drains away no faster than the ink fades (see `settle`).
+      const ease = target < carried && f.bed ? settle(f) : 1.2;
+      carried = carried < 0 ? target : carried + (target - carried) * Math.min(1, dt * ease);
       const q = carried;
+      // Strain too: it thickens the thread, and a thread that thins faster than the ink fades
+      // leaves a lump of cobalt downstream.
+      strained += (strain - strained) * Math.min(1, dt * (strain > strained ? 3 : settle(f)));
       const k = dt * 60 * tune.ink;
-      phase += dt * (0.45 + q * 0.9 + strain * 0.8);
+      phase += dt * (0.45 + q * 0.9 + strained * 0.8);
       const speed = (52 + q * 64) * (1 + pulse * 0.15) * tune.current;
       const ink = (0.09 + q * 0.06) * k;
       const thread = (0.12 + q * 0.18 + strain * 0.08 + failGlow * 0.15 + pulse * 0.7) * k;
@@ -255,30 +305,54 @@ export function LiquidField() {
       const name = nameBox();
       const beside = !!name && name.right <= dev.left + 8;
       if (beside && name) {
+        // The current runs in a bed (lib/fluid.ts): out of the device's lower-left corner, left
+        // beneath the copy, up the left lane beside the name, right along the top under the header
+        // and back in behind the device, so the name sits inside the river's loop. A steady bed
+        // rather than pushes: every push throws a pair of eddies off its sides, and those are what
+        // rolled the river's fringe into loops, hooks and islands beside the copy.
         const m = mouth(dev);
-        const tx = name.left + name.width * 0.3;
         const ty = Math.min(vh - 50, name.bottom + 56);
-        const angle = Math.atan2(-(ty - m.y), tx - m.x) + sway;
-        const [x, y] = uv(m.x, m.y);
-        f.splat(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, ink, 0, 0.085);
-        f.ink(x, y, 0, thread, 0.016);
-        // The turn: in the left lane the current is drawn up alongside the name, then eases right
-        // under the header, so the river frames the name instead of banking up on the edge. The
-        // turn's push sits on the river's own line, below the copy's corner: pushed up right at
-        // the corner, the current split there and spun a standing curl under the buttons.
-        const lx = Math.max(40, name.left - 30);
-        const [ax, ay] = uv(Math.max(30, lx - 10), name.bottom + 50);
-        f.splat(ax, ay, -speed * 0.05, speed * 0.5, 0, 0, 0.12);
-        // The pocket between the river and the copy's lower edge is swept gently into the turn, so
-        // ink can't idle there and close into a loop under the buttons.
-        const [px, py] = uv(name.left + name.width * 0.25, name.bottom + 24);
-        f.splat(px, py, -speed * 0.35, -speed * 0.2, 0, 0, 0.1);
-        const [bx, by] = uv(lx, name.top + 60);
-        f.splat(bx, by, speed * 0.2, speed * 0.25, 0, 0, 0.12);
-        // And a soft push off the screen's edge, so the turn never banks up against it.
-        const [ex, ey] = uv(8, (name.top + name.bottom) / 2 + 80);
-        f.splat(ex, ey, speed * 0.25, speed * 0.1, 0, 0, 0.3);
+        const lx = Math.max(56, name.left - 54);
+        const top = Math.max(98, name.top - 52);
+        const path: Array<[number, number]> = [
+          [dev.left + 120, (dev.top + dev.bottom) / 2],
+          [dev.left + 70, m.y + 2],
+          [m.x - 40, m.y + 16],
+          [name.left + name.width * 0.55, ty],
+          [name.left + 40, ty + 4],
+          [lx + 6, ty - 50],
+          [lx, (name.top + name.bottom) / 2],
+          [lx + 10, top + 46],
+          [name.left + 60, top],
+          [name.left + name.width * 0.6, top - 2],
+          [dev.left + 50, top + 8],
+          [dev.left + 120, (dev.top + dev.bottom) / 2],
+        ];
+        // The river meanders a little: the bed's middle reaches sway slowly across the current
+        // (never at the mouth, so the river always leaves the device in the same place).
+        const last = path.length - 1;
+        const flowTo = (BED_SPEED + q * 18) * tune.current;
+        flow = flow === 0 ? flowTo : flow + (flowTo - flow) * Math.min(1, dt * (flowTo > flow ? settle(f) : 1.2));
+        f.bed = {
+          points: path.map(([x, y], i) => {
+            const reach = i <= 2 || i >= last - 1 ? 0 : 1;
+            const wob = (Math.sin(phase + i * 0.9) * 9 + Math.sin(phase * 0.43 + i * 1.7) * 6) * reach * (1 + strained * 0.3);
+            return uv(x + wob * 0.6, y + wob);
+          }),
+          width: BED_WIDTH,
+          speed: flow,
+          // It heals a ripple (a cursor, a scroll) within a second, and ink torn off it clears.
+          rate: 4,
+          fade: 1.5,
+        };
+        // The ink is laid into the bed behind the device, on its way down to the mouth: where ink
+        // is poured the river's ink is densest just downstream, and that crest (a closed contour)
+        // stays hidden under the device instead of sitting at its corner.
+        const [x, y] = uv(path[0][0] + (path[1][0] - path[0][0]) * 0.75, path[0][1] + (path[1][1] - path[0][1]) * 0.75);
+        f.ink(x, y, ink * (1 + swell), 0, 0.06);
+        f.ink(x, y, 0, (0.12 + q * 0.18 + strained * 0.08 + failGlow * 0.15 + pulse * 0.7) * k * 0.6, 0.024);
       } else {
+        f.bed = null;
         for (const side of [0.22, 0.78]) {
           const [x, y] = uv(dev.left + dev.width * side, dev.top + 10);
           const out = side < 0.5 ? -1 : 1;
@@ -502,13 +576,15 @@ export function LiquidField() {
       const prewarm = (steps: number) => {
         const vh = window.innerHeight;
         const vw = window.innerWidth;
+        const dt = 1 / 30;
         for (let i = 0; i < steps; i++) {
-          f.time += 1 / 60;
-          riverLive = river(f, 1 / 60, vw, vh);
+          f.time += dt;
+          riverLive = river(f, dt, vw, vh);
           weatherFor(f, riverLive, 0, 0);
-          if (!riverLive) ambient(f, 1 / 60, rand, vw, vh);
-          f.obstruct();
-          f.step(1 / 60);
+          if (f.bed) f.config.densityDissipation = base.densityDissipation * RIVER_FADE;
+          if (!riverLive) ambient(f, dt, rand, vw, vh);
+          f.obstruct(dt);
+          f.step(dt);
         }
       };
 
@@ -584,13 +660,22 @@ export function LiquidField() {
 
         const { strain, rate } = flowState();
         const q = Math.min(1, rate / 900);
-        kick = Math.max(0, kick - dt * 0.6);
+        if (f.bed) {
+          // In the bed every swell drains exponentially, a little slower than the ink fades, so
+          // its trace down the river only ever thins with distance (no lump, no closed contour).
+          const out = Math.exp(-dt * settle(f));
+          kick *= out;
+          failGlow *= out;
+          swell *= out;
+        } else {
+          kick = Math.max(0, kick - dt * 0.6);
+          failGlow = Math.max(0, failGlow - dt * 0.5);
+        }
         pulse += (kick - pulse) * Math.min(1, dt * 3);
-        failGlow = Math.max(0, failGlow - dt * 0.5);
         weatherFor(f, riverLive, strain, q);
         // A busier system turns over its ink faster, so more traffic reads as more current, not
         // more mud.
-        f.config.densityDissipation = base.densityDissipation * (1 + q * 0.9 + strain * 0.3);
+        f.config.densityDissipation = base.densityDissipation * (1 + q * 0.9 + strain * 0.3) * (f.bed ? RIVER_FADE : 1);
 
         while (queue.length) applyEvent(f, queue.shift()!, rand);
         riverLive = river(f, dt, vw, vh);
@@ -606,7 +691,9 @@ export function LiquidField() {
           const v = Math.min(4000, dist / Math.max(dt, 1 / 240));
           const n = Math.min(4, Math.max(1, Math.ceil(dist / 36)));
           const radius = (coarse ? 0.16 : 0.07) + Math.min(1, v / 2600) * (coarse ? 0.22 : 0.17);
-          const push = (coarse ? 0.15 : 0.11) * Math.min(1, 0.4 + v / 1600);
+          // Over the hero's river the cursor stirs more gently, so it ripples the current rather than
+          // tearing it into eddies (the bed heals a ripple in a moment).
+          const push = (coarse ? 0.15 : 0.11) * Math.min(1, 0.4 + v / 1600) * (f.bed ? 0.1 : 1);
           // A faint smoke of ink: enough to see the stroke, too little to draw contour lines of its own.
           const ink = Math.min(0.03, v * 0.000012) / n;
           for (let i = 0; i < n; i++) {
