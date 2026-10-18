@@ -36,6 +36,7 @@ const EVENT_NAMES: Record<string, string> = {
   "project:systemlab-live": "Systemlab demo",
   "project:systemlab-code": "Systemlab code",
   "sim:interact": "Played with the hero simulator",
+  "sim:demo": "Watched the simulator's demo",
   "command-menu": "Opened the command menu",
 };
 

@@ -139,6 +139,12 @@ the database near 600 unless the cache is on. It starts when the page is idle, p
 and in background tabs, and draws no request dots under reduced motion. Status colours appear only
 on its screen; failed requests are drawn as × marks so they read without colour. `diagnose()` writes the
 hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
+Left on screen untouched for 6 seconds, it plays a short demo once per page load (`lib/sim-demo.ts`):
+traffic climbs, app 2 dies, p99 spikes and the river turns cobalt, then it restarts and recovers in
+about 12 seconds, narrated in the status line. It scripts only the controls, so every number shown is
+still simulated. Any pointer, touch, focus or key on the device stops it and hands back the starting
+setup; it never plays under reduced motion, and it sends `sim:demo` (never `sim:interact`). Below 560px
+the device is compact: the same left-to-right diagram at about half the height.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`
 (installed Chrome, retina resolution), then update `width`/`height` in `lib/content.ts` if they changed.

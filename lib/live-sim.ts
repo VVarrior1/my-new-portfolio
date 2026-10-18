@@ -349,14 +349,15 @@ export class LiveSim {
   }
 }
 
-/** One plain-language line about the current state, for the hint under the controls. */
+/** One plain-language line about the current state, for the status line. Each fits two lines on a
+ * 360px phone (under about 80 characters). */
 export function diagnose(m: Metrics, config: SimConfig): string {
   const anyDown = m.serverUp.some((up) => !up);
   const upCount = m.serverUp.filter(Boolean).length;
   if (m.errorRate > 0.01) {
     const { down, app, db } = m.failuresAt;
     if (down >= app && down >= db) {
-      return "A server is down. Requests routed to it fail until the health check takes it out of rotation.";
+      return "A server is down. Requests sent to it fail until the health check drops it.";
     }
     if (db > app) {
       return config.cache
@@ -374,5 +375,5 @@ export function diagnose(m: Metrics, config: SimConfig): string {
   if (m.p99 > 150) return "No errors yet, but queues are building and the p99 is climbing.";
   if (anyDown) return "One server is down, and the others are absorbing its traffic.";
   if (config.rate < 300) return "Healthy. Push the traffic up and find the first bottleneck.";
-  return "Healthy at this load. Keep pushing, or kill a server and watch what happens.";
+  return "Healthy at this load. Keep pushing, or kill a server and watch.";
 }

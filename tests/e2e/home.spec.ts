@@ -32,6 +32,40 @@ test.describe("home page", () => {
     await expect(sim.getByRole("button", { name: /^Restart app \d$/ })).toBeVisible();
   });
 
+  test("left alone, the simulator breaks itself once, and a touch hands it back", async ({ page }) => {
+    test.setTimeout(45_000);
+    const events: string[] = [];
+    await page.route("**/api/analytics/track", async (route) => {
+      const body = JSON.parse(route.request().postData() ?? "{}");
+      if (body.type === "event") events.push(body.name);
+      await route.fulfill({ status: 204 });
+    });
+    await page.addInitScript(() => {
+      try {
+        sessionStorage.setItem("intro", "1");
+      } catch {}
+    });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
+    const hint = sim.locator("p[aria-live]");
+    // Nobody touches it: after the idle wait it narrates, kills a server, and offers the restart.
+    await expect(hint).toContainText("traffic is climbing", { timeout: 15_000 });
+    await expect(sim.getByRole("button", { name: /^Restart app 2$/ })).toBeVisible({ timeout: 6000 });
+    expect(events).toContain("sim:demo");
+    // A pointer on the device stops it and hands back the starting setup, with every server up.
+    await sim.hover();
+    await expect(hint).toContainText("Demo stopped");
+    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
+    await expect(sim.getByText("160 requests/s")).toBeVisible();
+    // It does not come back, and watching it was never counted as playing with it.
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(7000);
+    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
+    await expect(hint).not.toContainText("Watch:");
+    expect(events).not.toContain("sim:interact");
+  });
+
   test("opens the command menu with the keyboard and finds the résumé", async ({ page }) => {
     await page.goto("/");
     await page.keyboard.press("ControlOrMeta+k");
@@ -91,6 +125,20 @@ test.describe("other pages", () => {
 });
 
 test.describe("reduced motion", () => {
+  test("the simulator never runs its demo", async ({ page }) => {
+    test.setTimeout(30_000);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
+    await expect(sim.locator("p[aria-live]")).toContainText("Healthy");
+    await page.waitForTimeout(9000);
+    await expect(sim.locator("p[aria-live]")).toContainText("Healthy");
+    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
+    await expect(sim.getByText("160 requests/s")).toBeVisible();
+  });
+
+
   test("shows everything without waiting on an animation", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");

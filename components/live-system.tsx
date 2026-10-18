@@ -1,39 +1,42 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { Slider as SliderPrimitive } from "radix-ui";
 import { LiveSim, MAX_SERVERS, diagnose, type Finished, type Metrics, type SimConfig, type Stage } from "@/lib/live-sim";
 import { emitFlow, setFlowState, strainFrom } from "@/lib/flow-bus";
 import { publishReadout, stateFrom } from "@/lib/sim-readout";
+import { DEMO_CUES, DEMO_HANDOFF, DEMO_IDLE_MS, DEMO_MS, DEMO_VICTIM, demoCueAt, demoRate } from "@/lib/sim-demo";
 import { trackEvent } from "./site-analytics";
 
 // The hero simulator: a dark instrument floating on the liquid field. Its screen shows the system
-// (and is the only place status colours appear); the control deck under it holds the things you
-// press, in cobalt, the biggest of which breaks it. It also drives the field behind the page
-// (lib/flow-bus.ts): traffic sets the current, strain makes it turbulent, and a killed server
-// blooms the accent at the node, at the node's real position on screen.
+// (and is the only place status colours appear); the deck under it holds the things you press, in
+// cobalt the one that breaks it. It also drives the field behind the page (lib/flow-bus.ts):
+// traffic sets the current, strain makes it turbulent, and a killed server swells the cobalt thread.
+// Left alone on screen for a few seconds it breaks itself once (lib/sim-demo.ts), then recovers.
 
 const INITIAL: SimConfig = { rate: 160, servers: 2, cache: false };
 const MAX_RATE = 900;
 const DOTS_PER_SECOND = 36;
 const SEGMENT_MS = 240;
 const SLOW_MS = 150;
-/** Below this screen width the diagram flows top to bottom instead of left to right. */
-const VERTICAL_BELOW = 560;
+/** Phones get the compact device: the same diagram, left to right, at about half the height.
+ * The `compact:` variant in globals.css is the same query. */
+const COMPACT_QUERY = "(width < 560px)";
 /** The status line and the diagram share a fixed height, so a two-line status shrinks the diagram
- * a little instead of pushing the controls down under the pointer. Narrow screens stack the
- * diagram top to bottom, so they get a taller display. */
+ * a little instead of pushing the controls down under the pointer. */
 const DISPLAY_HEIGHT = 300;
-const DISPLAY_HEIGHT_VERTICAL = 400;
-/** Where requests enter the diagram, clear of the screen's rounded edge. */
-const ENTRY_X = 14;
+const DISPLAY_HEIGHT_COMPACT = 156;
+/** How much of the diagram must be on screen for the idle clock (and so the demo) to run. */
+const DEMO_VISIBLE = 0.6;
+/** How long the demo's last line (or the hand-off line) stays before the live status returns. */
+const AFTERWORD_MS = 2600;
 
 type Point = { x: number; y: number };
 type Size = { w: number; h: number };
 type Layout = {
   width: number;
   height: number;
-  vertical: boolean;
+  compact: boolean;
   node: Size;
   app: Size;
   entry: Point;
@@ -43,50 +46,28 @@ type Layout = {
   db: Point;
 };
 
-function computeLayout(width: number, measuredHeight: number, servers: number): Layout {
-  if (width < VERTICAL_BELOW) {
-    const height = Math.max(300, measuredHeight);
-    // The first row leaves room for the incoming wire and its label; the rest share the height.
-    const top = 64;
-    const step = (height - 36 - top) / 3;
-    const rows = [top, top + step, top + 2 * step, top + 3 * step];
-    const node = { w: Math.min(156, width - 48), h: 48 };
-    const gap = 8;
-    const appW = Math.min(132, Math.floor((width - 24 - (servers - 1) * gap) / servers));
-    const first = (width - (servers * appW + (servers - 1) * gap)) / 2 + appW / 2;
-    const mid = width / 2;
-    return {
-      width,
-      height,
-      vertical: true,
-      node,
-      app: { w: appW, h: node.h },
-      entry: { x: mid, y: 0 },
-      lb: { x: mid, y: rows[0] },
-      apps: Array.from({ length: servers }, (_, i) => ({ x: first + i * (appW + gap), y: rows[1] })),
-      cache: { x: mid, y: rows[2] },
-      db: { x: mid, y: rows[3] },
-    };
-  }
-
-  const height = Math.max(220, measuredHeight);
+/** One left-to-right diagram for every width: the nodes shrink before the wires do, so requests
+ * always have a visible stretch of wire, and app servers stack in the second column. */
+function computeLayout(width: number, measuredHeight: number, servers: number, compact: boolean): Layout {
+  const height = Math.max(compact ? 88 : 180, measuredHeight);
   const mid = height / 2;
-  const left = 52;
-  const right = 14;
-  // Nodes shrink before the edges do, so requests always have a visible stretch of wire.
-  const node = { w: Math.min(120, Math.floor((width - left - right - 3 * 36) / 4)), h: 52 };
-  const app = { w: node.w, h: servers >= 4 ? 46 : 52 };
-  const gap = (width - left - right - 4 * node.w) / 3;
-  const col = (i: number) => left + node.w / 2 + i * (node.w + gap);
-  // Spread the app servers over the screen: 2 sit well apart, 4 still leave a gap between boxes.
-  const pitch = servers > 1 ? Math.min(112, (height - 24 - app.h) / (servers - 1)) : 0;
+  const left = compact ? 14 : 28;
+  const right = compact ? 8 : 14;
+  const gapMin = compact ? 12 : width < 480 ? 18 : 28;
+  const w = Math.min(compact ? 88 : 128, Math.floor((width - left - right - 3 * gapMin) / 4));
+  const h = compact ? 38 : 64;
+  const space = compact ? 4 : 8;
+  const appH = Math.min(h, Math.floor((height - 12 - (servers - 1) * space) / servers));
+  const pitch = servers > 1 ? Math.min(compact ? 50 : 116, (height - 12 - appH) / (servers - 1)) : 0;
+  const gap = (width - left - right - 4 * w) / 3;
+  const col = (i: number) => left + w / 2 + i * (w + gap);
   return {
     width,
     height,
-    vertical: false,
-    node,
-    app,
-    entry: { x: ENTRY_X, y: mid },
+    compact,
+    node: { w, h },
+    app: { w, h: appH },
+    entry: { x: compact ? 4 : 10, y: mid },
     lb: { x: col(0), y: mid },
     apps: Array.from({ length: servers }, (_, i) => ({ x: col(1), y: mid + (i - (servers - 1) / 2) * pitch })),
     cache: { x: col(2), y: mid },
@@ -95,15 +76,14 @@ function computeLayout(width: number, measuredHeight: number, servers: number): 
 }
 
 /** Where an edge leaves a node, and where it enters the next one. */
-const exitOf = (l: Layout, p: Point, s: Size): Point => (l.vertical ? { x: p.x, y: p.y + s.h / 2 } : { x: p.x + s.w / 2, y: p.y });
-const entryOf = (l: Layout, p: Point, s: Size): Point => (l.vertical ? { x: p.x, y: p.y - s.h / 2 } : { x: p.x - s.w / 2, y: p.y });
+const exitOf = (p: Point, s: Size): Point => ({ x: p.x + s.w / 2, y: p.y });
+const entryOf = (p: Point, s: Size): Point => ({ x: p.x - s.w / 2, y: p.y });
 
 type Dot = { points: Point[]; born: number; ok: boolean; slow: boolean };
 
 function pathPoints(layout: Layout, f: Finished): Point[] {
-  const jitter = (Math.random() - 0.5) * 16;
-  const start = layout.vertical ? { x: layout.entry.x + jitter, y: 0 } : { x: layout.entry.x, y: layout.entry.y + jitter };
-  const points: Point[] = [start];
+  const jitter = (Math.random() - 0.5) * (layout.compact ? 10 : 16);
+  const points: Point[] = [{ x: layout.entry.x, y: layout.entry.y + jitter }];
   const at: Record<Stage, Point | undefined> = {
     lb: layout.lb,
     app: layout.apps[f.server] ?? layout.apps[0],
@@ -119,7 +99,7 @@ function pathPoints(layout: Layout, f: Finished): Point[] {
   return points;
 }
 
-function utilColor(util: number, up = true) {
+function loadColor(util: number, up = true) {
   if (!up || util > 0.95) return "var(--fail)";
   if (util > 0.85) return "var(--trace)";
   return "var(--screen-ink)";
@@ -129,21 +109,33 @@ function reading(ms: number): { value: string; unit: string } {
   return ms >= 1000 ? { value: (ms / 1000).toFixed(1), unit: "s" } : { value: String(Math.round(ms)), unit: "ms" };
 }
 
+type DemoPhase = "waiting" | "playing" | "done";
+
 export function LiveSystem() {
   const [config, setConfig] = useState<SimConfig>(INITIAL);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [size, setSize] = useState({ w: 600, h: DISPLAY_HEIGHT - 40 });
+  const [size, setSize] = useState({ w: 560, h: DISPLAY_HEIGHT - 48 });
+  const [compact, setCompact] = useState(false);
+  /** A line the status shows instead of the live diagnosis: the demo's narration, then its last word. */
+  const [narration, setNarration] = useState<string | null>(null);
+  const [demoOn, setDemoOn] = useState(false);
+  const figure = useRef<HTMLElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const sim = useRef<LiveSim | null>(null);
   const dots = useRef<Dot[]>([]);
   const visible = useRef(true);
+  const shown = useRef(0);
   const reduced = useRef(false);
   const touched = useRef(false);
+  const demo = useRef({ phase: "waiting" as DemoPhase, idle: 0, t: 0, cue: -1, rate: INITIAL.rate });
+  const afterword = useRef(0);
+  /** A tap that stops the demo on the kill key isn't also a kill: the key said "restart" under the finger. */
+  const swallowKillUntil = useRef(0);
   /** Requests finished (and failed) since load or reset, for the status strip above the name. */
   const totals = useRef({ requests: 0, errors: 0 });
 
-  const layout = useMemo(() => computeLayout(size.w, size.h, config.servers), [size, config.servers]);
+  const layout = useMemo(() => computeLayout(size.w, size.h, config.servers, compact), [size, config.servers, compact]);
   const layoutRef = useRef(layout);
   layoutRef.current = layout;
   const rateRef = useRef(config.rate);
@@ -159,24 +151,37 @@ export function LiveSystem() {
 
   if (sim.current === null) sim.current = new LiveSim(INITIAL, 7);
 
-  // Track the diagram's size so text renders at its real size.
+  // Track the diagram's size so text renders at its real size, and the phone layout's query.
   useEffect(() => {
     const element = box.current;
     if (!element) return;
     const observer = new ResizeObserver(([entry]) => {
-      const w = Math.max(280, Math.round(entry.contentRect.width));
+      const w = Math.max(260, Math.round(entry.contentRect.width));
       const h = Math.round(entry.contentRect.height);
       setSize((current) => (current.w === w && current.h === h ? current : { w, h }));
     });
     observer.observe(element);
-    return () => observer.disconnect();
+    const query = window.matchMedia(COMPACT_QUERY);
+    const onQuery = () => setCompact(query.matches);
+    onQuery();
+    query.addEventListener("change", onQuery);
+    return () => {
+      observer.disconnect();
+      query.removeEventListener("change", onQuery);
+    };
   }, []);
 
   // Only run while on screen and the tab is visible.
   useEffect(() => {
     const element = box.current;
     if (!element) return;
-    const io = new IntersectionObserver(([entry]) => (visible.current = entry.isIntersecting), { threshold: 0.05 });
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visible.current = entry.isIntersecting;
+        shown.current = entry.intersectionRatio;
+      },
+      { threshold: [0, 0.05, DEMO_VISIBLE, 1] },
+    );
     io.observe(element);
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     reduced.current = media.matches;
@@ -185,8 +190,112 @@ export function LiveSystem() {
     return () => {
       io.disconnect();
       media.removeEventListener("change", onMedia);
+      window.clearTimeout(afterword.current);
     };
   }, []);
+
+  /** Applies controls without counting a visitor (the demo uses this too). */
+  const applyConfig = useCallback((next: Partial<SimConfig>) => {
+    setConfig((current) => {
+      const merged = { ...current, ...next };
+      sim.current!.setConfig(merged);
+      return merged;
+    });
+  }, []);
+
+  const deviceRect = () => {
+    const r = figure.current?.getBoundingClientRect();
+    return r ? { top: r.top, bottom: r.bottom, left: r.left, right: r.right } : undefined;
+  };
+  const kill = (index: number) => {
+    sim.current!.killServer(index);
+    const at = toViewport(layout.apps[index] ?? layout.apps[0]);
+    if (at) emitFlow({ kind: "kill", ...at, device: deviceRect() });
+    setMetrics(sim.current!.metrics());
+  };
+  const restart = (index: number) => {
+    sim.current!.restartServer(index);
+    const at = toViewport(layout.apps[index] ?? layout.apps[0]);
+    if (at) emitFlow({ kind: "restart", ...at });
+    setMetrics(sim.current!.metrics());
+  };
+
+  const sayFor = (line: string | null, ms = AFTERWORD_MS) => {
+    window.clearTimeout(afterword.current);
+    setNarration(line);
+    if (line) afterword.current = window.setTimeout(() => setNarration(null), ms);
+  };
+
+  /** A fresh run at the starting controls. `keepTotals` leaves the status strip's counts running. */
+  const restore = (keepTotals: boolean) => {
+    sim.current = new LiveSim(INITIAL, 7);
+    dots.current = [];
+    if (!keepTotals) totals.current = { requests: 0, errors: 0 };
+    publishReadout({ state: "healthy", ...totals.current, p99: null });
+    setFlowState({ rate: INITIAL.rate, strain: 0 });
+    setConfig(INITIAL);
+    setMetrics(null);
+  };
+
+  /** The demo, one frame at a time, on the simulation's own clock (so it pauses with it). */
+  const tickDemo = (dt: number) => {
+    const d = demo.current;
+    if (d.phase === "done") return;
+    if (reduced.current) {
+      // Never under reduced motion; if it was switched on mid-demo, hand back a clean device.
+      if (d.phase === "playing") stopDemo(null);
+      d.phase = "done";
+      return;
+    }
+    if (d.phase === "waiting") {
+      if (shown.current < DEMO_VISIBLE) return;
+      d.idle += dt;
+      if (d.idle < DEMO_IDLE_MS) return;
+      d.phase = "playing";
+      d.t = 0;
+      d.cue = -1;
+      setDemoOn(true);
+      trackEvent("sim:demo");
+    }
+    d.t += dt;
+    const rate = demoRate(d.t);
+    if (rate !== d.rate) {
+      d.rate = rate;
+      applyConfig({ rate });
+    }
+    const cue = demoCueAt(d.t);
+    while (d.cue < cue) {
+      d.cue++;
+      const step = DEMO_CUES[d.cue];
+      window.clearTimeout(afterword.current);
+      setNarration(step.say);
+      if (step.action === "kill") kill(DEMO_VICTIM);
+      if (step.action === "restart") restart(DEMO_VICTIM);
+    }
+    if (d.t >= DEMO_MS) {
+      d.phase = "done";
+      setDemoOn(false);
+      sayFor(DEMO_CUES[DEMO_CUES.length - 1].say);
+    }
+  };
+  const tickDemoRef = useRef(tickDemo);
+  tickDemoRef.current = tickDemo;
+
+  /** Any pointer, touch, focus or key on the device: the demo never starts, or stops right here. */
+  const stopDemo = (event: React.SyntheticEvent | null) => {
+    const d = demo.current;
+    if (d.phase === "waiting") d.phase = "done";
+    if (d.phase !== "playing") return;
+    d.phase = "done";
+    const pointer = event && "pointerType" in event ? (event as React.PointerEvent) : null;
+    const onKill = event?.target instanceof Element && event.target.closest("[data-kill]");
+    if (onKill && pointer && (pointer.pointerType !== "mouse" || event!.type.startsWith("pointerdown")) && metrics?.serverUp.some((up) => !up)) {
+      swallowKillUntil.current = performance.now() + 1000;
+    }
+    setDemoOn(false);
+    restore(true);
+    sayFor(DEMO_HANDOFF, 3600);
+  };
 
   // Simulation + drawing loop. It starts once the page is idle so it never delays first paint.
   useEffect(() => {
@@ -211,16 +320,17 @@ export function LiveSystem() {
       frame = requestAnimationFrame(loop);
       const dt = Math.min(64, now - last);
       last = now;
-      const s = sim.current!;
       if (!visible.current || document.hidden) {
         if (!paused) {
           paused = true;
-          publishReadout({ state: "paused", ...totals.current, p99: s.metrics().p99 || null });
+          publishReadout({ state: "paused", ...totals.current, p99: sim.current!.metrics().p99 || null });
         }
         return;
       }
       paused = false;
 
+      tickDemoRef.current(dt);
+      const s = sim.current!;
       const finished = s.step(dt);
       let failedAt = -1;
       for (const f of finished) {
@@ -261,7 +371,7 @@ export function LiveSystem() {
         // The status strip ticks with the readouts, from the same metrics (once a second under reduced motion).
         if (!reduced.current || now - lastReadout > 1000) {
           lastReadout = now;
-          const state = stateFrom(m.errorRate, m.p99, m.serverUp.some((up) => !up));
+          const state = stateFrom(m.errorRate, m.p99, anyDown);
           publishReadout({ state, ...totals.current, p99: m.p99 || null });
         }
       }
@@ -269,7 +379,7 @@ export function LiveSystem() {
       const c = canvas.current;
       const ctx = c?.getContext("2d");
       if (!c || !ctx) return;
-      const { width: w, height: h } = layoutRef.current;
+      const { width: w, height: h, compact: small } = layoutRef.current;
       const dpr = window.devicePixelRatio || 1;
       if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
         c.width = Math.round(w * dpr);
@@ -278,6 +388,8 @@ export function LiveSystem() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       ctx.lineCap = "round";
+      const radius = small ? 2.2 : 2.6;
+      const arm = small ? 3 : 3.5;
 
       dots.current = dots.current.filter((dot) => {
         const segments = dot.points.length - 1;
@@ -296,17 +408,17 @@ export function LiveSystem() {
         if (dot.ok) {
           ctx.fillStyle = dot.slow ? colors.slow : colors.ok;
           ctx.beginPath();
-          ctx.arc(x, y, 2.6, 0, Math.PI * 2);
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
           ctx.fill();
         } else {
           // A failed request is an ×, so it reads without colour too.
           ctx.strokeStyle = colors.bad;
           ctx.lineWidth = 1.75;
           ctx.beginPath();
-          ctx.moveTo(x - 3.5, y - 3.5);
-          ctx.lineTo(x + 3.5, y + 3.5);
-          ctx.moveTo(x + 3.5, y - 3.5);
-          ctx.lineTo(x - 3.5, y + 3.5);
+          ctx.moveTo(x - arm, y - arm);
+          ctx.lineTo(x + arm, y + arm);
+          ctx.moveTo(x + arm, y - arm);
+          ctx.lineTo(x - arm, y + arm);
           ctx.stroke();
         }
         return true;
@@ -340,44 +452,31 @@ export function LiveSystem() {
     }
   };
 
-  const update = useCallback((next: Partial<SimConfig>) => {
+  const update = (next: Partial<SimConfig>) => {
     markTouched();
-    setConfig((current) => {
-      const merged = { ...current, ...next };
-      sim.current!.setConfig(merged);
-      return merged;
-    });
-  }, []);
+    sayFor(null);
+    applyConfig(next);
+  };
 
   const downIndex = metrics?.serverUp.findIndex((up) => !up) ?? -1;
   const down = downIndex >= 0;
   const toggleKill = () => {
-    markTouched();
-    if (down) {
-      sim.current!.restartServer(downIndex);
-      const at = toViewport(layout.apps[downIndex]);
-      if (at) emitFlow({ kind: "restart", ...at });
-    } else {
-      const victim = Math.floor(Math.random() * config.servers);
-      sim.current!.killServer(victim);
-      const at = toViewport(layout.apps[victim]);
-      const device = box.current?.closest("figure")?.getBoundingClientRect();
-      if (at) emitFlow({ kind: "kill", ...at, device: device ? { top: device.top, bottom: device.bottom, left: device.left, right: device.right } : undefined });
+    if (performance.now() < swallowKillUntil.current) {
+      swallowKillUntil.current = 0;
+      return;
     }
-    setMetrics(sim.current!.metrics());
+    markTouched();
+    sayFor(null);
+    if (down) restart(downIndex);
+    else kill(Math.floor(Math.random() * config.servers));
   };
 
   const reset = () => {
-    sim.current = new LiveSim(INITIAL, 7);
-    dots.current = [];
-    totals.current = { requests: 0, errors: 0 };
-    publishReadout({ state: "healthy", requests: 0, errors: 0, p99: null });
-    setFlowState({ rate: INITIAL.rate, strain: 0 });
-    setConfig(INITIAL);
-    setMetrics(null);
+    sayFor(null);
+    restore(false);
   };
 
-  const hint = metrics ? diagnose(metrics, config) : "Starting the simulation.";
+  const hint = narration ?? (metrics ? diagnose(metrics, config) : "Starting the simulation.");
   const status = !metrics
     ? "var(--screen-graphite)"
     : metrics.errorRate > 0.01
@@ -387,88 +486,88 @@ export function LiveSystem() {
         : "var(--screen-go)";
 
   const errorPct = metrics ? (metrics.errorRate * 100).toFixed(metrics.errorRate > 0 && metrics.errorRate < 0.1 ? 1 : 0) : null;
-  const readouts = [
+  const readouts: Array<{ label: string; value: string; unit: string; warn?: boolean; bad?: boolean }> = [
     { label: "p50", ...(metrics ? reading(metrics.p50) : { value: "–", unit: "" }) },
-    { label: "p99", ...(metrics ? reading(metrics.p99) : { value: "–", unit: "" }) },
+    { label: "p99", ...(metrics ? reading(metrics.p99) : { value: "–", unit: "" }), warn: (metrics?.p99 ?? 0) > 150 },
     { label: "served", value: metrics ? String(Math.round(metrics.throughput)) : "–", unit: metrics ? "/s" : "" },
     { label: "errors", value: errorPct ?? "–", unit: metrics ? "%" : "", bad: (metrics?.errorRate ?? 0) > 0.01 },
   ];
 
   const { node, app } = layout;
-  const narrowApps = app.w < 96;
-  const killLabel = down ? `restart app ${downIndex + 1}` : "kill a server";
+  const roomy = node.w >= 100;
+  const percent = (u: number) => `${Math.round(u * 100)}%${roomy ? " busy" : ""}`;
 
   return (
     <div>
-      <figure className="device p-2" aria-labelledby="live-system-title">
-        <figcaption className="flex items-center justify-between gap-4 pb-2 pl-3 pr-0.5 pt-0.5">
-          <p id="live-system-title" className="t-mono flex items-center gap-2 text-ink-2">
-            <span className="relative flex size-1.5" aria-hidden="true">
-              <span className="absolute inset-0 rounded-full motion-safe:animate-ping" style={{ background: status, opacity: 0.6 }} />
-              <span className="relative size-1.5 rounded-full" style={{ background: status }} />
-            </span>
-            a small system you can break
+      <figure
+        ref={figure}
+        className="device p-2 compact:p-1.5"
+        aria-labelledby="live-system-title"
+        onPointerOverCapture={stopDemo}
+        onPointerDownCapture={stopDemo}
+        onFocusCapture={stopDemo}
+        onKeyDownCapture={stopDemo}
+        onWheelCapture={stopDemo}
+      >
+        <figcaption className="flex items-center justify-between gap-3 pb-2 pl-3 pr-0.5 pt-0.5 compact:pb-1 compact:pl-2.5 compact:pt-0 compact:pr-0">
+          <p id="live-system-title" className="text-[0.9375rem] font-[550] leading-tight tracking-[-0.01em] text-ink compact:text-[0.875rem]">
+            A small system you can break
           </p>
-          <button type="button" onClick={reset} className="key key-sm">
+          <button type="button" onClick={reset} className="key key-sm compact:min-h-10 compact:px-3.5">
             reset
           </button>
         </figcaption>
 
         <div className="screen overflow-hidden">
           {/* Status and diagram share a fixed height (see DISPLAY_HEIGHT). */}
-          <div className="flex flex-col" style={{ height: layout.vertical ? DISPLAY_HEIGHT_VERTICAL : DISPLAY_HEIGHT }}>
-            <div className="flex shrink-0 items-start gap-2.5 border-b border-screen-line px-3.5 py-2.5">
-              <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full" style={{ background: status }} aria-hidden="true" />
-              <p className="t-mono text-[0.75rem] leading-[1.45] text-screen-ink" aria-live="polite">
+          <div className="flex flex-col" style={{ height: compact ? DISPLAY_HEIGHT_COMPACT : DISPLAY_HEIGHT }}>
+            <div className="flex shrink-0 items-start gap-2.5 border-b border-screen-line px-4 py-3 compact:gap-2 compact:px-3 compact:py-1.5">
+              <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full transition-colors" style={{ background: status }} aria-hidden="true" />
+              <p className="text-[0.875rem] leading-[1.4] text-screen-ink compact:text-[0.8125rem] compact:leading-[1.35]" aria-live="polite">
+                {demoOn && (
+                  <span className="t-mono mr-2 rounded-full border border-screen-line px-1.5 py-px align-[0.08em] text-[0.6875rem] leading-none text-screen-signal">
+                    demo
+                  </span>
+                )}
                 {hint}
               </p>
             </div>
 
-            <div ref={box} className="screen-dots relative min-h-0 flex-1">
+            <div ref={box} className="relative min-h-0 flex-1">
               <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
                 <g stroke="var(--screen-wire)" strokeWidth={1.5} fill="none">
-                  <Edge from={layout.entry} to={entryOf(layout, layout.lb, node)} dashed />
+                  <Edge from={layout.entry} to={entryOf(layout.lb, node)} dashed />
                   {layout.apps.map((point, i) => (
                     <g key={i}>
-                      <Edge from={exitOf(layout, layout.lb, node)} to={entryOf(layout, point, app)} />
-                      <Edge from={exitOf(layout, point, app)} to={entryOf(layout, layout.cache, node)} />
+                      <Edge from={exitOf(layout.lb, node)} to={entryOf(point, app)} />
+                      <Edge from={exitOf(point, app)} to={entryOf(layout.cache, node)} />
                     </g>
                   ))}
-                  <Edge from={exitOf(layout, layout.cache, node)} to={entryOf(layout, layout.db, node)} />
+                  <Edge from={exitOf(layout.cache, node)} to={entryOf(layout.db, node)} />
                 </g>
-                {/* The incoming rate, where requests enter. */}
-                <text
-                  x={layout.vertical ? layout.entry.x + 12 : layout.entry.x}
-                  y={layout.vertical ? 18 : layout.lb.y - node.h / 2 - 12}
-                  fontSize={12}
-                  className="font-mono"
-                  fill="var(--screen-graphite)"
-                >
-                  in · {config.rate}/s
-                </text>
               </svg>
-              {/* Requests travel on the canvas, between the edges and the nodes, so they pass under the boxes. */}
+              {/* Requests travel on the canvas, between the wires and the nodes, so they pass under the boxes. */}
               <canvas
                 ref={canvas}
                 className="pointer-events-none absolute inset-0"
                 style={{ width: layout.width, height: layout.height }}
                 aria-hidden="true"
               />
-              <svg width={layout.width} height={layout.height} className="absolute inset-0 font-mono" aria-hidden="true">
-                <Node at={layout.lb} size={node} title="balancer" detail="round robin" />
+              <svg width={layout.width} height={layout.height} className="absolute inset-0" aria-hidden="true">
+                <Node at={layout.lb} size={node} compact={compact} title="balancer" />
                 {layout.apps.map((point, i) => {
                   const up = metrics?.serverUp[i] ?? true;
                   const util = metrics?.appUtilization[i] ?? 0;
-                  const pct = `${Math.round(util * 100)}%`;
                   return (
                     <Node
                       key={i}
                       at={point}
                       size={app}
+                      compact={compact}
                       title={`app ${i + 1}`}
-                      detail={up ? (narrowApps ? pct : `${pct} busy`) : "down"}
-                      util={up ? util : 1}
-                      color={utilColor(util, up)}
+                      value={up ? percent(util) : "down"}
+                      load={up ? util : 0}
+                      color={loadColor(util, up)}
                       state={up ? "normal" : "down"}
                     />
                   );
@@ -476,17 +575,19 @@ export function LiveSystem() {
                 <Node
                   at={layout.cache}
                   size={node}
+                  compact={compact}
                   title="cache"
-                  detail={config.cache ? `${Math.round((metrics?.cacheHitRate ?? 0) * 100)}% hits` : "off"}
+                  value={config.cache ? `${Math.round((metrics?.cacheHitRate ?? 0) * 100)}% hits` : "off"}
                   state={config.cache ? "normal" : "off"}
                 />
                 <Node
                   at={layout.db}
                   size={node}
+                  compact={compact}
                   title="database"
-                  detail={`${Math.round((metrics?.dbUtilization ?? 0) * 100)}% busy`}
-                  util={metrics?.dbUtilization ?? 0}
-                  color={utilColor(metrics?.dbUtilization ?? 0)}
+                  value={percent(metrics?.dbUtilization ?? 0)}
+                  load={metrics?.dbUtilization ?? 0}
+                  color={loadColor(metrics?.dbUtilization ?? 0)}
                 />
               </svg>
             </div>
@@ -494,114 +595,103 @@ export function LiveSystem() {
 
           <dl className="grid grid-cols-4 border-t border-screen-line">
             {readouts.map((item, i) => (
-              <div key={item.label} className={`min-w-0 px-3 py-2.5 sm:px-3.5 ${i > 0 ? "border-l border-screen-line" : ""}`}>
-                <dt className="t-mono text-[0.75rem] text-screen-graphite">{item.label}</dt>
-                <dd className="mt-1 whitespace-nowrap font-mono text-[1.125rem] font-medium leading-none tabular-nums tracking-tight sm:text-[1.375rem]">
-                  <span className={item.bad ? "text-fail" : undefined}>{item.value}</span>
-                  {item.unit && <span className="ml-1 text-[0.75rem] font-normal tracking-normal text-screen-graphite">{item.unit}</span>}
+              <div key={item.label} className={`min-w-0 px-4 pb-3 pt-2.5 compact:px-2.5 compact:pb-2 compact:pt-1.5 ${i > 0 ? "border-l border-screen-line" : ""}`}>
+                <dt className="t-mono text-[0.75rem] leading-none text-screen-graphite compact:text-[0.6875rem]">{item.label}</dt>
+                <dd className="sim-num mt-1.5 whitespace-nowrap text-[1.75rem] leading-none compact:mt-1 compact:text-[1.1875rem]">
+                  <span className={item.bad ? "text-fail" : item.warn ? "text-trace" : undefined}>{item.value}</span>
+                  {item.unit && <span className="ml-0.5 text-[0.8125rem] font-medium tracking-normal text-screen-graphite compact:text-[0.6875rem]">{item.unit}</span>}
                 </dd>
               </div>
             ))}
           </dl>
         </div>
 
-        {/* The control deck. Phones: fader, then servers · cache · kill on one row. Wider: the kill key gets its own bay. */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-4 px-2.5 pb-2 pt-4 sm:gap-x-6">
-          <div className="col-span-2 min-w-0 sm:col-span-1">
-            <div className="t-mono flex items-baseline justify-between">
-              <span className="text-graphite" aria-hidden="true">
-                traffic
-              </span>
-              <span className="text-ink">
-                <span className="tabular-nums">{config.rate}</span> requests/s
-              </span>
-            </div>
+        {/* The deck: traffic on its fader, then servers and the cache, and the one key that breaks it. */}
+        <div className="px-2.5 pb-1.5 pt-3.5 compact:px-1.5 compact:pb-0.5 compact:pt-2">
+          <div className="flex items-center gap-4 compact:gap-3">
+            <span className="t-mono w-[7.75rem] shrink-0 whitespace-nowrap text-ink compact:w-[7rem] compact:text-[0.75rem]">
+              <span className="tabular-nums">{config.rate}</span> <span className="text-graphite">requests/s</span>
+            </span>
             <Fader value={config.rate} onChange={(rate) => update({ rate })} />
           </div>
 
-          <div className="col-start-1 flex min-w-0 flex-wrap items-end gap-x-4 gap-y-4 self-start sm:row-start-2 sm:gap-x-6">
-            <div>
-              <span id="servers-label" className="t-mono mb-1.5 block text-graphite">
-                app servers
-              </span>
-              <div className="flex items-center gap-1.5" role="group" aria-labelledby="servers-label">
-                <button
-                  type="button"
-                  aria-label="Remove a server"
-                  disabled={config.servers <= 1}
-                  onClick={() => update({ servers: config.servers - 1 })}
-                  className="key key-icon h-10 min-h-10 w-10 text-lg"
-                >
-                  −
-                </button>
-                <span className="w-7 text-center font-mono text-[1.0625rem] font-medium tabular-nums" aria-live="polite">
-                  {config.servers}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Add a server"
-                  disabled={config.servers >= MAX_SERVERS}
-                  onClick={() => update({ servers: config.servers + 1 })}
-                  className="key key-icon h-10 min-h-10 w-10 text-lg"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <span id="cache-label" className="t-mono mb-1.5 block text-graphite">
-                cache
-              </span>
-              {/* A latching rocker: pressed in while the cache is on, with an ink dot as its lamp. */}
+          <div className="mt-3 flex items-center gap-2 compact:mt-1.5 compact:gap-1.5">
+            <div className="flex items-center" role="group" aria-label="App servers">
               <button
                 type="button"
-                role="switch"
-                aria-checked={config.cache}
-                aria-labelledby="cache-label"
-                data-latched={config.cache}
-                onClick={() => update({ cache: !config.cache })}
-                className="key h-10 min-h-10 w-[5rem] justify-between px-3 sm:w-[5.75rem]"
+                aria-label="Remove a server"
+                disabled={config.servers <= 1}
+                onClick={() => update({ servers: config.servers - 1 })}
+                className="key key-icon size-10 min-h-10 text-lg"
               >
-                <span
-                  className="size-1.5 rounded-full transition-colors"
-                  style={{ background: config.cache ? "var(--ink)" : "var(--rule-strong)" }}
-                  aria-hidden="true"
-                />
-                <span className="font-mono text-[0.8125rem] font-medium">{config.cache ? "on" : "off"}</span>
+                −
+              </button>
+              <span className="min-w-[4.75rem] text-center text-[0.875rem] compact:min-w-[3.25rem] compact:text-[0.8125rem]" aria-live="polite">
+                <span className="font-mono font-medium tabular-nums text-ink">{config.servers}</span>{" "}
+                <span className="text-graphite">
+                  <span className="compact:hidden">{config.servers === 1 ? "server" : "servers"}</span>
+                  <span className="hidden compact:inline">{config.servers === 1 ? "app" : "apps"}</span>
+                </span>
+              </span>
+              <button
+                type="button"
+                aria-label="Add a server"
+                disabled={config.servers >= MAX_SERVERS}
+                onClick={() => update({ servers: config.servers + 1 })}
+                className="key key-icon size-10 min-h-10 text-lg"
+              >
+                +
               </button>
             </div>
-          </div>
 
-          {/* The signature: a cobalt button, labelled on the panel the way hardware is. */}
-          <div className="col-start-2 row-start-2 flex flex-col items-end justify-start gap-1.5 sm:row-span-2 sm:row-start-1 sm:w-[9.5rem] sm:items-center sm:justify-center sm:gap-2.5 sm:border-l sm:border-rule sm:pl-6">
+            {/* A latching rocker: pressed in while the cache is on, with an ink dot as its lamp. */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={config.cache}
+              aria-label="Cache"
+              data-latched={config.cache}
+              onClick={() => update({ cache: !config.cache })}
+              className="key h-10 min-h-10 gap-2 px-3.5 text-[0.875rem] font-medium compact:px-3 compact:text-[0.8125rem]"
+            >
+              <span
+                className="size-1.5 rounded-full transition-colors"
+                style={{ background: config.cache ? "var(--ink)" : "var(--rule-strong)" }}
+                aria-hidden="true"
+              />
+              cache
+              <span className="text-graphite compact:hidden" aria-hidden="true">
+                {config.cache ? "on" : "off"}
+              </span>
+            </button>
+
+            {/* The invitation: the one cobalt key on the deck. */}
             <button
               type="button"
               onClick={toggleKill}
               aria-label={down ? `Restart app ${downIndex + 1}` : "Kill a server"}
               data-latched={down}
-              className="key key-signal size-14 min-h-0 rounded-full p-0 sm:size-[4.75rem]"
+              data-kill
+              className="key key-signal ml-auto h-11 min-h-11 gap-2 px-5 text-[0.9375rem] compact:h-10 compact:min-h-10 compact:px-4 compact:text-[0.875rem]"
             >
               {down ? <RestartGlyph /> : <PowerGlyph />}
+              <span className="compact:hidden">{down ? `Restart app ${downIndex + 1}` : "Kill a server"}</span>
+              <span className="hidden compact:inline">{down ? "Restart" : "Kill"}</span>
             </button>
-            <span className="t-mono whitespace-nowrap text-ink max-sm:order-first" aria-hidden="true">
-              <span className="sm:hidden">{down ? "restart" : "kill"}</span>
-              <span className="max-sm:hidden">{killLabel}</span>
-            </span>
           </div>
         </div>
       </figure>
-      <p className="mt-3 px-1 text-[0.9375rem] leading-snug text-graphite">
+      <p className="mt-3 px-1 text-[0.9375rem] leading-snug text-graphite compact:text-[0.875rem]">
         Every request is simulated in your browser by a seeded event engine, the idea behind Systemlab.
       </p>
     </div>
   );
 }
 
-/** Kill: a power symbol, 22px, in the key's ink. */
+/** Kill: a power symbol, in the key's ink. */
 function PowerGlyph() {
   return (
-    <svg viewBox="0 0 24 24" className="size-[18px] sm:size-[22px]" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" aria-hidden="true">
       <path d="M12 3v8" />
       <path d="M6.4 6.6a8 8 0 1 0 11.2 0" />
     </svg>
@@ -611,7 +701,7 @@ function PowerGlyph() {
 /** Restart: a circular arrow. */
 function RestartGlyph() {
   return (
-    <svg viewBox="0 0 24 24" className="size-[18px] sm:size-[22px]" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 12a8 8 0 1 1-2.6-5.9" />
       <path d="M20 4v4.5h-4.5" />
     </svg>
@@ -622,7 +712,7 @@ function RestartGlyph() {
 function Fader({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   return (
     <SliderPrimitive.Root
-      className="relative mt-2 flex h-7 w-full touch-none select-none items-center"
+      className="relative flex h-10 min-w-0 flex-1 touch-none select-none items-center"
       min={0}
       max={MAX_RATE}
       step={10}
@@ -632,11 +722,6 @@ function Fader({ value, onChange }: { value: number; onChange: (value: number) =
       <SliderPrimitive.Track className="relative h-1 grow overflow-hidden rounded-full bg-rule-strong">
         <SliderPrimitive.Range className="absolute h-full rounded-full bg-ink" />
       </SliderPrimitive.Track>
-      <span aria-hidden="true" className="pointer-events-none absolute inset-x-[14px] top-[calc(50%+7px)] flex justify-between">
-        {Array.from({ length: 10 }, (_, i) => (
-          <span key={i} className={`w-px bg-rule-strong ${i % 3 === 0 ? "h-1.5" : "h-1"}`} />
-        ))}
-      </span>
       <SliderPrimitive.Thumb aria-label="Traffic, in requests per second" className="fader-cap focus-visible:outline-offset-4" />
     </SliderPrimitive.Root>
   );
@@ -646,56 +731,88 @@ function Edge({ from, to, dashed = false }: { from: Point; to: Point; dashed?: b
   return <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} strokeDasharray={dashed ? "3 4" : undefined} />;
 }
 
+/** A box in the diagram: its name, one value, and its load as a level rising inside it. */
 function Node({
   at,
   size,
+  compact,
   title,
-  detail,
-  util,
+  value,
+  load,
   color = "var(--screen-ink)",
   state = "normal",
 }: {
   at: Point;
   size: Size;
+  compact: boolean;
   title: string;
-  detail: string;
-  util?: number;
+  value?: string;
+  load?: number;
   color?: string;
   state?: "normal" | "off" | "down";
 }) {
+  const clip = `node-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const x = at.x - size.w / 2;
   const y = at.y - size.h / 2;
-  const pad = size.w < 104 ? 8 : 10;
+  const small = compact || size.w < 92;
+  const pad = small ? 8 : 12;
   const muted = state === "off";
-  const hasTrack = util !== undefined;
-  // Without a track, the two lines sit in the middle of the box.
-  const titleY = y + (hasTrack ? Math.round(size.h * 0.36) : size.h / 2 - 3);
-  const lineGap = size.h < 50 ? 14 : 15;
+  const titleSize = small ? 12 : 14;
+  const valueSize = small ? 11 : 12.5;
+  const stacked = value !== undefined && size.h >= 34;
+  // A short box (four servers on a phone) keeps its name and drops the number; the level still shows the load.
+  const valueBeside = value !== undefined && !stacked && size.w >= 84;
+  const titleY = stacked ? at.y - (small ? 2 : 4) : at.y + titleSize * 0.36;
+  const valueY = at.y + (small ? 11 : 14);
+  const level = Math.max(0, Math.min(1, load ?? 0));
+  const alpha = color === "var(--screen-ink)" ? 0.11 : 0.3;
   return (
     <g>
+      <clipPath id={clip}>
+        <rect x={x} y={y} width={size.w} height={size.h} rx={10} />
+      </clipPath>
       {/* Opaque, so requests pass under the box instead of over its label. */}
-      <rect x={x} y={y} width={size.w} height={size.h} rx={8} fill="var(--screen)" />
+      <rect x={x} y={y} width={size.w} height={size.h} rx={10} fill="var(--screen)" />
+      {!muted && <rect x={x} y={y} width={size.w} height={size.h} rx={10} fill="var(--screen-fill)" />}
+      {load !== undefined && (
+        <g clipPath={`url(#${clip})`}>
+          <g className="sim-level" style={{ transform: `translateY(${((1 - level) * size.h).toFixed(1)}px)` }}>
+            <rect x={x} y={y} width={size.w} height={size.h} fill={color} fillOpacity={alpha} />
+          </g>
+        </g>
+      )}
       <rect
         x={x + 0.5}
         y={y + 0.5}
         width={size.w - 1}
         height={size.h - 1}
-        rx={8}
-        fill={muted ? "none" : "var(--screen-fill)"}
+        rx={9.5}
+        fill="none"
         stroke={state === "down" ? "var(--fail)" : "var(--screen-outline)"}
         strokeDasharray={state === "normal" ? undefined : "4 3"}
       />
-      <text x={x + pad} y={titleY} fontSize={13} fontWeight={500} fill={muted ? "var(--screen-graphite)" : "var(--screen-ink)"}>
+      <text
+        x={value === undefined ? at.x : x + pad}
+        y={titleY}
+        textAnchor={value === undefined ? "middle" : "start"}
+        fontSize={titleSize}
+        fontWeight={550}
+        letterSpacing="-0.01em"
+        fill={muted ? "var(--screen-graphite)" : "var(--screen-ink)"}
+      >
         {title}
       </text>
-      <text x={x + pad} y={titleY + lineGap} fontSize={12} fill={state === "down" ? "var(--fail)" : "var(--screen-graphite)"}>
-        {detail}
-      </text>
-      {hasTrack && (
-        <>
-          <rect x={x + pad} y={y + size.h - (size.h < 50 ? 9 : 11)} width={size.w - pad * 2} height={3} rx={1.5} fill="var(--screen-track)" />
-          <rect x={x + pad} y={y + size.h - (size.h < 50 ? 9 : 11)} width={Math.max(0, (size.w - pad * 2) * Math.min(1, util))} height={3} rx={1.5} fill={color} />
-        </>
+      {(stacked || valueBeside) && (
+        <text
+          x={stacked ? x + pad : x + size.w - pad}
+          y={stacked ? valueY : titleY}
+          textAnchor={stacked ? "start" : "end"}
+          fontSize={valueSize}
+          className="font-mono"
+          fill={state === "down" ? "var(--fail)" : "var(--screen-graphite)"}
+        >
+          {value}
+        </text>
       )}
     </g>
   );

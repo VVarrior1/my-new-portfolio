@@ -99,7 +99,11 @@ Design and the token comments at the top of `app/globals.css`.
 - The name is never printed twice in one viewport: the header wordmark waits on `/` until the h1
   scrolls out (on laptops it is assembled, letter by letter, by the name's own flight).
 - The simulator's status line and diagram share a fixed height (`DISPLAY_HEIGHT`) so controls
-  never move under the pointer, and the diagram flows top to bottom below 560px.
+  never move under the pointer. The diagram always flows left to right; below 560px (the `compact:`
+  variant) the device is about half height, so status lines (`diagnose()`, the demo's cues) stay
+  under ~80 characters to fit two lines at 360px. The self-running demo (`lib/sim-demo.ts`) must
+  stay once per load, idle-gated, cancelled by any touch on the device, off under reduced motion,
+  and must never fire `sim:interact`.
 - shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
   `globals.css`, not per-component colors. cmdk separators inside the list break ARIA, so don't add them.
   Object classes live in `@layer components` so Tailwind utilities can still override them; keep
