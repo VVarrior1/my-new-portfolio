@@ -40,42 +40,66 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 
 ## Design
 
-"Liquid": the page is a stack of sheets floating on a pool of real fluid. A GPU fluid simulation
-(`lib/fluid.ts`, adapted from Pavel Dobryakov's MIT-licensed WebGL-Fluid-Simulation) runs on one
-fixed canvas behind everything (`components/liquid-field.tsx`). The hero and the contact section
-are transparent windows onto it, and every other section is an opaque, rounded sheet inset by a
-thin rail, so the liquid also shows in the channels between them. It is ink on paper in the light
-theme and lit smoke on near-black in the dark one, and it can only paint the neutrals and the one
-accent, cobalt (`--signal`).
+"Liquid Signal": the home page floats on a pool of real fluid, and one request travels down it.
+
+**The liquid.** A GPU fluid simulation (`lib/fluid.ts`, adapted from Pavel Dobryakov's
+MIT-licensed WebGL-Fluid-Simulation) runs on one fixed canvas behind the whole page
+(`components/liquid-field.tsx`). There are no opaque sheets: the page is transparent over it, and
+the display shader holds the dye back behind every block of text (`data-liquid-protect`, up to 16
+boxes), so words sit on clean water while the liquid moves in the margins and between blocks. It is
+ink in water in the light theme and lit smoke on near-black in the dark one. Its dye channels are
+meanings: neutral, cobalt (`--signal`) and failure. A tone curve with a floor keeps a busy system
+from silting up into a grey or indigo wash; cobalt is drawn mostly on the dye's edges, as
+filaments, and a hairline drafting grid shows only where the ink is.
 
 The hero simulator drives it through `lib/flow-bus.ts`: incoming traffic is a current flowing
-into the device, strain (latency, errors, a dead server) makes it turbulent and tints it cobalt,
-and killing a server blooms cobalt out of the device at that node. The pointer stirs it,
-scrolling drags a wake off the sheets' edges (`data-liquid-edge`), and the theme toggle drops
-ink into it while the new theme floods out of the button as an ink blot (View Transitions,
-`blotPath` in `lib/theme.ts`). The fluid holds back behind the hero's text and the contact block
-(`data-liquid-protect`), so words always sit on clean water.
+into the device, strain makes it turbulent and threads it with cobalt, and killing a server
+blooms cobalt out of the device. The pointer stirs it, screenshots drag a wake as they scroll
+(`data-liquid-edge`), and the theme toggle drops ink into it while the new theme floods out of
+the button as an ink blot (View Transitions, `blotPath` in `lib/theme.ts`).
 
-Below the fold, `components/motion-root.tsx` adds inertial scrolling (Lenis, loaded after
-hydration) and reveals: section titles rise out of their own clip, rows rise in, and project
-screenshots and the portrait open with the same ink blot as the theme switch (`data-reveal`).
-Buttons are pills that pour full of ink (or cobalt) from the bottom on a spring. Reveals hide
-content only after `html[data-motion="on"]` is set, so without JavaScript or under
-`prefers-reduced-motion` everything is simply there; reduced motion also turns Lenis off and
-renders the liquid as one still frame.
+**The spine** (`components/choreo.tsx`). A wire leaves the simulator, runs out to the frame's
+left edge and down the page to the contact keys. A packet rides it at the middle of the screen,
+inking the wire behind it and lighting a station at every section; its tag reads
+`GET /work · 66 ms` from the simulator's live p99. It trails dye into the liquid while you
+scroll, a comet tail that streams back up the page and curls when you stop. If you broke the
+simulator, the packet turns red, reads `503`, and its tail is the fail colour; at the contact
+section it is delivered (`200`) beside "Email me".
 
-The field starts once the page has loaded and gone idle, caps the pixel ratio (1.5 desktop, 1.25
-touch), pauses in background tabs, and runs at half rate when only the rails are in view. Without
-WebGL the windows show the plain pool colour. On an M2 Pro it holds 60 fps at 1440×900 (2160×1350
-canvas) with about 0.1 ms of main-thread time a frame.
+**The rail** (`components/hud.tsx`, after getartcraft.com/apps). On laptops a ruler runs down the
+right edge: a 1% tick tape slides past a cobalt needle with a rolling percent readout, ticks near
+the needle stretch with scroll speed, and each section start is a cobalt mark. Each section's
+name is split into letters: upcoming names wait at the bottom right, the next stands on deck up
+the rail, and as its section reaches the top the letters peel off (last first) and fly in arcs
+to the top-right corner, turning upright; the previous name shrinks into the pile above. A
+half-finished flight settles once you stop scrolling. Hover the rail and it zooms out into a map
+of the page (the words glide to their sections, a bracket marks the screen); click or drag to
+travel. The maths is in `lib/hud-math.ts`.
 
-Type is Instrument Sans (variable; set tight and large for the name and section titles) with
-Instrument Serif italic as a second voice for one or two words, and JetBrains Mono for dates,
-stacks, numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--pool`, `--ink`,
-`--ink-2`, `--graphite`, `--rule`, `--signal`, `--screen`, `--fluid-*`…) exposed to Tailwind as
-`bg-paper`, `text-graphite` and so on. The object classes (`.sheet`, `.device`, `.screen`, `.key`,
-`.key-signal`, `.key-ink`, `.keycap`, `.stage`, `.spec`, `.stat-row`, `.pour-row`, `.sep-list`)
-are in `app/globals.css`.
+**Sections** open on a sticky eyebrow bar (`01 / WORK`, mono, frosted) inside one framed column
+with hairlines down both sides. Projects pair a screenshot that opens like a window as it rises
+with a two-voice name, a hairline grid of figures that count up, the hard part, mono tags and
+links; the smaller projects and the toolkits sit on hairline card grids with cobalt number chips
+and fills that slide in from the side the pointer entered. Experience pins its timeline strip
+and lights the role you're reading. The personal line runs as two marquee rows (Archivo caps and
+Instrument Serif italic) in opposite directions, faster while you scroll. Poster lines are
+revealed by a cobalt bar that sweeps across and pulls away (`data-reveal="wipe"`).
+
+**Progressive enhancement.** Everything is in the HTML and readable without JavaScript. Reveals
+hide content only under `html[data-motion="on"]`. Under `prefers-reduced-motion` the page is a
+finished drawing: Lenis off, the liquid one still frame, the wire fully inked, the packet
+delivered, the marquee replaced by the plain list, no rail. The rail only mounts on a fine pointer
+at 1024px and up; elsewhere each section shows its name large. The liquid starts once the page
+has loaded and gone idle, caps the pixel ratio (1.5 desktop, 1.25 touch) and pauses in background
+tabs; every loop pauses when hidden. Without WebGL the page shows the plain pool colour.
+
+Type is Instrument Sans (text and the name) with Instrument Serif italic as a second voice,
+Archivo (variable, wide caps) for the rail's words, section words, the marquee and big figures,
+and JetBrains Mono for data and HUD labels. Colors are CSS variables on `:root` (`--pool`,
+`--ink`, `--graphite`, `--rule`, `--wire`, `--signal`, `--screen`, `--fluid-*`…) exposed to
+Tailwind as `bg-pool`, `text-graphite` and so on; the object classes (`.frame`, `.eyebrow`,
+`.station`, `.packet`, `.hud-*`, `.marquee`, `.project`, `.stat-grid`, `.lineup`, `.tag-mono`,
+`.chip`, `.device`, `.key`, `.spec`) are in `app/globals.css`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
 command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,

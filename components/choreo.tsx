@@ -108,15 +108,26 @@ export function Choreo() {
      * packet slides along it instead of jumping.
      */
     const SIDE = 0.55;
+    const CATCH = 700;
     const arcFor = (scrollY: number) => {
-      const target = scrollY + window.innerHeight * 0.5;
-      const u = target - originY;
+      const vh = window.innerHeight;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+      // The delivery point sits low on the last screen; over the last screen of scroll the packet
+      // drifts down from the middle so it arrives exactly when the page bottoms out.
+      const short = Math.max(0, path[path.length - 1].y + main.offsetTop - (maxScroll + vh * 0.5));
+      const ramp = clamp01((scrollY - (maxScroll - vh)) / vh);
+      const target = scrollY + vh * 0.5 + short * ramp;
+      const u = target - main.offsetTop - originY;
       if (u <= 0) return 0;
       const drop = lengths[1];
       if (u <= drop) return u;
       const side = lengths[2] - lengths[1];
       if (u <= drop + side * SIDE) return drop + (u - drop) / SIDE;
-      return Math.min(total, lengths[2] + (u - drop - side * SIDE));
+      // Back on the vertical, it runs a little faster than the page until it has caught up with the
+      // middle of the screen again (over CATCH px of scroll), then rides there.
+      const v = u - drop - side * SIDE;
+      const lag = side * SIDE;
+      return Math.min(total, lengths[2] + Math.min(v * (1 + lag / CATCH), v + lag));
     };
 
     // ---- Health -------------------------------------------------------------------------------

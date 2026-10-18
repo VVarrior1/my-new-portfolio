@@ -469,7 +469,11 @@ body {
   }
   @media (max-width: 400px) {
     .key {
-      padding: 0 1.05rem;
+      padding: 0 0.9rem;
+    }
+    .key.key-icon {
+      width: 2.75rem;
+      padding: 0;
     }
   }
   .key-sm {
@@ -1335,7 +1339,7 @@ html[data-choreo="on"] .spine-svg[data-placed] .spine-wire {
   animation: packet-fail 900ms ease-in-out infinite alternate;
 }
 .packet[data-state="failing"] .packet-tag [data-method] {
-  fill: var(--fail);
+  fill: var(--destructive);
 }
 @keyframes packet-fail {
   to {
@@ -1623,7 +1627,7 @@ html[data-choreo="on"] .spine-svg[data-placed] .spine-wire {
   }
   .offclock-list {
     position: static;
-    width: auto;
+    width: min(var(--frame), 100% - 2 * var(--gutter));
     height: auto;
     overflow: visible;
     clip-path: none;
@@ -1997,13 +2001,17 @@ html[data-choreo="on"] .spine-svg[data-placed] .spine-wire {
   }
 }
 @media (min-width: 1024px) {
-  /* Starts below the pile of section names in the top-right corner. */
+  /* Sits low, beside the keys, so it never runs under the pile of names in the top-right corner. */
   .contact-card {
-    display: block;
-    padding-top: 7.5rem;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    align-items: end;
+    gap: 1.5rem;
   }
-  .contact-card .spec {
-    margin-top: 1.5rem;
+}
+@media (min-width: 1280px) {
+  .contact-card {
+    grid-template-columns: 13.5rem minmax(0, 1fr);
+    gap: 2rem;
   }
 }
 .chapter-contact {
@@ -2068,6 +2076,30 @@ html:has(.liquid-field) body {
 }
 
 /* The contact spec sits in a narrow column beside the portrait on phones, so its values may wrap. */
-.contact-card .spec dd {
-  white-space: normal;
+@media (max-width: 1279px) {
+  .contact-card .spec dd {
+    white-space: normal;
+  }
+}
+/* A station inside the content (the delivery point beside the contact keys) reaches back to the
+   frame's edge. */
+.station-inset {
+  left: calc(-1 * var(--inset) - 6px);
+  top: calc(50% - 6px);
+}
+/* On delivery the wire branches across to the key. */
+.delivery-branch {
+  position: absolute;
+  left: calc(-1 * var(--inset));
+  top: 50%;
+  width: var(--inset);
+  height: 1px;
+  background: var(--wire-lit);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 600ms var(--ease-out);
+  pointer-events: none;
+}
+.station-inset[data-lit] + .delivery-branch {
+  transform: none;
 }

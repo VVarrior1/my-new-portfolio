@@ -427,27 +427,30 @@ export default async function Home() {
           </Section>
 
           {/* Contact: where the packet is delivered. */}
-          <Section id="contact" index="05" title="Contact" station="end" className="chapter-contact">
-            <div className="grid gap-x-12 gap-y-12 lg:grid-cols-12">
-              <div className="min-w-0 lg:col-span-8" data-liquid-protect="0.94">
-                <p className="t-poster" data-reveal="wipe">
-                  <span>
-                    Hiring for <span className="t-serif">2027?</span>
-                  </span>
-                </p>
-                <p className="measure mt-8 text-[1.1875rem] leading-relaxed text-ink-2 sm:text-[1.375rem]" data-reveal="rise">
+          <Section id="contact" index="05" title="Contact" className="chapter-contact">
+            <p className="t-poster" data-reveal="wipe" data-liquid-protect="0.94">
+              <span>
+                Hiring for <span className="t-serif">2027?</span>
+              </span>
+            </p>
+            <div className="mt-12 grid gap-x-12 gap-y-12 sm:mt-16 lg:grid-cols-12 lg:items-end">
+              <div className="min-w-0 lg:col-span-7" data-liquid-protect="0.94">
+                <p className="measure text-[1.1875rem] leading-relaxed text-ink-2 sm:text-[1.375rem]" data-reveal="rise">
                   I&apos;m looking for a full-time software engineering role starting January 2027, in Calgary, remote, or somewhere I can move to.{" "}
                   {profile.workAuth}
                 </p>
                 <a
                   href={`mailto:${profile.email}`}
                   data-track="email"
-                  className="email-link mt-10 block text-[clamp(1.25rem,4.6vw,3.25rem)] font-semibold leading-[1.1] tracking-[-0.035em] text-ink"
+                  className="email-link mt-10 block text-[clamp(1.25rem,4.2vw,3rem)] font-semibold leading-[1.1] tracking-[-0.035em] text-ink"
                 >
                   {profile.email.split("@")[0]}
                   <wbr />@{profile.email.split("@")[1]}
                 </a>
-                <div className="mt-9 flex flex-wrap gap-2.5">
+                <div className="relative mt-9 flex flex-wrap gap-2.5">
+                  {/* The end of the wire: the packet is delivered beside the key that sends the email. */}
+                  <span aria-hidden="true" className="station station-inset" data-station="end" data-route="/contact" />
+                  <span aria-hidden="true" className="delivery-branch" />
                   <a href={`mailto:${profile.email}`} className="key key-signal terminal" data-track="email" data-terminal>
                     Email me
                   </a>
@@ -462,7 +465,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="contact-card lg:col-span-4" data-reveal="rise">
+              <div className="contact-card lg:col-span-5" data-reveal="rise">
                 <div className="portrait relative aspect-[4/5] w-full overflow-hidden rounded-[1rem] bg-paper-raised" data-reveal="blot" data-origin="center">
                   {/* Head and shoulders at 4:5. */}
                   <Image
@@ -470,7 +473,7 @@ export default async function Home() {
                     width={1200}
                     height={1500}
                     alt="Abdelrahman Mohamed smiling outdoors in the snow"
-                    sizes="(min-width: 1024px) 340px, (min-width: 640px) 176px, 104px"
+                    sizes="(min-width: 1024px) 220px, (min-width: 640px) 176px, 104px"
                     className="absolute inset-0 size-full object-cover object-top"
                   />
                 </div>
@@ -487,7 +490,7 @@ export default async function Home() {
           </Section>
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter framed />
     </>
   );
 }

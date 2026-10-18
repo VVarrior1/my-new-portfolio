@@ -2,12 +2,16 @@ import Link from "next/link";
 import { RESUME_PATH, profile } from "@/lib/content";
 import { SoundToggle } from "./sound-toggle";
 
-export function SiteFooter() {
+/** `framed`: lines up with the home page's frame instead of the wider content column. */
+export function SiteFooter({ framed = false }: { framed?: boolean }) {
   const year = new Date().getFullYear();
 
   return (
     <footer className="mt-auto border-t border-rule">
-      <div className="t-mono mx-auto flex max-w-[88rem] flex-col gap-5 px-4 py-10 text-graphite sm:flex-row sm:items-center sm:justify-between sm:px-8" data-liquid-protect="0.9">
+      <div
+        className={`t-mono flex flex-col gap-5 py-10 text-graphite sm:flex-row sm:items-center sm:justify-between ${framed ? "wrap" : "mx-auto max-w-[88rem] px-4 sm:px-8"}`}
+        data-liquid-protect="0.9"
+      >
         <p>
           <span className="text-ink-2">
             © {year} {profile.name}

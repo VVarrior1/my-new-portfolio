@@ -13,7 +13,6 @@ export function Section({
   meta,
   className = "",
   children,
-  station,
 }: {
   id: string;
   index: string;
@@ -21,12 +20,10 @@ export function Section({
   meta?: ReactNode;
   className?: string;
   children: ReactNode;
-  /** "end" for the last section, where the packet is delivered. */
-  station?: "end";
 }) {
   return (
     <section id={id} aria-labelledby={`${id}-title`} className={`chapter scroll-mt-16 ${className}`} data-hud={title}>
-      <span aria-hidden="true" className="station" data-station={station ?? ""} data-route={`/${id}`} />
+      <span aria-hidden="true" className="station" data-station="" data-route={`/${id}`} />
       <div className="eyebrow">
         <h2 id={`${id}-title`} className="eyebrow-title">
           <span className="eyebrow-index" aria-hidden="true">

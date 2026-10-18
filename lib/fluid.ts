@@ -216,12 +216,12 @@ void main () {
   float gx = texture2D(uTexture, vR).g - texture2D(uTexture, vL).g;
   float gy = texture2D(uTexture, vT).g - texture2D(uTexture, vB).g;
   float edge = smoothstep(0.004, 0.03, length(vec2(gx, gy)));
-  float core = smoothstep(0.1, 0.6, c.g);
-  float a = clamp(core * 0.5 + edge * smoothstep(0.05, 0.25, c.g) * 0.45, 0.0, 1.0) * guard;
+  float core = smoothstep(0.06, 0.5, c.g);
+  float a = clamp(core * 0.55 + edge * smoothstep(0.04, 0.2, c.g) * 0.6, 0.0, 1.0) * guard;
   float f = smoothstep(0.04, 0.45, c.b) * mix(1.0, guard, 0.6);
   vec3 col = mix(uBg, uNeutral, n * uNeutralMax);
   col = mix(col, uAccent, a * uAccentMax);
-  col = mix(col, uFail, f * 0.9);
+  col = mix(col, uFail, f * 0.75);
   if (uGrid > 0.0) {
     float cell = 32.0 * uDpr;
     vec2 m = mod(px, cell);

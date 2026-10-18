@@ -169,7 +169,7 @@ export function LiquidField() {
         const angle = Math.atan2(ty - yy, Math.max(0.2, tx - x)) * 0.6 + (rand() - 0.5) * strain * 0.6;
         const speed = (260 + q * 640) * (0.85 + rand() * 0.3);
         const ink = (0.045 + q * 0.045) * (dt * 60);
-        f.splat(x + 0.015, yy, Math.cos(angle) * speed, Math.sin(angle) * speed, ink * (1 - strain * 0.25), ink * strain * 0.22, 0.2 + q * 0.12);
+        f.splat(x + 0.015, yy, Math.cos(angle) * speed, Math.sin(angle) * speed, ink * (1 - strain * 0.25), ink * strain * 0.3, 0.2 + q * 0.12);
       }
       // A strained system boils near the device: accent rising through the current.
       if (strain > 0.25 && rand() < strain * dt * 6) {
