@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { emitFlow } from "@/lib/flow-bus";
+import { clamp01, easeInOutCubic, flipProgress, letterProgress, quad } from "@/lib/hud-math";
 import { getLenis, onFrame, scrollToTarget, type Frame } from "@/lib/ticker";
 
 // The HUD: the page's scroll signature, after getartcraft.com/apps.
@@ -46,8 +47,7 @@ type Entry = {
   prev: Array<{ x: number; y: number }>;
 };
 
-const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const ease = easeInOutCubic;
 
 function measure(word: string, font: string) {
   const probe = document.createElement("span");
@@ -235,7 +235,7 @@ function HudLayer() {
         // 1. Flip progress per entry.
         for (const e of entries) {
           const top = e.anchor.getBoundingClientRect().top;
-          e.flipP = e.queued ? clamp01((0.12 * vh + 200 - top) / 200) : clamp01((0.3 * vh + 170 - top) / 170);
+          e.flipP = flipProgress(top, vh, e.queued);
         }
         // Project names leave the stack when the next section arrives.
         for (const e of entries) {
@@ -277,9 +277,7 @@ function HudLayer() {
           const sourceRects = e.source ? e.source.map((el) => el.getBoundingClientRect()) : null;
           for (let k = 0; k < n; k++) {
             const el = e.letters[k];
-            const order = n - 1 - k;
-            const t = clamp01(e.flipP * (1 + (n - 1) * STAGGER) - order * STAGGER);
-            const d = ease(t);
+            const d = ease(letterProgress(e.flipP, k, n, STAGGER));
             // Where the letter docks.
             const cx = right - (e.total - e.cum[k] - e.adv[k] / 2) * SIZE * s.scale;
             const p1 = { x: cx + e.detach * 60, y: s.y, rot: 0, scale: s.scale, alpha: s.alpha };
@@ -301,9 +299,7 @@ function HudLayer() {
               };
             }
             const c = { x: (p0.x + p1.x) / 2 - (sourceRects ? 0 : 90 + k * 6), y: (p0.y + p1.y) / 2 - (sourceRects ? 120 : 0) };
-            const u = 1 - d;
-            const x = u * u * p0.x + 2 * u * d * c.x + d * d * p1.x;
-            const y = u * u * p0.y + 2 * u * d * c.y + d * d * p1.y;
+            const { x, y } = quad(p0, c, p1, d);
             const rot = p0.rot + (p1.rot - p0.rot) * d + Math.sin(Math.PI * d) * e.tumble[k];
             const scale = p0.scale + (p1.scale - p0.scale) * d;
             let alpha = p0.alpha + (p1.alpha - p0.alpha) * d;

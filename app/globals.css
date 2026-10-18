@@ -2042,7 +2042,8 @@ html[data-intro] .intro {
   animation: intro-gone 1ms linear 1900ms forwards;
 }
 @keyframes intro-gone {
-  to {
+  0%,
+  100% {
     visibility: hidden;
   }
 }

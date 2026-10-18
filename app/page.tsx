@@ -3,12 +3,11 @@ import Link from "next/link";
 import { GithubMark, LinkedinMark } from "@/components/brand-icons";
 import { Choreo } from "@/components/choreo";
 import { CopyEmail } from "@/components/copy-email";
-import { Cursor } from "@/components/cursor";
 import { DotList } from "@/components/dot-list";
-import { Hud } from "@/components/hud";
 import { Intro } from "@/components/intro";
 import { LiquidField } from "@/components/liquid-field";
 import { LiveSystem } from "@/components/live-system";
+import { PageFx } from "@/components/page-fx";
 import { ProjectShot } from "@/components/project-shot";
 import { Count, Letters, Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
@@ -91,8 +90,7 @@ export default async function Home() {
       <Intro />
       <SiteHeader overlay />
       <LiquidField />
-      <Hud />
-      <Cursor />
+      <PageFx />
       <Choreo />
       <main id="main" className="relative">
         <Spine />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Fluid, MAX_CALM, type FluidColors, type FluidConfig, type Palette } from "@/lib/fluid";
+import type { Fluid, FluidColors, FluidConfig, Palette } from "@/lib/fluid";
 import { flowState, onFlow, type FlowEvent } from "@/lib/flow-bus";
 import { onFrame, type Frame } from "@/lib/ticker";
 
@@ -134,7 +134,7 @@ export function LiquidField() {
         const r = el.getBoundingClientRect();
         if (r.bottom < -40 || r.top > vh + 40 || r.width === 0) continue;
         calm.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom, strength: parseFloat(el.dataset.calm || "") || 0.9 });
-        if (calm.length >= MAX_CALM) break;
+        if (calm.length >= 8) break; // MAX_CALM in lib/fluid.ts
       }
       f.calm = calm;
       const bands: Fluid["bands"] = [];
@@ -364,7 +364,10 @@ export function LiquidField() {
     let lastY = window.scrollY;
     let bend = 0;
 
-    const start = () => {
+    const start = async () => {
+      if (disposed) return;
+      // The engine (and its shaders) is its own chunk, fetched once the page is idle.
+      const { Fluid } = await import("@/lib/fluid");
       if (disposed) return;
       try {
         fluid = Fluid.create(canvas, coarse ? MOBILE : DESKTOP, readColors());
@@ -508,8 +511,8 @@ export function LiquidField() {
           if (!plane.texture || !plane.img) continue;
           const r = plane.img.getBoundingClientRect();
           if (r.bottom < -80 || r.top > vh + 80 || r.width === 0) continue;
-          if (!plane.revealing && r.top < vh * 0.88) plane.revealing = true;
-          if (plane.revealing) plane.reveal = Math.min(1, plane.reveal + dt / 1.5);
+          if (!plane.revealing && r.top < vh * 0.98) plane.revealing = true;
+          if (plane.revealing) plane.reveal = Math.min(1, plane.reveal + dt / 1.1);
           const inside = pointer.has && pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
           plane.hover += ((inside ? 1 : 0) - plane.hover) * (1 - Math.exp(-6 * dt));
           const radius = parseFloat(getComputedStyle(plane.img).borderTopLeftRadius) || 0;
@@ -534,8 +537,8 @@ export function LiquidField() {
     };
 
     const idle = () => {
-      if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(start, { timeout: 900 });
-      else setTimeout(start, 200);
+      if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(() => void start(), { timeout: 900 });
+      else setTimeout(() => void start(), 200);
     };
     if (document.readyState === "complete") idle();
     else window.addEventListener("load", idle, { once: true });
