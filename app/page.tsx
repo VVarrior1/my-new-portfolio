@@ -161,10 +161,6 @@ export default async function Home() {
               <LiveSystem />
             </div>
           </div>
-          <p className="scroll-cue t-mono" aria-hidden="true" data-calm="0.97">
-            <span className="scroll-cue-line" />
-            Scroll
-          </p>
           <Station route="/" role="origin" className="spine-origin" />
         </section>
 
