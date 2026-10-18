@@ -131,19 +131,22 @@ command (⌘K menu), slider (the simulator's fader is built on its Radix primiti
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
 
-**The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is a dark
-instrument (`.device`) floating on the liquid. It is a seeded
+**The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is an
+instrument (`.device`) floating on the liquid: a pale body around a dark screen in light, all dark in
+dark. It is a seeded
 discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
 Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
 the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
 and in background tabs, and draws no request dots under reduced motion. Status colours appear only
 on its screen; failed requests are drawn as × marks so they read without colour. `diagnose()` writes the
 hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
-Left on screen untouched for 6 seconds, it plays a short demo once per page load (`lib/sim-demo.ts`):
-traffic climbs, app 2 dies, p99 spikes and the river turns cobalt, then it restarts and recovers in
-about 12 seconds, narrated in the status line. It scripts only the controls, so every number shown is
-still simulated. Any pointer, touch, focus or key on the device stops it and hands back the starting
-setup; it never plays under reduced motion, and it sends `sim:demo` (never `sim:interact`). Below 560px
+Left alone for 6 seconds with all of it on screen, it plays a short demo once per page load
+(`lib/sim-demo.ts`): traffic climbs, app 2 dies, p99 spikes and the river turns cobalt, then it
+restarts and recovers in about 14 seconds, narrated in five lines of about three seconds each. It
+scripts only the controls, so every number shown is still simulated. A pointer passing over, a wheel
+or a finger scrolling the page only restarts the 6 second wait; a press, a tap, focus or a key calls it
+off, or, mid-demo, hands back the starting setup with every server up. It never plays under reduced
+motion, and it sends `sim:demo` (never `sim:interact`). Below 560px
 the device is compact: the same left-to-right diagram at about half the height.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`

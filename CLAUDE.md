@@ -102,8 +102,10 @@ Design and the token comments at the top of `app/globals.css`.
   never move under the pointer. The diagram always flows left to right; below 560px (the `compact:`
   variant) the device is about half height, so status lines (`diagnose()`, the demo's cues) stay
   under ~80 characters to fit two lines at 360px. The self-running demo (`lib/sim-demo.ts`) must
-  stay once per load, idle-gated, cancelled by any touch on the device, off under reduced motion,
-  and must never fire `sim:interact`.
+  stay once per load, idle-gated (hover, wheel and touch-scrolls restart the wait; a press, tap,
+  focus or key cancels it), off under reduced motion, and must never fire `sim:interact`. Each cue
+  stays up at least 2.5 s. In light the device is a pale body around the dark screen; status colours
+  stay on the screen.
 - shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
   `globals.css`, not per-component colors. cmdk separators inside the list break ARIA, so don't add them.
   Object classes live in `@layer components` so Tailwind utilities can still override them; keep

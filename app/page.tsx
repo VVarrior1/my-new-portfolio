@@ -157,7 +157,7 @@ export default async function Home() {
               </div>
             </div>
 
-            <div id="play" className="fade-up min-w-0 scroll-mt-20 lg:col-span-6 lg:self-center" style={{ ["--d" as string]: "260ms" }} data-calm="0.8">
+            <div id="play" className="fade-up min-w-0 scroll-mt-20 lg:col-span-6 lg:mr-7 lg:self-center" style={{ ["--d" as string]: "260ms" }} data-calm="0.8">
               <LiveSystem />
             </div>
           </div>

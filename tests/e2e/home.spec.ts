@@ -49,12 +49,19 @@ test.describe("home page", () => {
     await page.goto("/");
     const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
     const hint = sim.locator("p[aria-live]");
-    // Nobody touches it: after the idle wait it narrates, kills a server, and offers the restart.
-    await expect(hint).toContainText("traffic is climbing", { timeout: 15_000 });
+    // A pointer that only passes over the device restarts the wait; it doesn't call the demo off.
+    await page.waitForTimeout(2500);
+    await sim.hover();
+    await page.mouse.move(5, 5);
+    // Nobody presses anything: after the idle wait it narrates, kills a server, and offers the restart.
+    await expect(hint).toContainText("Traffic climbs", { timeout: 15_000 });
     await expect(sim.getByRole("button", { name: /^Restart app 2$/ })).toBeVisible({ timeout: 6000 });
     expect(events).toContain("sim:demo");
-    // A pointer on the device stops it and hands back the starting setup, with every server up.
+    // Hovering doesn't stop it either; a press does, and hands back the starting setup, every server up.
     await sim.hover();
+    await page.waitForTimeout(400);
+    await expect(hint).not.toContainText("Demo stopped");
+    await sim.getByText("A small system you can break").click();
     await expect(hint).toContainText("Demo stopped");
     await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
     await expect(sim.getByText("160 requests/s")).toBeVisible();
@@ -62,7 +69,7 @@ test.describe("home page", () => {
     await page.mouse.move(5, 5);
     await page.waitForTimeout(7000);
     await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
-    await expect(hint).not.toContainText("Watch:");
+    await expect(hint).not.toContainText("Traffic climbs");
     expect(events).not.toContain("sim:interact");
   });
 

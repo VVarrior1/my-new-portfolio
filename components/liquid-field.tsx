@@ -273,7 +273,7 @@ export function LiquidField() {
     let phase = 0;
     /** How fast a swell in the bed's river may drain, per second: under the rate the ink itself
      * fades. Ink poured in at a rate that falls faster than that leaves a lump downstream. */
-    const settle = (f: Fluid) => 0.8 * f.config.densityDissipation;
+    const settle = (f: Fluid) => 0.9 * f.config.densityDissipation;
     /** The traffic the river carries, eased toward the simulator's rate over about a second: a
      * sudden jump in the current at the mouth rolls the river's front into curls. */
     let carried = -1;
@@ -350,7 +350,10 @@ export function LiquidField() {
         // stays hidden under the device instead of sitting at its corner.
         const [x, y] = uv(path[0][0] + (path[1][0] - path[0][0]) * 0.75, path[0][1] + (path[1][1] - path[0][1]) * 0.75);
         f.ink(x, y, ink * (1 + swell), 0, 0.06);
-        f.ink(x, y, 0, (0.12 + q * 0.18 + strained * 0.08 + failGlow * 0.15 + pulse * 0.7) * k * 0.6, 0.024);
+        // A kill's swell is lighter here than in the open pool: the bed may only drain it as fast as
+        // the ink fades, so a smaller swell is what lets the river read calm again soon after the
+        // server is back.
+        f.ink(x, y, 0, (0.12 + q * 0.18 + strained * 0.08 + failGlow * 0.15 + pulse * 0.45) * k * 0.6, 0.024);
       } else {
         f.bed = null;
         for (const side of [0.22, 0.78]) {

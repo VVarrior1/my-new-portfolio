@@ -431,6 +431,9 @@ function HudLayer() {
       // they step aside (fade) until it has scrolled past.
       const avoidEls = Array.from(document.querySelectorAll<HTMLElement>("[data-hud-avoid]"));
       let yieldP = 0;
+      // The hero's simulator sits beside the docked stack: its frost narrows so it never dims the
+      // device's keys (it still covers the names, which sit well right of the device).
+      const play = document.getElementById("play");
       const mapFrost = rail.querySelector<HTMLElement>("[data-mapfrost]")!;
       let lastPct = -1;
       let needleShown = -1;
@@ -635,6 +638,16 @@ function HudLayer() {
           if (topP > 0) tint(poolTop.current, bands);
         }
         if (poolBottom.current) {
+          let width = 200;
+          if (play) {
+            const r = play.getBoundingClientRect();
+            const vw = window.innerWidth;
+            const poolTop = window.innerHeight - poolBottom.current.offsetHeight;
+            // How far the device reaches into the frost, eased out as it scrolls up past its top.
+            const over = Math.min(1, Math.max(0, (r.bottom - poolTop) / 120)) * (r.right > vw - 200 ? 1 : 0);
+            width = Math.round(200 - (200 - Math.max(140, vw - r.right + 8)) * over);
+          }
+          if (poolBottom.current.style.width !== `${width}px`) poolBottom.current.style.width = `${width}px`;
           const queued = entries.some((e) => e.queued && e.flipP < 1);
           poolBottom.current.style.opacity = queued ? (1 - zoom).toFixed(3) : "0";
           if (queued) tint(poolBottom.current, bands);

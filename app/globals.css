@@ -62,7 +62,7 @@
   --signal: #2a46ff;
   --signal-ink: #ffffff;
   --signal-text: #2a46ff;
-  /* The simulator is a dark instrument in both themes. */
+  /* The simulator's screen is dark in both themes (its body is light in light, see .device). */
   --screen: #0d0e11;
   --screen-raised: #16171b;
   --screen-ink: #eceef2;
@@ -100,7 +100,7 @@
   --fluid-accent-x: #5470ff;
   --fluid-shading-x: 0.5;
   --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
-  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 40px 80px -40px rgb(14 15 18 / 0.55), 0 12px 24px -16px rgb(14 15 18 / 0.35);
+  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 0 0 1px rgb(14 15 18 / 0.07), 0 40px 80px -44px rgb(14 15 18 / 0.42), 0 12px 24px -16px rgb(14 15 18 / 0.22);
   --scrim: rgb(14 15 18 / 0.42);
   /* Motion. A spring for things with weight, and an expo-out for things that glide. */
   --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
@@ -650,18 +650,39 @@ body {
   }
 
   /* ------------------------------------------------------------------
-     The device: the simulator, a dark instrument floating on the fluid in
-     both themes. Inside it the page tokens are re-pointed at the screen's,
-     so keys, labels and hairlines follow without per-element colours.
+     The device: the simulator, an instrument floating on the fluid. In
+     light it is a pale body around a dark screen, its keys in the page's
+     own colours; in dark the body is the screen's black, and inside it the
+     page tokens are re-pointed at the screen's, so keys, labels and
+     hairlines follow without per-element colours.
      ------------------------------------------------------------------ */
   .device {
     position: relative;
     border-radius: 1.5rem;
-    background: color-mix(in srgb, var(--screen) 90%, transparent);
-    color: var(--screen-ink);
+    background: color-mix(in srgb, var(--paper-raised) 86%, transparent);
+    color: var(--ink);
     box-shadow: var(--device-shadow);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
+  }
+  /* In dark the body is the screen's own black, so the whole instrument is one dark object. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .device {
+      background: color-mix(in srgb, var(--screen) 90%, transparent);
+      color: var(--screen-ink);
+      --ink: var(--screen-ink);
+      --ink-2: var(--screen-ink);
+      --graphite: var(--screen-graphite);
+      --rule: var(--screen-line);
+      --rule-strong: var(--screen-outline);
+      --paper: var(--screen);
+      --key-face: var(--screen-raised);
+      --signal-text: var(--screen-signal);
+    }
+  }
+  :root[data-theme="dark"] .device {
+    background: color-mix(in srgb, var(--screen) 90%, transparent);
+    color: var(--screen-ink);
     --ink: var(--screen-ink);
     --ink-2: var(--screen-ink);
     --graphite: var(--screen-graphite);
@@ -670,6 +691,27 @@ body {
     --paper: var(--screen);
     --key-face: var(--screen-raised);
     --signal-text: var(--screen-signal);
+  }
+  /* A latching key (the cache): lit, filled with ink, while it is on. */
+  .key-latch[data-latched="true"] {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    --graphite: color-mix(in srgb, var(--paper) 70%, transparent);
+    --pour: var(--ink);
+    --pour-ink: var(--paper);
+  }
+  /* The demo's tag on the status line. */
+  .sim-tag {
+    display: inline-block;
+    padding: 0.2em 0.5em;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--screen-signal) 22%, transparent);
+    color: var(--screen-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: 0.1em;
   }
 
   /* The contact block's portrait plate and the dark screens. */

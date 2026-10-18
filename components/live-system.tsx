@@ -8,11 +8,14 @@ import { publishReadout, stateFrom } from "@/lib/sim-readout";
 import { DEMO_CUES, DEMO_HANDOFF, DEMO_IDLE_MS, DEMO_MS, DEMO_VICTIM, demoCueAt, demoRate } from "@/lib/sim-demo";
 import { trackEvent } from "./site-analytics";
 
-// The hero simulator: a dark instrument floating on the liquid field. Its screen shows the system
+// The hero simulator: an instrument floating on the liquid field (a pale body around a dark screen in
+// light, all dark in dark). Its screen shows the system
 // (and is the only place status colours appear); the deck under it holds the things you press, in
 // cobalt the one that breaks it. It also drives the field behind the page (lib/flow-bus.ts):
 // traffic sets the current, strain makes it turbulent, and a killed server swells the cobalt thread.
-// Left alone on screen for a few seconds it breaks itself once (lib/sim-demo.ts), then recovers.
+// Left alone on screen for a few seconds it breaks itself once (lib/sim-demo.ts), then recovers. A
+// pointer passing over or a finger scrolling the page only restarts that wait; a press, a tap, focus
+// or a key calls the demo off, or hands the visitor a fresh device if it is playing.
 
 const INITIAL: SimConfig = { rate: 160, servers: 2, cache: false };
 const MAX_RATE = 900;
@@ -24,10 +27,13 @@ const SLOW_MS = 150;
 const COMPACT_QUERY = "(width < 560px)";
 /** The status line and the diagram share a fixed height, so a two-line status shrinks the diagram
  * a little instead of pushing the controls down under the pointer. */
-const DISPLAY_HEIGHT = 300;
+const DISPLAY_HEIGHT = 276;
 const DISPLAY_HEIGHT_COMPACT = 156;
-/** How much of the diagram must be on screen for the idle clock (and so the demo) to run. */
-const DEMO_VISIBLE = 0.6;
+/** How much of the device must be on screen for the idle clock (and so the demo) to run: all of it,
+ * deck included, so the visitor sees the kill key the demo is about. */
+const DEMO_VISIBLE = 0.9;
+/** A touch that moves less than this is a tap; more, and it is the page scrolling under a finger. */
+const TAP_SLOP = 10;
 /** How long the demo's last line (or the hand-off line) stays before the live status returns. */
 const AFTERWORD_MS = 2600;
 
@@ -53,12 +59,12 @@ function computeLayout(width: number, measuredHeight: number, servers: number, c
   const mid = height / 2;
   const left = compact ? 14 : 28;
   const right = compact ? 8 : 14;
-  const gapMin = compact ? 12 : width < 480 ? 18 : 28;
-  const w = Math.min(compact ? 88 : 128, Math.floor((width - left - right - 3 * gapMin) / 4));
-  const h = compact ? 38 : 64;
+  const gapMin = compact ? 12 : width < 480 ? 18 : 26;
+  const w = Math.min(compact ? 88 : 132, Math.floor((width - left - right - 3 * gapMin) / 4));
+  const h = compact ? 42 : 72;
   const space = compact ? 4 : 8;
   const appH = Math.min(h, Math.floor((height - 12 - (servers - 1) * space) / servers));
-  const pitch = servers > 1 ? Math.min(compact ? 50 : 116, (height - 12 - appH) / (servers - 1)) : 0;
+  const pitch = servers > 1 ? Math.min(compact ? 54 : 124, (height - 12 - appH) / (servers - 1)) : 0;
   const gap = (width - left - right - 4 * w) / 3;
   const col = (i: number) => left + w / 2 + i * (w + gap);
   return {
@@ -125,7 +131,10 @@ export function LiveSystem() {
   const sim = useRef<LiveSim | null>(null);
   const dots = useRef<Dot[]>([]);
   const visible = useRef(true);
+  /** How much of the whole device is on screen (the demo waits for all of it). */
   const shown = useRef(0);
+  /** A touch that has gone down on the device: a tap if it comes up where it started. */
+  const press = useRef<{ id: number; x: number; y: number } | null>(null);
   const reduced = useRef(false);
   const touched = useRef(false);
   const demo = useRef({ phase: "waiting" as DemoPhase, idle: 0, t: 0, cue: -1, rate: INITIAL.rate });
@@ -174,15 +183,19 @@ export function LiveSystem() {
   // Only run while on screen and the tab is visible.
   useEffect(() => {
     const element = box.current;
-    if (!element) return;
+    const device = figure.current;
+    if (!element || !device) return;
     const io = new IntersectionObserver(
-      ([entry]) => {
-        visible.current = entry.isIntersecting;
-        shown.current = entry.intersectionRatio;
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.target === element) visible.current = entry.isIntersecting;
+          else shown.current = entry.intersectionRatio;
+        }
       },
-      { threshold: [0, 0.05, DEMO_VISIBLE, 1] },
+      { threshold: [0, 0.05, 0.6, DEMO_VISIBLE, 1] },
     );
     io.observe(element);
+    io.observe(device);
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     reduced.current = media.matches;
     const onMedia = () => (reduced.current = media.matches);
@@ -243,7 +256,7 @@ export function LiveSystem() {
     if (d.phase === "done") return;
     if (reduced.current) {
       // Never under reduced motion; if it was switched on mid-demo, hand back a clean device.
-      if (d.phase === "playing") stopDemo(null);
+      if (d.phase === "playing") takeOver(null);
       d.phase = "done";
       return;
     }
@@ -281,20 +294,45 @@ export function LiveSystem() {
   const tickDemoRef = useRef(tickDemo);
   tickDemoRef.current = tickDemo;
 
-  /** Any pointer, touch, focus or key on the device: the demo never starts, or stops right here. */
-  const stopDemo = (event: React.SyntheticEvent | null) => {
+  /** The visitor takes over mid-demo: a fresh device at the starting setup, every server up. */
+  const takeOver = (event: React.SyntheticEvent | null) => {
     const d = demo.current;
-    if (d.phase === "waiting") d.phase = "done";
     if (d.phase !== "playing") return;
     d.phase = "done";
-    const pointer = event && "pointerType" in event ? (event as React.PointerEvent) : null;
+    // A press on the kill key while it read "Restart" isn't also a kill once every server is back:
+    // a click follows the pointer or key that stopped the demo, and a key reached by Tab was
+    // announced as "Restart", so an Enter straight after means restart, not kill.
     const onKill = event?.target instanceof Element && event.target.closest("[data-kill]");
-    if (onKill && pointer && (pointer.pointerType !== "mouse" || event!.type.startsWith("pointerdown")) && metrics?.serverUp.some((up) => !up)) {
+    if (onKill && metrics?.serverUp.some((up) => !up)) {
       swallowKillUntil.current = performance.now() + 1000;
     }
     setDemoOn(false);
     restore(true);
     sayFor(DEMO_HANDOFF, 3600);
+  };
+
+  /** A real press, a tap, focus or a key: the demo never starts, or stops right here. */
+  const engage = (event: React.SyntheticEvent | null) => {
+    const d = demo.current;
+    if (d.phase === "waiting") d.phase = "done";
+    else takeOver(event);
+  };
+  /** A pointer passing over, a wheel or a finger scrolling the page only restarts the idle clock:
+   * the demo waits for the device to be left alone, it isn't called off by a near miss. */
+  const stir = () => {
+    if (demo.current.phase === "waiting") demo.current.idle = 0;
+  };
+  const onPointerDown = (event: React.PointerEvent) => {
+    stir();
+    // A touch might be the start of a scroll: it counts once it comes up as a tap.
+    if (event.pointerType === "touch") press.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    else engage(event);
+  };
+  const onPointerUp = (event: React.PointerEvent) => {
+    const start = press.current;
+    press.current = null;
+    if (event.pointerType !== "touch" || !start || start.id !== event.pointerId) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < TAP_SLOP) engage(event);
   };
 
   // Simulation + drawing loop. It starts once the page is idle so it never delays first paint.
@@ -453,6 +491,8 @@ export function LiveSystem() {
   };
 
   const update = (next: Partial<SimConfig>) => {
+    // A control moved under a finger (the fader takes a touch at once) is the visitor's now.
+    takeOver(null);
     markTouched();
     sayFor(null);
     applyConfig(next);
@@ -461,6 +501,8 @@ export function LiveSystem() {
   const downIndex = metrics?.serverUp.findIndex((up) => !up) ?? -1;
   const down = downIndex >= 0;
   const toggleKill = () => {
+    // A click with no press or key before it (assistive tech) while the demo runs: the hand-off alone.
+    if (demo.current.phase === "playing") return takeOver(null);
     if (performance.now() < swallowKillUntil.current) {
       swallowKillUntil.current = 0;
       return;
@@ -472,6 +514,7 @@ export function LiveSystem() {
   };
 
   const reset = () => {
+    takeOver(null);
     sayFor(null);
     restore(false);
   };
@@ -487,7 +530,7 @@ export function LiveSystem() {
 
   const errorPct = metrics ? (metrics.errorRate * 100).toFixed(metrics.errorRate > 0 && metrics.errorRate < 0.1 ? 1 : 0) : null;
   const readouts: Array<{ label: string; value: string; unit: string; warn?: boolean; bad?: boolean }> = [
-    { label: "p50", ...(metrics ? reading(metrics.p50) : { value: "–", unit: "" }) },
+    { label: "median", ...(metrics ? reading(metrics.p50) : { value: "–", unit: "" }) },
     { label: "p99", ...(metrics ? reading(metrics.p99) : { value: "–", unit: "" }), warn: (metrics?.p99 ?? 0) > 150 },
     { label: "served", value: metrics ? String(Math.round(metrics.throughput)) : "–", unit: metrics ? "/s" : "" },
     { label: "errors", value: errorPct ?? "–", unit: metrics ? "%" : "", bad: (metrics?.errorRate ?? 0) > 0.01 },
@@ -503,18 +546,20 @@ export function LiveSystem() {
         ref={figure}
         className="device p-2 compact:p-1.5"
         aria-labelledby="live-system-title"
-        onPointerOverCapture={stopDemo}
-        onPointerDownCapture={stopDemo}
-        onFocusCapture={stopDemo}
-        onKeyDownCapture={stopDemo}
-        onWheelCapture={stopDemo}
+        onPointerMoveCapture={stir}
+        onWheelCapture={stir}
+        onPointerDownCapture={onPointerDown}
+        onPointerUpCapture={onPointerUp}
+        onPointerCancelCapture={() => (press.current = null)}
+        onFocusCapture={engage}
+        onKeyDownCapture={engage}
       >
         <figcaption className="flex items-center justify-between gap-3 pb-2 pl-3 pr-0.5 pt-0.5 compact:pb-1 compact:pl-2.5 compact:pt-0 compact:pr-0">
           <p id="live-system-title" className="text-[0.9375rem] font-[550] leading-tight tracking-[-0.01em] text-ink compact:text-[0.875rem]">
             A small system you can break
           </p>
-          <button type="button" onClick={reset} className="key key-sm compact:min-h-10 compact:px-3.5">
-            reset
+          <button type="button" onClick={reset} className="key key-sm font-sans font-[550] compact:min-h-10 compact:px-3.5">
+            Reset
           </button>
         </figcaption>
 
@@ -525,9 +570,9 @@ export function LiveSystem() {
               <span className="mt-[0.5em] size-1.5 shrink-0 rounded-full transition-colors" style={{ background: status }} aria-hidden="true" />
               <p className="text-[0.875rem] leading-[1.4] text-screen-ink compact:text-[0.8125rem] compact:leading-[1.35]" aria-live="polite">
                 {demoOn && (
-                  <span className="t-mono mr-2 rounded-full border border-screen-line px-1.5 py-px align-[0.08em] text-[0.6875rem] leading-none text-screen-signal">
-                    demo
-                  </span>
+                  <>
+                    <span className="sim-tag mr-1.5">Demo</span>{" "}
+                  </>
                 )}
                 {hint}
               </p>
@@ -596,7 +641,7 @@ export function LiveSystem() {
           <dl className="grid grid-cols-4 border-t border-screen-line">
             {readouts.map((item, i) => (
               <div key={item.label} className={`min-w-0 px-4 pb-3 pt-2.5 compact:px-2.5 compact:pb-2 compact:pt-1.5 ${i > 0 ? "border-l border-screen-line" : ""}`}>
-                <dt className="t-mono text-[0.75rem] leading-none text-screen-graphite compact:text-[0.6875rem]">{item.label}</dt>
+                <dt className="text-[0.8125rem] font-medium leading-none text-screen-graphite compact:text-[0.6875rem]">{item.label}</dt>
                 <dd className="sim-num mt-1.5 whitespace-nowrap text-[1.75rem] leading-none compact:mt-1 compact:text-[1.1875rem]">
                   <span className={item.bad ? "text-fail" : item.warn ? "text-trace" : undefined}>{item.value}</span>
                   {item.unit && <span className="ml-0.5 text-[0.8125rem] font-medium tracking-normal text-screen-graphite compact:text-[0.6875rem]">{item.unit}</span>}
@@ -609,13 +654,17 @@ export function LiveSystem() {
         {/* The deck: traffic on its fader, then servers and the cache, and the one key that breaks it. */}
         <div className="px-2.5 pb-1.5 pt-3.5 compact:px-1.5 compact:pb-0.5 compact:pt-2">
           <div className="flex items-center gap-4 compact:gap-3">
-            <span className="t-mono w-[7.75rem] shrink-0 whitespace-nowrap text-ink compact:w-[7rem] compact:text-[0.75rem]">
-              <span className="tabular-nums">{config.rate}</span> <span className="text-graphite">requests/s</span>
+            <span className="w-[7.25rem] shrink-0 whitespace-nowrap text-[0.9375rem] text-ink compact:w-[4.75rem] compact:text-[0.8125rem]">
+              <span className="font-[600] tabular-nums">{config.rate}</span>{" "}
+              <span className="text-graphite">
+                <span className="compact:hidden">requests/s</span>
+                <span className="hidden compact:inline">req/s</span>
+              </span>
             </span>
             <Fader value={config.rate} onChange={(rate) => update({ rate })} />
           </div>
 
-          <div className="mt-3 flex items-center gap-2 compact:mt-1.5 compact:gap-1.5">
+          <div className="mt-3 flex items-center gap-2 compact:mt-1.5 compact:gap-1">
             <div className="flex items-center" role="group" aria-label="App servers">
               <button
                 type="button"
@@ -626,8 +675,8 @@ export function LiveSystem() {
               >
                 −
               </button>
-              <span className="min-w-[4.75rem] text-center text-[0.875rem] compact:min-w-[3.25rem] compact:text-[0.8125rem]" aria-live="polite">
-                <span className="font-mono font-medium tabular-nums text-ink">{config.servers}</span>{" "}
+              <span className="min-w-[4.75rem] text-center text-[0.875rem] compact:min-w-[3rem] compact:text-[0.8125rem]" aria-live="polite">
+                <span className="font-[600] tabular-nums text-ink">{config.servers}</span>{" "}
                 <span className="text-graphite">
                   <span className="compact:hidden">{config.servers === 1 ? "server" : "servers"}</span>
                   <span className="hidden compact:inline">{config.servers === 1 ? "app" : "apps"}</span>
@@ -644,7 +693,7 @@ export function LiveSystem() {
               </button>
             </div>
 
-            {/* A latching rocker: pressed in while the cache is on, with an ink dot as its lamp. */}
+            {/* A latching switch: it lights up (fills) while the cache is on, with a dot as its lamp. */}
             <button
               type="button"
               role="switch"
@@ -652,11 +701,11 @@ export function LiveSystem() {
               aria-label="Cache"
               data-latched={config.cache}
               onClick={() => update({ cache: !config.cache })}
-              className="key h-10 min-h-10 gap-2 px-3.5 text-[0.875rem] font-medium compact:px-3 compact:text-[0.8125rem]"
+              className="key key-latch h-10 min-h-10 gap-2 px-3.5 text-[0.875rem] font-medium compact:h-[2.625rem] compact:min-h-[2.625rem] compact:gap-1.5 compact:px-3 compact:text-[0.8125rem]"
             >
               <span
-                className="size-1.5 rounded-full transition-colors"
-                style={{ background: config.cache ? "var(--ink)" : "var(--rule-strong)" }}
+                className="size-1.5 shrink-0 rounded-full transition-colors"
+                style={{ background: config.cache ? "var(--paper)" : "var(--rule-strong)" }}
                 aria-hidden="true"
               />
               cache
@@ -672,7 +721,7 @@ export function LiveSystem() {
               aria-label={down ? `Restart app ${downIndex + 1}` : "Kill a server"}
               data-latched={down}
               data-kill
-              className="key key-signal ml-auto h-11 min-h-11 gap-2 px-5 text-[0.9375rem] compact:h-10 compact:min-h-10 compact:px-4 compact:text-[0.875rem]"
+              className="key key-signal ml-auto h-11 min-h-11 shrink-0 gap-2 px-5 text-[0.9375rem] compact:h-[2.625rem] compact:min-h-[2.625rem] compact:gap-1.5 compact:px-3.5 compact:text-[0.875rem]"
             >
               {down ? <RestartGlyph /> : <PowerGlyph />}
               <span className="compact:hidden">{down ? `Restart app ${downIndex + 1}` : "Kill a server"}</span>
@@ -691,7 +740,7 @@ export function LiveSystem() {
 /** Kill: a power symbol, in the key's ink. */
 function PowerGlyph() {
   return (
-    <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-[17px] shrink-0" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" aria-hidden="true">
       <path d="M12 3v8" />
       <path d="M6.4 6.6a8 8 0 1 0 11.2 0" />
     </svg>
@@ -701,7 +750,7 @@ function PowerGlyph() {
 /** Restart: a circular arrow. */
 function RestartGlyph() {
   return (
-    <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-[17px] shrink-0" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 12a8 8 0 1 1-2.6-5.9" />
       <path d="M20 4v4.5h-4.5" />
     </svg>
@@ -757,13 +806,13 @@ function Node({
   const small = compact || size.w < 92;
   const pad = small ? 8 : 12;
   const muted = state === "off";
-  const titleSize = small ? 12 : 14;
-  const valueSize = small ? 11 : 12.5;
+  const titleSize = small ? 12.5 : 15;
+  const valueSize = small ? 11.5 : 13;
   const stacked = value !== undefined && size.h >= 34;
   // A short box (four servers on a phone) keeps its name and drops the number; the level still shows the load.
   const valueBeside = value !== undefined && !stacked && size.w >= 84;
   const titleY = stacked ? at.y - (small ? 2 : 4) : at.y + titleSize * 0.36;
-  const valueY = at.y + (small ? 11 : 14);
+  const valueY = at.y + (small ? 12 : 16);
   const level = Math.max(0, Math.min(1, load ?? 0));
   const alpha = color === "var(--screen-ink)" ? 0.11 : 0.3;
   return (
@@ -808,7 +857,8 @@ function Node({
           y={stacked ? valueY : titleY}
           textAnchor={stacked ? "start" : "end"}
           fontSize={valueSize}
-          className="font-mono"
+          fontWeight={500}
+          style={{ fontVariantNumeric: "tabular-nums" }}
           fill={state === "down" ? "var(--fail)" : "var(--screen-graphite)"}
         >
           {value}

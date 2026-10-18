@@ -6,8 +6,9 @@
 
 /** How long the device must sit on screen untouched before the demo starts. */
 export const DEMO_IDLE_MS = 6000;
-/** The whole demo, from the first cue to handing the device back healthy. */
-export const DEMO_MS = 11800;
+/** The whole demo, from the first cue to handing the device back healthy. Five lines of about three
+ * seconds each: slow enough to read while you watch the diagram. */
+export const DEMO_MS = 14400;
 /** The rate the device starts at, and the one the demo climbs to. Two servers carry about 400 req/s,
  * so this is comfortable for two and far too much for one. */
 export const DEMO_BASE_RATE = 160;
@@ -15,22 +16,23 @@ export const DEMO_PEAK_RATE = 320;
 /** The server the demo kills (app 2). */
 export const DEMO_VICTIM = 1;
 
-const RISE = [0, 2200] as const;
-const FALL = [7000, 8600] as const;
-const KILL_AT = 2600;
-const RESTART_AT = 6600;
+const RISE = [0, 2400] as const;
+const FALL = [8500, 10100] as const;
+const KILL_AT = 3000;
+const RESTART_AT = 8200;
 
 export type DemoAction = "kill" | "restart" | null;
 export type DemoCue = { at: number; say: string; action: DemoAction };
 
-/** What happens, and the line the status narrates, in order. Each line fits two lines on a 360px phone. */
+/** What happens, and the line the status narrates, in order. Each line stays on screen for at least
+ * 2.5 s and fits two lines on a 360px phone. "Recovered" comes once the readouts' 3 s window has
+ * really cleared (tests/unit/sim-demo.test.ts checks the simulation agrees). */
 export const DEMO_CUES: readonly DemoCue[] = [
-  { at: 0, say: "Watch: traffic is climbing toward what two servers can carry.", action: null },
-  { at: KILL_AT, say: "A server just died. Requests sent to it fail until the health check notices.", action: "kill" },
-  { at: 4300, say: "One server is left with all the traffic. Its queue fills and p99 spikes.", action: null },
-  { at: RESTART_AT, say: "The dead server restarts and takes its share again.", action: "restart" },
-  { at: 7400, say: "Traffic eases off, and the backlog drains.", action: null },
-  { at: 10300, say: "Recovered. Your turn: kill a server.", action: null },
+  { at: 0, say: "Traffic climbs toward what two servers can carry.", action: null },
+  { at: KILL_AT, say: "A server dies. Its requests fail until the balancer notices.", action: "kill" },
+  { at: 5600, say: "One server carries it all. Its queue overflows, p99 spikes.", action: null },
+  { at: RESTART_AT, say: "The server restarts, traffic eases, and the backlog drains.", action: "restart" },
+  { at: 12400, say: "Recovered. Your turn: kill a server.", action: null },
 ];
 
 /** What the status says once a visitor takes over in the middle of the demo. */
