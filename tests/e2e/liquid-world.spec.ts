@@ -103,20 +103,50 @@ test.describe("liquid world", () => {
     });
   }
 
-  test("the hero's name flies into the header's wordmark and back", async ({ page }) => {
+  test("the hero's name flies into the header's brand and back", async ({ page }) => {
     await skipIntro(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await expect(page.locator(".hud-name-ltr")).toHaveCount(18); // Abdelrahman + Mohamed
     const firstOfName = page.locator("[data-name] [data-nl]").first();
-    const wordmarkA = page.locator("[data-wordmark] [data-wl]").first();
-    await expect(wordmarkA).toHaveCSS("opacity", "0");
+    const markA = page.locator("[data-wordmark] .am-a");
+    const markDot = page.locator("[data-wordmark] .am-dot");
+    const surnameM = page.locator("[data-surname] [data-wl]").first();
+    // At the top the mark is there on its own; the surname waits for the name.
+    await expect(markA).toHaveCSS("opacity", "1");
+    await expect(markDot).toHaveCSS("opacity", "1");
+    await expect(surnameM).toHaveCSS("opacity", "0");
     await page.evaluate(() => window.scrollTo(0, 700));
-    await expect(wordmarkA).toHaveCSS("opacity", "1");
+    await expect(surnameM).toHaveCSS("opacity", "1");
+    await expect(markA).toHaveCSS("opacity", "1");
     await expect(firstOfName).toHaveCSS("visibility", "hidden");
     await page.evaluate(() => window.scrollTo(0, 0));
     await expect(firstOfName).toHaveCSS("visibility", "visible");
-    await expect(wordmarkA).toHaveCSS("opacity", "0");
+    await expect(surnameM).toHaveCSS("opacity", "0");
+    await expect(markA).toHaveCSS("opacity", "1");
+  });
+
+  test("the header brand is the Am. mark and reads as the full name", async ({ page }) => {
+    await skipIntro(page);
+    await page.goto("/blogs");
+    const home = page.getByRole("link", { name: "Abdelrahman Mohamed, home" });
+    await expect(home).toBeVisible();
+    await expect(home.locator("svg.am > path")).toHaveCount(2);
+    await expect(home.locator("svg.am .am-dot")).toBeVisible();
+    // Off the home page the surname is always there.
+    await expect(home.locator("[data-surname]")).toHaveCSS("opacity", "1");
+  });
+
+  test("under reduced motion the mark is complete and still", async ({ page }) => {
+    await skipIntro(page);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/blogs");
+    const mark = page.locator("svg.am");
+    await expect(mark).toBeVisible();
+    const running = await page.evaluate(() => document.getAnimations().filter((a) => (a.effect as KeyframeEffect | null)?.target?.closest?.(".am")).length);
+    expect(running).toBe(0);
+    await expect(mark.locator(".am-pen")).toHaveCSS("stroke-dashoffset", "0px");
+    await expect(mark.locator(".am-fill")).toHaveCSS("opacity", "1");
   });
 
   test("the packet is delivered beside Email me at the bottom of the page", async ({ page }) => {
