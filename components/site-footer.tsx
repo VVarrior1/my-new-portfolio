@@ -15,7 +15,7 @@ export function SiteFooter() {
           <span className="px-2" aria-hidden="true">
             ·
           </span>
-          Built with Next.js, hosted on Netlify
+          Built with Next.js, hosted on Vercel
         </p>
         <ul className="flex flex-wrap gap-x-5 gap-y-2">
           <li>

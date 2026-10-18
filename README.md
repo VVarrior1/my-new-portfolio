@@ -1,7 +1,7 @@
 # abdelrahmanm.dev
 
 Personal site of Abdelrahman Mohamed: work, experience, writing, a gallery and public site stats.
-Next.js 15 (App Router), TypeScript, Tailwind CSS v4, deployed on Netlify. Blog posts, gallery
+Next.js 15 (App Router), TypeScript, Tailwind CSS v4, deployed on Vercel. Blog posts, gallery
 images and analytics live in a Google Cloud Storage bucket.
 
 ## Run it
@@ -182,6 +182,13 @@ so a résumé link can be `.../?ref=resume`) and link clicks.
 
 ## Deploying
 
-Pushing to `master` deploys to Netlify (`netlify.toml` pins Node 22). Netlify refuses to deploy
-Next.js versions affected by CVE-2025-55182, so keep `next` on a patched 15.5.x release. To
-read a failed build's log: `netlify logs -d <deploy-id> -s deploy --since <ISO time>`.
+Pushing to `master` deploys to Vercel (project `abdelrahmanm`, team vvarrior1s-projects), and every other
+branch gets a preview URL. Production is https://abdelrahmanm.dev; `www` 308-redirects to the apex. The domain is
+registered at Namecheap with its nameservers pointed at Vercel (`ns1/ns2.vercel-dns.com`), so DNS is managed in Vercel.
+Deploy through git pushes, not `vercel deploy`: CLI uploads ignore `.gitignore` (see `.vercelignore`).
+
+The old address https://abdelrahmanmohamed1.netlify.app is printed on résumés that are already out, so the Netlify site
+must stay up. It still builds `master`, and `netlify.toml` 301s every request on that host to the same path on
+abdelrahmanm.dev. Never delete that site. Keep `next` on a patched 15.5.x release
+(CVE-2025-55182); Netlify refuses to build affected versions. To read a failed Netlify build's log:
+`netlify logs -d <deploy-id> -s deploy --since <ISO time>`.
