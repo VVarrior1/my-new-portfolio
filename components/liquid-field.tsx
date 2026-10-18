@@ -175,8 +175,10 @@ export function LiquidField() {
 
     // Things that happened since the last frame, applied at the start of the next one.
     const queue: FlowEvent[] = [];
-    let curlBoost = 0;
-    /** A killed server's bloom travelling down the river, 1 at the kill and settling to 0. */
+    /** A killed server's bloom travelling down the river: `kick` jumps to 1 at the kill and decays,
+     * and `pulse` follows it with a short attack, so the river swells smoothly rather than jolting
+     * (a jolt at the mouth throws ripples down the whole current). */
+    let kick = 0;
     let pulse = 0;
     /** Failing requests: they tint the river's thread rather than spatter the pool. */
     let failGlow = 0;
@@ -187,29 +189,23 @@ export function LiquidField() {
     /** Where the river leaves the device, in viewport px. */
     const mouth = (dev: DOMRect) => ({ x: dev.left + 28, y: Math.min(dev.bottom - 18, window.innerHeight - 40) });
 
-    const ring = (f: Fluid, px: number, py: number, count: number, speed: number, ink: number, accent: number, radius: number, rand: () => number) => {
-      const [x, y] = uv(px, py);
-      for (let i = 0; i < count; i++) {
-        const a = (i / count) * Math.PI * 2 + rand() * 0.3;
-        f.splat(x, y, Math.cos(a) * speed, Math.sin(a) * speed, 0, 0, radius);
-      }
-      f.ink(x, y, ink, accent, radius * 2.2);
-    };
-
     const applyEvent = (f: Fluid, e: FlowEvent, rand: () => number) => {
       const [x, y] = uv(e.x, e.y);
       if (e.kind === "kill") {
-        // One clean accent bloom where the current leaves the device; the river then carries it
-        // off and the pulse settles back over a second or so.
-        curlBoost = 1;
-        pulse = 1;
-        const dev = e.device ? new DOMRect(e.device.left, e.device.top, e.device.right - e.device.left, e.device.bottom - e.device.top) : deviceBox();
-        const m = dev ? mouth(dev) : { x: e.x, y: e.y };
-        ring(f, m.x - 30, m.y + 26, 8, 150, 0.08, 0.55, 0.06, rand);
-      } else if (e.kind === "restart") {
+        // One clean accent bloom: a soft drop of cobalt where the current leaves the device and a
+        // swell in the river's thread, which the current carries off; it settles within a couple
+        // of seconds. No radial burst: pushes that sharp ripple the whole river.
+        kick = 1;
         const dev = deviceBox();
         const m = dev ? mouth(dev) : { x: e.x, y: e.y };
-        ring(f, m.x - 30, m.y + 26, 6, 90, 0.18, 0, 0.05, rand);
+        const [bx, by] = uv(m.x - 24, m.y + 16);
+        f.ink(bx, by, 0.04, 0.42, 0.07);
+      } else if (e.kind === "restart") {
+        // The server is back: a quiet drop of ink into the river, no accent.
+        const dev = deviceBox();
+        const m = dev ? mouth(dev) : { x: e.x, y: e.y };
+        const [bx, by] = uv(m.x - 24, m.y + 16);
+        f.ink(bx, by, 0.25, 0, 0.06);
       } else if (e.kind === "fail") {
         failGlow = Math.min(1, failGlow + 0.06);
       } else if (e.kind === "stir") {
@@ -236,15 +232,15 @@ export function LiquidField() {
       const q = Math.min(1, rate / 900);
       const k = dt * 60 * tune.ink;
       phase += dt * (0.45 + q * 0.9 + strain * 1.6);
-      const speed = (52 + q * 64) * (1 + pulse * 0.6) * tune.current;
+      const speed = (52 + q * 64) * (1 + pulse * 0.35) * tune.current;
       const ink = (0.09 + q * 0.06) * k;
-      const thread = (0.12 + q * 0.18 + strain * 0.08 + failGlow * 0.15 + pulse * 0.5) * k;
+      const thread = (0.12 + q * 0.18 + strain * 0.08 + failGlow * 0.15 + pulse * 0.7) * k;
       const sway = (Math.sin(phase) * 0.1 + Math.sin(phase * 0.43 + 1.3) * 0.07) * (1 + strain * 0.6);
       const name = nameBox();
       const beside = !!name && name.right <= dev.left + 8;
       if (beside && name) {
         const m = mouth(dev);
-        const tx = name.left + 30;
+        const tx = name.left + name.width * 0.3;
         const ty = Math.min(vh - 50, name.bottom + 56);
         const angle = Math.atan2(-(ty - m.y), tx - m.x) + sway;
         const [x, y] = uv(m.x, m.y);
@@ -252,11 +248,14 @@ export function LiquidField() {
         f.ink(x, y, 0, thread, 0.016);
         // The turn: in the left lane the current is drawn up alongside the name, then eases right
         // under the header, so the river frames the name instead of banking up on the edge.
-        const lx = Math.max(40, name.left - 36);
+        const lx = Math.max(40, name.left - 30);
         const [ax, ay] = uv(lx, name.bottom + 10);
-        f.splat(ax, ay, -speed * 0.1, speed * 0.4, 0, 0, 0.12);
+        f.splat(ax, ay, -speed * 0.05, speed * 0.5, 0, 0, 0.12);
         const [bx, by] = uv(lx, name.top + 60);
         f.splat(bx, by, speed * 0.2, speed * 0.25, 0, 0, 0.12);
+        // And a soft push off the screen's edge, so the turn never banks up against it.
+        const [ex, ey] = uv(8, (name.top + name.bottom) / 2 + 80);
+        f.splat(ex, ey, speed * 0.25, speed * 0.1, 0, 0, 0.3);
       } else {
         for (const side of [0.22, 0.78]) {
           const [x, y] = uv(dev.left + dev.width * side, dev.top + 10);
@@ -553,10 +552,10 @@ export function LiquidField() {
         f.shift = Math.max(-0.2, Math.min(0.2, (delta / vh) * tune.parallax));
 
         const { strain, rate } = flowState();
-        curlBoost = Math.max(0, curlBoost - dt * 0.8);
-        pulse = Math.max(0, pulse - dt * 0.7);
+        kick = Math.max(0, kick - dt * 0.6);
+        pulse += (kick - pulse) * Math.min(1, dt * 6);
         failGlow = Math.max(0, failGlow - dt * 0.5);
-        f.config.curl = base.curl + strain * 2.5 + curlBoost * 4;
+        f.config.curl = base.curl + strain * 2;
         const q = Math.min(1, rate / 900);
         // A busier system turns over its ink faster, so more traffic reads as more current, not
         // more mud.

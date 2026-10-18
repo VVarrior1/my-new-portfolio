@@ -392,8 +392,8 @@ void main () {
   float w = max(0.62, 0.55 * uDpr);
   vec2 hc = 1.0 - exp(-1.3 * c.rg);
   vec2 hs = 1.3 * exp(-1.3 * c.rg);
-  float ln = contour(hc.x, length(gn) * hs.x, uSteps, w) * smoothstep(0.035, 0.11, wide.r) * smoothstep(0.02, 0.06, c.r) * traceOf;
-  float la = contour(hc.y, length(ga) * hs.y, uSteps * 0.7, w) * smoothstep(0.05, 0.14, wide.g) * smoothstep(0.05, 0.1, c.g) * traceOf;
+  float ln = contour(hc.x, length(gn) * hs.x, uSteps, w) * smoothstep(0.05, 0.14, wide.r) * smoothstep(0.02, 0.06, c.r) * traceOf;
+  float la = contour(hc.y, length(ga) * hs.y, uSteps * 0.7, w) * smoothstep(0.07, 0.16, wide.g) * smoothstep(0.05, 0.1, c.g) * traceOf;
 
   vec3 col = mix(bg, neutral, n * uNeutralMax * uFill);
   col = mix(col, neutral, ln * uLines * 0.6);
@@ -876,10 +876,10 @@ export class Fluid {
   private smooth() {
     const d = this.dye;
     const f = this.field;
-    // About 2.5 CSS px of blur: enough to erase texel steps and half-float rounding, small enough
-    // that the lines stay sharp-edged where the dye is.
-    this.blurPass(d.read.texture, this.fieldTmp, d.texelX * 1.6, 0);
-    this.blurPass(this.fieldTmp.texture, f, 0, f.texelY * 0.8);
+    // About 4 CSS px of blur: enough to erase texel steps, half-float rounding and the finest
+    // wrinkles and loops (the lines keep their own fixed width, so they stay crisp).
+    this.blurPass(d.read.texture, this.fieldTmp, d.texelX * 2.4, 0);
+    this.blurPass(this.fieldTmp.texture, f, 0, f.texelY * 1.2);
     // About 25 CSS px: a stray fleck all but vanishes in it, a body of dye does not.
     this.blurPass(f.texture, this.wideTmp, f.texelX * 3.2, 0);
     this.blurPass(this.wideTmp.texture, this.wide, 0, this.wide.texelY * 0.9);
