@@ -20,7 +20,10 @@ export type FlowEvent =
   /** A request failed at this point. */
   | { kind: "fail"; x: number; y: number }
   /** An ink drop, e.g. from the theme toggle. */
-  | { kind: "drop"; x: number; y: number; size: number };
+  | { kind: "drop"; x: number; y: number; size: number }
+  /** A push through the liquid (a flying letter, the spine's packet, a row you point at): velocity
+   * in px/s, and how much of each dye it leaves. */
+  | { kind: "stir"; x: number; y: number; dx: number; dy: number; ink: number; accent: number; radius: number };
 
 const state: FlowState = { rate: 160, strain: 0, inlet: null };
 const listeners = new Set<(event: FlowEvent) => void>();

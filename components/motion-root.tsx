@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { blotPath } from "@/lib/theme";
+import { onFrame, setLenis } from "@/lib/ticker";
 
 // Page-wide motion, off entirely under prefers-reduced-motion:
 // 1. Inertial scrolling (Lenis), so the page glides like the fluid under it. Anchor links and the
@@ -19,13 +20,28 @@ export function MotionRoot() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) return;
     let stopped = false;
-    let lenis: { destroy: () => void } | null = null;
+    let lenis: { destroy: () => void; stop: () => void; start: () => void } | null = null;
+    let off: (() => void) | null = null;
+    let lock: MutationObserver | null = null;
     import("lenis").then(({ default: Lenis }) => {
       if (stopped) return;
-      lenis = new Lenis({ autoRaf: true, anchors: { offset: -64 }, lerp: 0.11, wheelMultiplier: 0.95, stopInertiaOnNavigate: true });
+      // The shared ticker drives Lenis, so everything drawn per frame reads the same scroll.
+      const instance = new Lenis({ autoRaf: false, anchors: { offset: -64 }, lerp: 0.1, wheelMultiplier: 0.95, stopInertiaOnNavigate: true });
+      lenis = instance;
+      setLenis(instance);
+      off = onFrame(() => undefined, -100);
+      // Modal dialogs lock the page; Lenis stops with them or it keeps scrolling the page behind.
+      lock = new MutationObserver(() => {
+        if (document.body.hasAttribute("data-scroll-locked")) instance.stop();
+        else instance.start();
+      });
+      lock.observe(document.body, { attributes: true, attributeFilter: ["data-scroll-locked"] });
     });
     return () => {
       stopped = true;
+      off?.();
+      lock?.disconnect();
+      setLenis(null);
       lenis?.destroy();
     };
   }, []);

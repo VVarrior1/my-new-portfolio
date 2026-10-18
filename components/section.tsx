@@ -1,14 +1,17 @@
 import type { ReactNode } from "react";
 
 /**
- * A home-page section: one of the opaque sheets that slide over the liquid. A mono index on its
- * own line, a large title that rises out of its own clip as it enters, and the content below on the
- * shared 12-column grid. `meta` is a short mono line on the right (counts, a date range).
+ * A home-page section on the liquid. Its header is one element with two looks:
+ * - phones, tablets, touch and reduced motion: an index and a very large title;
+ * - laptops with motion (where the HUD runs): a sticky frosted bar, "01 / WORK", while the title
+ *   itself flies into the top-right corner (components/hud.tsx reads data-hud on the section).
+ * The switch is a media query, so nothing moves after load. `meta` is a short mono line.
  */
 export function Section({
   id,
   index,
   title,
+  hud,
   meta,
   className = "",
   children,
@@ -16,26 +19,68 @@ export function Section({
   id: string;
   index: string;
   title: ReactNode;
+  /** The name the HUD flies, in capitals. */
+  hud: string;
   meta?: ReactNode;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={`sheet scroll-mt-16 ${className}`} data-liquid-edge>
-      <div className="mx-auto max-w-[88rem] px-4 py-20 sm:px-8 sm:py-32">
-        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-rule pb-6 sm:pb-8">
-          <div>
-            <p className="t-mono mb-3 text-graphite" aria-hidden="true">
-              <span className="text-signal-text">{index}</span>
-            </p>
-            <h2 id={`${id}-title`} className="t-section" data-reveal="title">
-              {title}
-            </h2>
-          </div>
-          {meta && <p className="t-mono pb-[0.4rem] text-graphite">{meta}</p>}
-        </div>
-        <div className="mt-12 sm:mt-16">{children}</div>
-      </div>
+    <section id={id} aria-labelledby={`${id}-title`} className={`relative scroll-mt-16 ${className}`} data-hud={hud} data-hud-index={index}>
+      <SectionHead id={id} index={index} title={title} meta={meta} />
+      <div className="wrap pb-24 pt-12 sm:pb-36 sm:pt-16">{children}</div>
     </section>
+  );
+}
+
+export function SectionHead({ id, index, title, meta }: { id: string; index: string; title: ReactNode; meta?: ReactNode }) {
+  return (
+    <div className="sec-head">
+      <div className="wrap">
+        <div className="sec-head-row" data-calm="0.95">
+          <p className="sec-index t-mono" aria-hidden="true">
+            <span className="text-signal-text">{index}</span>
+            <span className="sec-slash"> / </span>
+          </p>
+          <h2 id={`${id}-title`} className="sec-title t-section" data-reveal="title">
+            {title}
+          </h2>
+          {meta && <p className="sec-meta t-mono text-graphite">{meta}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** A word set as separate letters (for the HUD to lift off the page), read once by screen readers. */
+export function Letters({ text, className = "" }: { text: string; className?: string }) {
+  return (
+    <>
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true" className={`letters ${className}`}>
+        {Array.from(text.toUpperCase()).map((ch, i) => (
+          <span key={i} data-ltr className="ltr">
+            {ch === " " ? " " : ch}
+          </span>
+        ))}
+      </span>
+    </>
+  );
+}
+
+/**
+ * A figure that counts up when it scrolls in. The server renders the final value, and a hidden copy
+ * of it holds the width, so the count never shifts the layout and reads right without JavaScript.
+ */
+export function Count({ value, className = "" }: { value: string; className?: string }) {
+  const m = value.match(/^([^\d]*)([\d.,]+)(.*)$/);
+  if (!m) return <span className={className}>{value}</span>;
+  return (
+    <span className={`count ${className}`} data-count={m[2].replace(/,/g, "")} data-prefix={m[1]} data-suffix={m[3]}>
+      <span className="count-hold" aria-hidden="true">
+        {value}
+      </span>
+      <span className="count-run">{value}</span>
+    </span>
   );
 }

@@ -15,18 +15,25 @@
 }
 
 /* ------------------------------------------------------------------
-   Tokens: Liquid. The page is a sheet over a pool. Under the hero and
-   the contact section a real fluid simulation shows through (ink on
-   paper in the light theme, smoke on black in the dark one); every
-   other section is an opaque sheet that slides over it.
+   Tokens: Liquid World. The whole home page floats on a real fluid
+   simulation (components/liquid-field.tsx): ink marbling on pale water
+   in the light theme, lit smoke on black in the dark one. There are no
+   opaque sheets; text sits on calm water (data-calm holds the dye back)
+   and the résumé chapter is set in the opposite theme, its edges a
+   waterline the current pushes around ([data-chapter="invert"]).
 
    One accent, cobalt (--signal), and neutrals that all sit on one cool
    hue (OKLCH h≈265, chroma ≤ 0.016), so both themes share a temperature.
-   Cobalt fills the things you press, marks "now", and is the only
-   colour the fluid can bloom into (when the simulator is strained or a
-   server dies). Status colours (--trace, --fail, --screen-go) live only
-   on the simulator's screen. Dark follows the OS unless the visitor picks
-   a theme with the toggle (stored as data-theme on <html>).
+   Cobalt fills the things you press, marks "now", runs the spine and the
+   ruler's needle, voices the serif labels, and is the only colour the
+   fluid can paint besides its neutral ink. Status colours (--trace,
+   --fail, --screen-go) mean status only: the simulator's screen, the
+   spine's packet when it carries a 503, and the /stats chart.
+
+   Every theme token has an "-x" twin holding the opposite theme's value,
+   for things that cross into the inverted chapter (HUD letters, the
+   cursor ring, the fluid's second palette). Dark follows the OS unless
+   the visitor picks a theme (data-theme on <html>).
    ------------------------------------------------------------------ */
 :root {
   --paper: #f4f4f5;
@@ -66,13 +73,24 @@
   --go: #18723f;
   /* The fluid's two dyes and how far each may cover the paper. The light theme is ink in water,
      flat; the dark theme is lit smoke, with a soft relief from the dye's surface. */
-  /* The pool: what the liquid sits in, a step below the paper, so the sheets read as sheets. */
-  --pool: #e6e7e9;
+  /* The pool: the water the page floats on, and so the page's ground. */
+  --pool: #ebecee;
   --fluid-neutral: #16181e;
   --fluid-accent: #2a46ff;
-  --fluid-neutral-max: 0.55;
-  --fluid-accent-max: 0.85;
+  --fluid-neutral-max: 0.5;
+  --fluid-accent-max: 0.9;
   --fluid-shading: 0;
+  /* Marbling: how much of the dye is a soft fill, how strong its contour lines are, and how many
+     lines per unit of dye. Lines, not fill, carry a busy system, so it never turns into a wash. */
+  --fluid-fill: 0.42;
+  --fluid-lines: 0.9;
+  --fluid-steps: 6;
+  /* The opposite theme, for the inverted chapter. */
+  --pool-x: #08090b;
+  --ink-x: #eeeff2;
+  --fluid-neutral-x: #c4c8d2;
+  --fluid-accent-x: #5470ff;
+  --fluid-shading-x: 0.5;
   --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
   --device-shadow: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 40px 80px -40px rgb(14 15 18 / 0.55), 0 12px 24px -16px rgb(14 15 18 / 0.35);
   --scrim: rgb(14 15 18 / 0.42);
@@ -120,12 +138,20 @@
     --screen: #101115;
     --screen-raised: #18191e;
     --go: #4fc98a;
-    --pool: #070809;
+    --pool: #08090b;
     --fluid-neutral: #c4c8d2;
     --fluid-accent: #5470ff;
-    --fluid-neutral-max: 0.58;
+    --fluid-neutral-max: 0.55;
     --fluid-accent-max: 0.95;
     --fluid-shading: 0.5;
+    --fluid-fill: 0.5;
+    --fluid-lines: 0.75;
+    --fluid-steps: 6;
+    --pool-x: #ebecee;
+    --ink-x: #0e0f12;
+    --fluid-neutral-x: #16181e;
+    --fluid-accent-x: #2a46ff;
+    --fluid-shading-x: 0;
     --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
     --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
     --scrim: rgb(0 0 0 / 0.62);
@@ -149,12 +175,20 @@
   --screen: #101115;
   --screen-raised: #18191e;
   --go: #4fc98a;
-  --pool: #070809;
+  --pool: #08090b;
   --fluid-neutral: #c4c8d2;
   --fluid-accent: #5470ff;
-  --fluid-neutral-max: 0.58;
+  --fluid-neutral-max: 0.55;
   --fluid-accent-max: 0.95;
   --fluid-shading: 0.5;
+  --fluid-fill: 0.5;
+  --fluid-lines: 0.75;
+  --fluid-steps: 6;
+  --pool-x: #ebecee;
+  --ink-x: #0e0f12;
+  --fluid-neutral-x: #16181e;
+  --fluid-accent-x: #2a46ff;
+  --fluid-shading-x: 0;
   --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
   --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
   --scrim: rgb(0 0 0 / 0.62);
@@ -266,8 +300,8 @@ body {
   }
 }
 
-/* The fluid canvas: fixed behind the whole page, seen only through the transparent "windows"
-   (the hero and the contact section). It fades in once its first frame is drawn. */
+/* The fluid canvas: fixed behind the whole page. It appears at once on its first frame, which is
+   the bare pool (the dye then fades in), so nothing flashes. */
 .liquid-field {
   position: fixed;
   inset: 0;
@@ -276,7 +310,6 @@ body {
   z-index: -1;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1400ms var(--ease-out);
 }
 .liquid-field[data-ready] {
   opacity: 1;
@@ -981,72 +1014,608 @@ html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
 }
 
 /* ------------------------------------------------------------------
-   Sheets over the pool. Every section but the hero and contact is an
-   opaque sheet with rounded corners, inset from the viewport by a thin
-   rail, so the liquid shows in the channels around and between them and
-   scrolling drags a wake off their edges (data-liquid-edge).
+   The inverted chapter (Experience and Background). Its tokens are the
+   opposite theme's, so everything inside follows without per-element
+   colours. Until the liquid runs it is a solid band; once it runs the
+   shader draws the band and its waterline instead.
    ------------------------------------------------------------------ */
-:root {
-  --rail: clamp(0.5rem, 1vw, 0.875rem);
+[data-chapter="invert"] {
+  --paper: #0b0c0e;
+  --paper-raised: #141518;
+  --key-face: #1b1c20;
+  --ink: #eeeff2;
+  --ink-2: #c0c3ca;
+  --graphite: #8d919b;
+  --rule: #26282d;
+  --rule-strong: #393b42;
+  --signal: #3d5afe;
+  --signal-ink: #ffffff;
+  --signal-text: #8597ff;
+  --pool: #08090b;
+  --go: #4fc98a;
+  --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
 }
-.sheet {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [data-chapter="invert"] {
+    --paper: #f4f4f5;
+    --paper-raised: #e3e4e7;
+    --key-face: #ffffff;
+    --ink: #0e0f12;
+    --ink-2: #33353b;
+    --graphite: #5a5d64;
+    --rule: #d3d4d8;
+    --rule-strong: #bec0c5;
+    --signal: #2a46ff;
+    --signal-text: #2a46ff;
+    --pool: #ebecee;
+    --go: #18723f;
+    --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
+    color-scheme: light;
+  }
+}
+:root[data-theme="dark"] [data-chapter="invert"] {
+  --paper: #f4f4f5;
+  --paper-raised: #e3e4e7;
+  --key-face: #ffffff;
+  --ink: #0e0f12;
+  --ink-2: #33353b;
+  --graphite: #5a5d64;
+  --rule: #d3d4d8;
+  --rule-strong: #bec0c5;
+  --signal: #2a46ff;
+  --signal-text: #2a46ff;
+  --pool: #ebecee;
+  --go: #18723f;
+  --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
+  color-scheme: light;
+}
+.chapter-invert {
   position: relative;
-  margin-inline: var(--rail);
-  margin-top: var(--rail);
-  border-radius: 1.75rem;
-  background: var(--paper);
-  box-shadow: 0 0 0 1px var(--rule);
+  color: var(--ink);
+  padding-block: 2rem;
 }
-/* The off-the-clock strip and Work are one sheet. */
-.sheet-top {
-  margin-top: 0;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-.sheet-join {
-  margin-top: 0;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-@media (max-width: 639px) {
-  .sheet {
-    border-radius: 1.25rem;
-  }
-  .sheet-top {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  .sheet-join {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
+/* Below the liquid's canvas (z-index -1) but above the body: the canvas paints over it. */
+.chapter-ground {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: var(--pool);
 }
 
-/* A project's stage: the raised surface its screenshots sit on. */
-.stage {
-  border-radius: 1.5rem;
-  background: var(--paper-raised);
-  padding: 0.75rem 0.75rem 1rem;
+/* On the home page the body is the pool, so the page matches the liquid before it starts (and
+   without WebGL). */
+html:has(.liquid-field) body {
+  background: var(--pool);
+}
+
+/* ------------------------------------------------------------------
+   Layout: one container. Laptops leave a lane on the left for the spine
+   and room on the right for the HUD's ruler.
+   ------------------------------------------------------------------ */
+.wrap {
+  margin-inline: auto;
+  max-width: 88rem;
+  padding-inline: 1rem;
 }
 @media (min-width: 640px) {
-  .stage {
-    padding: 2rem;
+  .wrap {
+    padding-inline: 2rem;
   }
 }
-/* Screenshots have weight: they lift on a spring when you point at them. */
-.lift {
-  transition: transform 700ms var(--ease-spring), box-shadow 500ms ease;
-}
-@media (hover: hover) {
-  .group:hover > .lift,
-  .lift:hover {
-    transform: translateY(-6px) scale(1.012);
-    box-shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 40px 60px -36px rgb(0 0 0 / 0.5);
+@media (min-width: 1024px) {
+  html:has(.liquid-field) .wrap {
+    padding-left: clamp(4.5rem, 7vw, 7.5rem);
+    padding-right: 5.5rem;
   }
 }
 
-/* The contact address: an underline that fills with cobalt from the left, like ink wicking along
-   a line. */
+/* ------------------------------------------------------------------
+   Section heads. Big titles by default; on laptops with motion (where
+   the HUD flies the title) a sticky frosted bar, "01 / WORK".
+   ------------------------------------------------------------------ */
+.sec-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 1.5rem;
+  padding: 5rem 0 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.sec-index {
+  flex-basis: 100%;
+}
+.sec-slash {
+  display: none;
+}
+.sec-meta {
+  margin-left: auto;
+  padding-bottom: 0.4rem;
+}
+@media (min-width: 640px) {
+  .sec-head-row {
+    padding-top: 8rem;
+  }
+}
+@media (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .sec-head {
+    position: sticky;
+    top: 4rem;
+    z-index: 20;
+  }
+  .sec-head-row {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    height: 2.75rem;
+    padding: 0 1rem;
+    margin-inline: -1rem;
+    border-block: 1px solid var(--rule);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--pool) 62%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .sec-index {
+    flex-basis: auto;
+  }
+  .sec-slash {
+    display: inline;
+    color: var(--graphite);
+  }
+  .sec-head .sec-title {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-stretch: 100%;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  html[data-motion="on"] .sec-head [data-reveal="title"]:not([data-in]) {
+    clip-path: none;
+    transform: none;
+  }
+  .sec-meta {
+    margin-left: 2rem;
+    padding: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Poster type. Instrument Sans semi-condensed, heavy, very large: the
+   project names (whose letters the HUD lifts off the page), the tools
+   count, the experience odometer, the contact title, the rivers of type.
+   ------------------------------------------------------------------ */
+.poster {
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  letter-spacing: -0.035em;
+  line-height: 0.84;
+}
+.poster-word {
+  display: block;
+  font-size: clamp(3.75rem, 12.5vw, 12rem);
+  margin-left: -0.04em;
+}
+.poster-rest {
+  display: block;
+  margin-top: 0.9rem;
+  font-size: clamp(1.75rem, 2.8vw, 2.5rem);
+  font-weight: 600;
+  font-stretch: 100%;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.letters {
+  white-space: nowrap;
+}
+.ltr {
+  display: inline-block;
+  line-height: 1;
+}
+.project-head-flip {
+  text-align: right;
+}
+.project-head-flip .poster-word {
+  margin-left: 0;
+  margin-right: -0.04em;
+}
+.t-poster {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 9vw, 9rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+}
+.t-poster .t-serif {
+  font-size: 1.06em;
+  letter-spacing: -0.03em;
+}
+.t-role {
+  font-family: var(--font-display);
+  font-size: clamp(1.625rem, 2.6vw, 2.375rem);
+  font-weight: 620;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+.t-row {
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 2.1vw, 1.875rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+.tools-count {
+  font-family: var(--font-display);
+  font-size: clamp(7rem, 17vw, 15rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A count holds its final width while it runs. */
+.count {
+  display: inline-grid;
+}
+.count > * {
+  grid-area: 1 / 1;
+}
+.count-hold {
+  visibility: hidden;
+}
+
+/* A project's figures: one per line, big number then its label. */
+.stat-stack > div {
+  display: grid;
+  grid-template-columns: 5.5ch minmax(0, 1fr);
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: 0.7rem;
+  border-top: 1px solid var(--rule);
+}
+.stat-stack > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.stat-stack dd {
+  order: -1;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.stat-stack dt {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--graphite);
+}
+
+/* The experience odometer: start month and year of the role you're reading, on rolling reels. */
+.odometer {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 11vw, 10rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.odo-col {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+.odo-reel {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--n, 0) * -1em));
+  transition: transform 1100ms var(--ease-spring);
+}
+.odo-sep {
+  padding-inline: 0.04em;
+  color: var(--signal-text);
+  font-weight: 400;
+}
+.span-label,
+.span-bar {
+  transition: opacity 400ms ease, color 400ms ease;
+}
+[data-active] .span-label {
+  color: var(--graphite);
+}
+[data-active] .span-label[data-on] {
+  color: var(--ink);
+}
+.span-label::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  margin-right: 0;
+  border-radius: 999px;
+  background: var(--signal-text);
+  transform: scale(0);
+  transition: transform 500ms var(--ease-spring), margin 500ms var(--ease-spring);
+  flex: none;
+}
+.span-label[data-on]::before {
+  transform: scale(1);
+  margin-right: 0.5rem;
+}
+[data-active] .span-lane:not([data-on]) .span-bar {
+  opacity: 0.35;
+}
+
+/* ------------------------------------------------------------------
+   Off the clock: two rivers of type. Without motion, the plain list.
+   ------------------------------------------------------------------ */
+.offclock {
+  overflow: hidden;
+  padding-block: 4rem 4.5rem;
+}
+.offclock-list {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.marquee {
+  margin-top: 1.25rem;
+}
+.marquee-row {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  will-change: transform;
+  animation: river 46s linear infinite;
+}
+.marquee-row-b {
+  animation-direction: reverse;
+  margin-top: 0.2rem;
+}
+html[data-marquee="js"] .marquee-row {
+  animation: none;
+}
+@keyframes river {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.marquee-run {
+  display: flex;
+  flex: none;
+}
+.marquee-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28em;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8.4vw, 8.25rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.marquee-label {
+  font-size: 0.52em;
+  text-transform: none;
+  color: var(--signal-text);
+}
+.marquee-row-b .marquee-item {
+  color: transparent;
+  -webkit-text-stroke: 1.25px var(--ink);
+}
+.marquee-row-b .marquee-label {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--signal-text);
+}
+.marquee-dot {
+  align-self: center;
+  width: 0.14em;
+  height: 0.14em;
+  margin-inline: 0.42em 0.5em;
+  border-radius: 999px;
+  background: var(--signal);
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    display: none;
+  }
+  .offclock-list {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    white-space: normal;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+    margin-top: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 640px) {
+  .offclock-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------------
+   Tide rows (more projects, writing): ink fills the row from the edge
+   the pointer came in by and leaves by the edge it goes out of.
+   Decoration only; nothing is hidden behind it.
+   ------------------------------------------------------------------ */
+.tide-row {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid var(--rule);
+}
+.tide-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ink);
+  transform: translate3d(0, 101%, 0);
+}
+.tide-row[data-tide="pre"] .tide-fill {
+  transform: translate3d(0, var(--from, 101%), 0);
+}
+.tide-row[data-tide="in"] .tide-fill {
+  transform: none;
+  transition: transform 560ms var(--ease-pour);
+}
+.tide-row[data-tide="out"] .tide-fill {
+  transform: translate3d(0, var(--to, 101%), 0);
+  transition: transform 560ms var(--ease-pour);
+}
+.tide-row > div:not(.tide-fill),
+.tide-row > a {
+  transition: color 300ms ease, padding 560ms var(--ease-pour);
+}
+.tide-row[data-tide="in"] > :not(.tide-fill) {
+  --ink: var(--paper);
+  --ink-2: color-mix(in srgb, var(--paper) 84%, transparent);
+  --graphite: color-mix(in srgb, var(--paper) 72%, transparent);
+  --signal-text: var(--paper);
+}
+.tide-row .t-row,
+.tide-row p,
+.tide-row span {
+  transition: color 300ms ease;
+}
+.tide-link {
+  color: inherit;
+  text-decoration: none;
+}
+.tide-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.tide-arrow {
+  display: inline-block;
+  margin-left: 0.4em;
+  color: var(--graphite);
+  transition: transform 520ms var(--ease-spring), color 200ms ease;
+}
+.tide-row[data-tide="in"] .tide-arrow {
+  transform: translateX(0.3em);
+  color: var(--signal-text);
+}
+.tide-row[data-tide="in"] .link-arrow {
+  color: var(--paper);
+}
+.tide-row > a,
+.tide-row > div:not(.tide-fill) {
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------
+   Screenshots and the portrait. On laptops they are drawn into the
+   liquid (data-gl-live); the <img> keeps its box and goes invisible.
+   ------------------------------------------------------------------ */
+.shot-url {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+  color: var(--graphite);
+}
+.shot-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: 0.875rem;
+  text-align: left;
+  cursor: zoom-in;
+}
+.shot-img {
+  border-radius: 0.875rem;
+  box-shadow: 0 0 0 1px var(--rule-strong), var(--elevation);
+}
+.shot-phone {
+  border-radius: 1.125rem;
+}
+[data-gl-live] .shot-img,
+[data-gl-live] .portrait-img {
+  opacity: 0;
+}
+.shot-kbd {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  height: 1.75rem;
+  gap: 0.375rem;
+  padding: 0 0.5rem;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.shot-button:hover .shot-kbd,
+.shot-button:focus-visible .shot-kbd {
+  opacity: 1;
+}
+.portrait-img {
+  border-radius: 1.5rem;
+}
+
+/* Scroll cue at the bottom of the hero. */
+.scroll-cue {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .scroll-cue {
+    position: absolute;
+    bottom: 1.75rem;
+    left: max(clamp(4.5rem, 7vw, 7.5rem), calc((100vw - 88rem) / 2 + clamp(4.5rem, 7vw, 7.5rem)));
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--graphite);
+  }
+  .scroll-cue-line {
+    position: relative;
+    width: 3rem;
+    height: 1px;
+    overflow: hidden;
+    background: var(--rule-strong);
+  }
+  .scroll-cue-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--signal-text);
+    animation: cue 2.4s var(--ease-pour) infinite;
+  }
+}
+@keyframes cue {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* The contact address: an underline that fills with cobalt from the left. */
 .email-link {
   width: fit-content;
   max-width: 100%;
@@ -1084,8 +1653,491 @@ html[data-motion="on"] [data-reveal="blot"]:not([data-in]) {
   transform: scaleX(1);
 }
 
-/* On the home page the body is the pool, so the hero matches the liquid before it fades in (and
-   without WebGL). */
-html:has(.liquid-field) body {
+/* ------------------------------------------------------------------
+   The HUD (components/hud.tsx): flying section names, the frost pools
+   behind them, and the ruler.
+   ------------------------------------------------------------------ */
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.hud-letters {
+  --hud-font: 650 semi-condensed 100px var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  position: absolute;
+  inset: 0;
+}
+.hud-ltr {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  white-space: pre;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform, opacity;
+  text-shadow: 0 0 16px var(--pool), 0 0 3px var(--pool);
+  transition: color 240ms ease;
+}
+.hud-ltr[data-x] {
+  color: var(--ink-x);
+  text-shadow: 0 0 16px var(--pool-x), 0 0 3px var(--pool-x);
+}
+.hud-pool {
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  transition: opacity 260ms ease, background-color 300ms ease;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  background: color-mix(in srgb, var(--pool) 55%, transparent);
+}
+.hud-pool[data-x] {
+  background: color-mix(in srgb, var(--pool-x) 55%, transparent);
+}
+.hud-pool-top {
+  top: 4rem;
+  width: min(48vw, 680px);
+  height: 330px;
+  -webkit-mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+  mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+}
+.hud-pool-bottom {
+  bottom: 0;
+  width: 200px;
+  height: min(70vh, 640px);
+  -webkit-mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+  mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+}
+.hud-rail {
+  position: absolute;
+  top: 4rem;
+  right: 0;
+  bottom: 0;
+  width: 56px;
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+.hud-rail > * {
+  pointer-events: none;
+}
+.hud-rail-frost {
+  position: absolute;
+  inset: 0;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  -webkit-mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 65%, transparent);
+  mask-image: linear-gradient(to left, #000 40%, rgb(0 0 0 / 0.6) 65%, transparent);
+}
+.hud-tape,
+.hud-words {
+  position: absolute;
+  inset: -4rem 0 0 0;
+}
+.hud-tick {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 10px;
+  height: 1px;
+  background: var(--ink);
+  opacity: 0.38;
+  transform-origin: right center;
+  will-change: transform;
+}
+.hud-tick-major {
+  width: 20px;
+  opacity: 0.8;
+}
+.hud-tick[data-x] {
+  background: var(--ink-x);
+}
+.hud-tick-n {
+  position: absolute;
+  right: 26px;
+  top: -5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+  color: var(--ink);
+  opacity: 0.8;
+}
+.hud-tick[data-x] .hud-tick-n {
+  color: var(--ink-x);
+}
+.hud-mapword {
+  position: absolute;
+  right: 62px;
+  top: 0;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 650;
+  font-stretch: 87.5%;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--ink);
+  opacity: 0;
+  text-shadow: 0 0 10px var(--pool), 0 0 2px var(--pool);
+}
+.hud-bracket {
+  position: absolute;
+  right: 0;
+  top: -4rem;
+  width: 56px;
+  height: 0;
+  opacity: 0;
+  border-block: 1px solid color-mix(in srgb, var(--signal-text) 55%, transparent);
+  background: color-mix(in srgb, var(--signal-text) 12%, transparent);
+}
+.hud-ghost {
+  position: absolute;
+  right: 0;
+  top: -4rem;
+  width: 40px;
+  height: 1px;
+  opacity: 0;
+  background: var(--ink);
+}
+.hud-needle {
+  position: absolute;
+  right: 0;
+  top: -4rem;
+  width: 56px;
+  height: 1px;
+  background: var(--signal-text);
+  box-shadow: 0 0 6px var(--signal-text);
+}
+.hud-readout {
+  position: absolute;
+  right: 4px;
+  top: -13px;
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--signal-text);
+}
+.hud-digit {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+.hud-digit > span {
+  display: flex;
+  flex-direction: column;
+  transition: transform 280ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.hud-pct {
+  margin-left: 1px;
+}
+
+/* ------------------------------------------------------------------
+   The spine (components/spine.tsx): a wire in the left lane and the
+   packet riding it.
+   ------------------------------------------------------------------ */
+.station {
+  display: block;
+  width: 0;
+  height: 0;
+}
+.spine,
+.packet {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .spine {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    width: 1px;
+    height: 0;
+    pointer-events: none;
+    background: var(--rule-strong);
+  }
+  .spine:not([data-placed]) {
+    visibility: hidden;
+  }
+  .spine-lit {
+    position: absolute;
+    inset: 0;
+    background: var(--signal-text);
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+  .spine-node {
+    position: absolute;
+    left: -3.5px;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 999px;
+    background: var(--pool);
+    box-shadow: inset 0 0 0 1.5px var(--rule-strong);
+    transition: background-color 400ms ease, box-shadow 400ms ease, transform 500ms var(--ease-spring);
+  }
+  .spine-node[data-lit] {
+    background: var(--signal-text);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal-text) 20%, transparent);
+    transform: scale(1.15);
+  }
+  .packet {
+    display: block;
+    position: fixed;
+    top: 50%;
+    z-index: 30;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 300ms ease;
+  }
+  .packet[data-on="true"] {
+    opacity: 1;
+  }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .packet {
+    display: none;
+  }
+}
+.packet-capsule {
+  position: absolute;
+  left: -3.5px;
+  top: -10px;
+  width: 7px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px var(--pool), 0 0 14px color-mix(in srgb, var(--signal) 55%, transparent);
+  transform: scaleY(var(--stretch, 1));
+  transition: background-color 300ms ease;
+}
+.packet[data-state="failing"] .packet-capsule {
+  background: var(--fail);
+  box-shadow: 0 0 0 3px var(--pool), 0 0 14px color-mix(in srgb, var(--fail) 55%, transparent);
+}
+.packet-tag {
+  position: absolute;
+  left: 7px;
+  top: -276px;
+  overflow: visible;
+}
+.packet-tag text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  fill: var(--graphite);
+}
+.packet[data-state="failing"] [data-method] {
+  fill: var(--fail);
+}
+
+/* ------------------------------------------------------------------
+   The cursor (components/cursor.tsx).
+   ------------------------------------------------------------------ */
+html[data-pointer="custom"],
+html[data-pointer="custom"] * {
+  cursor: none !important;
+}
+html[data-pointer="custom"] input,
+html[data-pointer="custom"] textarea,
+html[data-pointer="custom"] [cmdk-input] {
+  cursor: text !important;
+}
+.cursor-ring,
+.cursor-dot {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+}
+.cursor-dot {
+  z-index: 10000;
+}
+.cursor-ring::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: -19px;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 70%, transparent);
+  transition: transform 420ms var(--ease-spring), background-color 260ms ease, border-color 260ms ease;
+}
+.cursor-ring[data-x]::before {
+  border-color: color-mix(in srgb, var(--ink-x) 70%, transparent);
+}
+.cursor-ring[data-mode="link"]::before {
+  transform: scale(1.45);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.cursor-ring[data-mode="rail"]::before {
+  transform: scale(0.45);
+}
+.cursor-ring[data-mode="label"]::before {
+  transform: scale(2.3);
+  border-color: var(--signal);
+  background: var(--signal);
+}
+.cursor-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%) scale(0.6);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--signal-ink);
+  opacity: 0;
+  transition: opacity 200ms ease, transform 420ms var(--ease-spring);
+}
+.cursor-ring[data-mode="label"] .cursor-label {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+.cursor-dot::before {
+  content: "";
+  position: absolute;
+  left: -3.5px;
+  top: -3.5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--signal);
+  transition: transform 300ms var(--ease-spring);
+}
+.cursor-dot[data-mode="label"]::before {
+  transform: scale(0);
+}
+
+/* ------------------------------------------------------------------
+   The intro (components/intro.tsx): only under html[data-intro].
+   ------------------------------------------------------------------ */
+.intro {
+  display: none;
+}
+html[data-intro] .intro {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+  animation: intro-gone 1ms linear 1900ms forwards;
+}
+@keyframes intro-gone {
+  to {
+    visibility: hidden;
+  }
+}
+.intro-sheet {
+  position: absolute;
+  inset: 0 0 -14vh 0;
   background: var(--pool);
+  animation: intro-lift 900ms cubic-bezier(0.76, 0, 0.24, 1) 1000ms forwards;
+}
+@keyframes intro-lift {
+  0% {
+    transform: translate3d(0, 0, 0);
+    border-radius: 0 0 50% 50% / 0 0 0 0;
+  }
+  55% {
+    border-radius: 0 0 50% 50% / 0 0 14vh 14vh;
+  }
+  100% {
+    transform: translate3d(0, -118vh, 0);
+    border-radius: 0 0 50% 50% / 0 0 6vh 6vh;
+  }
+}
+.intro-center {
+  position: absolute;
+  left: 50%;
+  top: 50vh;
+  width: min(78vw, 26rem);
+  transform: translate(-50%, -50%);
+  animation: intro-center 360ms var(--ease-out) 880ms forwards;
+}
+@keyframes intro-center {
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 2rem));
+  }
+}
+.intro-count {
+  display: flex;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 16vw, 9rem);
+  font-weight: 650;
+  font-stretch: 87.5%;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.intro-col {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+}
+.intro-reel > span,
+.odo-reel > span,
+.hud-digit > span > span {
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+.intro-reel {
+  display: flex;
+  flex-direction: column;
+  animation: intro-reel 900ms cubic-bezier(0.65, 0, 0.35, 1) 60ms both;
+}
+@keyframes intro-reel {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(var(--to) * -1em));
+  }
+}
+.intro-bar {
+  display: block;
+  height: 1px;
+  margin-top: 1.25rem;
+  background: var(--signal);
+  transform-origin: left;
+  animation: intro-bar 900ms cubic-bezier(0.65, 0, 0.35, 1) 60ms both;
+}
+@keyframes intro-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+.intro-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+}
+html[data-intro] .rise-line > span,
+html[data-intro] .fade-up {
+  animation-delay: calc(var(--d, 0ms) + 1150ms);
 }

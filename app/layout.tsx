@@ -80,7 +80,9 @@ export const viewport: Viewport = {
 //    production domain. React then can't match <head> and re-renders the whole page on the
 //    client (error #418). Remove comments and whitespace-only text nodes that precede this script.
 // 2. Applies a saved theme before first paint so there's no flash.
-const headScript = `(function(){var n=document.head&&document.head.firstChild;while(n){var x=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!/\\S/.test(n.nodeValue)))n.parentNode.removeChild(n);n=x}})();try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+// 3. Marks the first view of the home page in this tab, so the intro (components/intro.tsx) plays
+//    once; never under reduced motion, and never without JavaScript.
+const headScript = `(function(){var n=document.head&&document.head.firstChild;while(n){var x=n.nextSibling;if(n.nodeType===8||(n.nodeType===3&&!/\\S/.test(n.nodeValue)))n.parentNode.removeChild(n);n=x}})();try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}try{if(location.pathname==="/"&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!sessionStorage.getItem("intro")){document.documentElement.dataset.intro="";sessionStorage.setItem("intro","1")}}catch(e){}`;
 
 const personJsonLd = {
   "@context": "https://schema.org",

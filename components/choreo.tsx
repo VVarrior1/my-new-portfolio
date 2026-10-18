@@ -1,0 +1,164 @@
+"use client";
+
+import { useEffect } from "react";
+import { emitFlow } from "@/lib/flow-bus";
+import { onFrame } from "@/lib/ticker";
+
+/**
+ * The home page's smaller motions, all off under reduced motion (the page is complete without them):
+ * - figures count up as they scroll in;
+ * - the off-the-clock rivers of type run at the speed you scroll, in opposite directions;
+ * - rows (more projects, writing) fill with a tide from the edge the pointer came in by, and leave
+ *   by the edge it goes out of, dropping a little ink into the liquid;
+ * - the experience odometer rolls to the start date of the role you're reading, and its lane lights;
+ * - the contact card assembles from its parts as it arrives;
+ * - after the intro, one drop lands in the liquid.
+ */
+export function Choreo() {
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const root = document.documentElement;
+    const cleanups: Array<() => void> = [];
+
+    // Counts.
+    const counts = Array.from(document.querySelectorAll<HTMLElement>("[data-count]"));
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          io.unobserve(entry.target);
+          const el = entry.target as HTMLElement;
+          const run = el.querySelector<HTMLElement>(".count-run");
+          const target = Number(el.dataset.count);
+          if (!run || !Number.isFinite(target)) continue;
+          const decimals = (el.dataset.count?.split(".")[1] ?? "").length;
+          const t0 = performance.now();
+          const duration = 1400;
+          const step = (now: number) => {
+            const t = Math.min(1, (now - t0) / duration);
+            const e = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            run.textContent = `${el.dataset.prefix ?? ""}${(target * e).toFixed(decimals)}${el.dataset.suffix ?? ""}`;
+            if (t < 1) requestAnimationFrame(step);
+          };
+          run.textContent = `${el.dataset.prefix ?? ""}${(0).toFixed(decimals)}${el.dataset.suffix ?? ""}`;
+          requestAnimationFrame(step);
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px" },
+    );
+    counts.forEach((el) => io.observe(el));
+    cleanups.push(() => io.disconnect());
+
+    // Rivers of type.
+    const rows = Array.from(document.querySelectorAll<HTMLElement>("[data-marquee]"));
+    if (rows.length) {
+      root.dataset.marquee = "js";
+      const offsets = rows.map(() => 0);
+      const visible = new Set<Element>();
+      const vio = new IntersectionObserver((entries) => entries.forEach((e) => (e.isIntersecting ? visible.add(e.target) : visible.delete(e.target))));
+      rows.forEach((row) => vio.observe(row));
+      cleanups.push(() => vio.disconnect());
+      cleanups.push(
+        onFrame((fr) => {
+          rows.forEach((row, i) => {
+            if (!visible.has(row)) return;
+            const run = row.firstElementChild as HTMLElement | null;
+            const width = run?.offsetWidth || 1;
+            const dir = Number(row.dataset.marquee) || 1;
+            const speed = 46 + Math.min(1400, Math.abs(fr.velocity)) * 0.42;
+            offsets[i] = (offsets[i] + speed * fr.dt) % width;
+            const x = dir > 0 ? -offsets[i] : offsets[i] - width;
+            row.style.transform = `translate3d(${x.toFixed(1)}px,0,0) skewX(${(-Math.max(-12, Math.min(12, fr.velocity / 120)) * dir).toFixed(2)}deg)`;
+          });
+        }, 50),
+      );
+      cleanups.push(() => delete root.dataset.marquee);
+    }
+
+    // Tide rows: the fill comes in from the edge the pointer entered by.
+    const tides = Array.from(document.querySelectorAll<HTMLElement>(".tide-row"));
+    const onEnter = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      const row = e.currentTarget as HTMLElement;
+      const r = row.getBoundingClientRect();
+      const fromTop = e.clientY < r.top + r.height / 2;
+      row.style.setProperty("--from", fromTop ? "-101%" : "101%");
+      row.dataset.tide = "pre";
+      void row.offsetWidth;
+      row.dataset.tide = "in";
+      emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: fromTop ? 300 : -300, ink: 0.12, accent: 0.06, radius: 0.08 });
+    };
+    const onLeave = (e: PointerEvent) => {
+      const row = e.currentTarget as HTMLElement;
+      const r = row.getBoundingClientRect();
+      row.style.setProperty("--to", e.clientY < r.top + r.height / 2 ? "-101%" : "101%");
+      row.dataset.tide = "out";
+    };
+    tides.forEach((row) => {
+      row.addEventListener("pointerenter", onEnter);
+      row.addEventListener("pointerleave", onLeave);
+    });
+    cleanups.push(() =>
+      tides.forEach((row) => {
+        row.removeEventListener("pointerenter", onEnter);
+        row.removeEventListener("pointerleave", onLeave);
+      }),
+    );
+
+    // Experience: the odometer and the lit lane follow the role you're reading.
+    const exp = document.querySelector<HTMLElement>("[data-experience]");
+    if (exp) {
+      const roles = Array.from(exp.querySelectorAll<HTMLElement>("[data-role]"));
+      const reels = Array.from(exp.querySelectorAll<HTMLElement>("[data-reel]"));
+      const lanes = Array.from(exp.querySelectorAll<HTMLElement>("[data-lane]"));
+      const monthEl = exp.querySelector<HTMLElement>("[data-exp-month]");
+      const companyEl = exp.querySelector<HTMLElement>("[data-exp-company]");
+      let active = -1;
+      cleanups.push(
+        onFrame((fr) => {
+          let next = 0;
+          for (let i = 0; i < roles.length; i++) if (roles[i].getBoundingClientRect().top < fr.vh * 0.58) next = i;
+          if (next === active) return;
+          active = next;
+          const role = roles[next];
+          const digits = role.dataset.odo ?? "";
+          reels.forEach((reel, i) => reel.style.setProperty("--n", digits[i] ?? "0"));
+          if (monthEl) monthEl.textContent = role.dataset.month ?? "";
+          if (companyEl) companyEl.textContent = role.dataset.company ?? "";
+          lanes.forEach((lane) => lane.toggleAttribute("data-on", lane.dataset.lane === String(next)));
+          exp.dataset.active = String(next);
+        }, 60),
+      );
+    }
+
+    // Contact: the parts rise into place as the section arrives.
+    const contact = document.querySelector<HTMLElement>("[data-contact]");
+    if (contact) {
+      const parts = Array.from(contact.querySelectorAll<HTMLElement>("[data-part]"));
+      cleanups.push(
+        onFrame((fr) => {
+          const top = contact.getBoundingClientRect().top;
+          if (top > fr.vh * 1.2 || top < -fr.vh) return;
+          const p = Math.max(0, Math.min(1, (fr.vh - top) / (fr.vh * 0.62)));
+          const e = 1 - Math.pow(1 - p, 3);
+          parts.forEach((part, i) => {
+            const y = (1 - e) * (70 + i * 34);
+            part.style.transform = y > 0.2 ? `translate3d(0,${y.toFixed(1)}px,0)` : "";
+            part.style.opacity = (0.15 + 0.85 * Math.min(1, e * 1.3)).toFixed(3);
+          });
+        }, 60),
+      );
+      cleanups.push(() => parts.forEach((part) => ((part.style.transform = ""), (part.style.opacity = ""))));
+    }
+
+    // The intro ends with a drop landing in the pool.
+    if (root.hasAttribute("data-intro")) {
+      const t = window.setTimeout(() => emitFlow({ kind: "drop", x: window.innerWidth * 0.5, y: window.innerHeight * 0.92, size: 1.1 }), 1250);
+      cleanups.push(() => window.clearTimeout(t));
+    }
+
+    return () => cleanups.forEach((fn) => fn());
+  }, []);
+
+  return null;
+}
