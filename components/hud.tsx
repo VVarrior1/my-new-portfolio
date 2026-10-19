@@ -10,10 +10,11 @@ import { redrawMark } from "./brand-mark";
 //
 // Section names wait in a queue on the right edge, set sideways like the spines of books. When a
 // section reaches the top of the screen its name's letters fly one by one along curved paths,
-// tumbling as they go, and dock upright in the top-right corner; earlier names shrink into a
-// breadcrumb stack above it. Project names don't queue: their poster letters lift off the page
-// itself and fly into the stack. Flying letters stir the liquid under them. A flip left half-done
-// when you stop scrolling finishes (or reverts) on its own, so letters never rest mid-air.
+// tumbling as they go, and dock upright in the top-right corner. Only the current section's name
+// is docked: the one before it lifts away and fades as the next arrives, so the corner never
+// piles up into a stack of names. Flying letters push the liquid under them (no dye: a dotted
+// trail of ink drops is a row of loose dots). A flip left half-done when you stop scrolling
+// finishes (or reverts) on its own, so letters never rest mid-air.
 //
 // On the right edge, a ruler: tick tape that slides with the page, a needle and a rolling percent
 // readout; point at it and it zooms out into a map of the whole page with every section on it.
@@ -22,10 +23,9 @@ import { redrawMark } from "./brand-mark";
 // Laptops and desktops only (a fine pointer, 1024px and up, motion allowed). Everything here is
 // decoration (aria-hidden); the header nav and the in-page headings carry the same information.
 
-const SIZE = 40; // HUD letter size, px
+const SIZE = 32; // HUD letter size, px
 const STAGGER = 0.16;
-const QUEUE_SCALE = 0.4;
-const STACK_SCALE = 0.5;
+const QUEUE_SCALE = 0.45;
 const RAIL = 56;
 const NAV = 64;
 
@@ -33,18 +33,12 @@ type Entry = {
   word: string;
   index: string;
   anchor: HTMLElement;
-  /** Letters on the page that lift off (project posters); null for queued section names. */
-  source: HTMLElement[] | null;
-  queued: boolean;
   letters: HTMLSpanElement[];
   adv: number[];
   cum: number[];
   total: number;
   tumble: number[];
   flipP: number;
-  detach: number;
-  /** Section entries own the project entries that follow them until the next section. */
-  parent: number;
   prev: Array<{ x: number; y: number }>;
 };
 
@@ -285,12 +279,8 @@ function HudLayer() {
       const font = getComputedStyle(layer).getPropertyValue("--hud-font").trim() || `650 100px sans-serif`;
       const nodes = Array.from(document.querySelectorAll<HTMLElement>("main [data-hud]"));
       const entries: Entry[] = [];
-      let parent = -1;
       nodes.forEach((anchor, i) => {
         const word = (anchor.dataset.hud || "").toUpperCase();
-        const source = anchor.dataset.hudSource !== undefined ? Array.from(anchor.querySelectorAll<HTMLElement>("[data-ltr]")) : null;
-        const queued = !source;
-        if (queued) parent = entries.length;
         const { cum, adv, total } = measure(word, font);
         const letters = Array.from(word).map((ch, k) => {
           const el = document.createElement("span");
@@ -307,16 +297,12 @@ function HudLayer() {
           word,
           index: anchor.dataset.hudIndex || "",
           anchor,
-          source,
-          queued,
           letters,
           adv,
           cum,
           total,
           tumble,
           flipP: 0,
-          detach: 0,
-          parent: queued ? -1 : parent,
           prev: letters.map(() => ({ x: 0, y: 0 })),
         });
       });
@@ -330,7 +316,7 @@ function HudLayer() {
         const entry = entries[Number(el.dataset.entry)];
         if (entry)
           scrollToTarget(entry.anchor, {
-            offset: entry.queued ? -NAV : -NAV - 120,
+            offset: -NAV,
             duration: 1.25,
           });
       };
@@ -355,9 +341,7 @@ function HudLayer() {
         ticks.push(t);
       }
       const words = rail.querySelector<HTMLElement>("[data-words]")!;
-      const mapWords = entries
-        .filter((e) => e.queued)
-        .map((e) => {
+      const mapWords = entries.map((e) => {
           const w = document.createElement("span");
           w.className = "hud-mapword";
           w.textContent = e.word;
@@ -479,38 +463,25 @@ function HudLayer() {
         // 1. Flip progress per entry.
         for (const e of entries) {
           const top = e.anchor.getBoundingClientRect().top;
-          e.flipP = flipProgress(top, vh, e.queued);
-        }
-        // Project names leave the stack when the next section arrives.
-        for (const e of entries) {
-          if (e.queued) continue;
-          const next = entries.find((o, j) => o.queued && j > entries.indexOf(e));
-          e.detach = next ? next.flipP : 0;
+          e.flipP = flipProgress(top, vh, true);
         }
 
-        // 2. Stack positions (top-right) and queue positions (bottom-right), continuous.
+        // 2. The dock (top-right) and queue positions (bottom-right), continuous. Every name docks
+        // in the same slot; as the next one flies in, the one there lifts a little, shrinks and
+        // fades, so the corner holds one name (two only for the moment they cross).
         const right = vw - RAIL - 22;
-        let stackY = NAV + 62;
-        const flipped = entries.filter((e) => e.flipP > 0);
+        const dockY = NAV + 62 + SIZE / 2;
         const slot = new Map<Entry, { y: number; scale: number; alpha: number }>();
-        flipped.forEach((e, i) => {
-          // Older names shrink as the ones after them arrive; detached ones (project names once the
-          // next section is here) fade out where they are and give up their room.
-          const older = clamp01(flipped.slice(i + 1).reduce((s, o) => s + o.flipP * (1 - o.detach), 0));
-          const scale = 1 - (1 - STACK_SCALE) * older;
-          const presence = e.flipP * (1 - e.detach);
-          slot.set(e, {
-            y: stackY + (SIZE * scale) / 2,
-            scale,
-            alpha: (1 - 0.58 * older) * (1 - e.detach),
-          });
-          stackY += (SIZE * scale * 0.9 + 4 + 14 * (1 - older)) * presence;
+        entries.forEach((e, i) => {
+          if (e.flipP <= 0) return;
+          const next = entries[i + 1];
+          const gone = next ? ease(next.flipP) : 0;
+          slot.set(e, { y: dockY - gone * SIZE * 0.9, scale: 1 - 0.25 * gone, alpha: 1 - gone });
         });
 
         let queueBottom = vh - 30;
         const queuePos = new Map<Entry, number>();
         for (const e of entries) {
-          if (!e.queued) continue;
           queuePos.set(e, queueBottom);
           queueBottom -= (e.total * SIZE * QUEUE_SCALE + 18) * (1 - e.flipP);
         }
@@ -525,66 +496,37 @@ function HudLayer() {
         const fade = (1 - zoom) * (1 - yieldP);
         for (const e of entries) {
           const n = e.letters.length;
-          const s = slot.get(e) ?? {
-            y: NAV + 62 + SIZE / 2,
-            scale: 1,
-            alpha: 1,
-          };
+          const s = slot.get(e) ?? { y: dockY, scale: 1, alpha: 1 };
           const qb = queuePos.get(e) ?? vh - 30;
-          if (e.queued && e.flipP > 0.04 && e.flipP < 0.96) anyMid = true;
-          const sourceRects = e.source ? e.source.map((el) => el.getBoundingClientRect()) : null;
+          if (e.flipP > 0.04 && e.flipP < 0.96) anyMid = true;
           for (let k = 0; k < n; k++) {
             const el = e.letters[k];
             const d = ease(letterProgress(e.flipP, k, n, STAGGER));
             // Where the letter docks.
             const cx = right - (e.total - e.cum[k] - e.adv[k] / 2) * SIZE * s.scale;
             const p1 = {
-              x: cx + e.detach * 60,
+              x: cx,
               y: s.y,
               rot: 0,
               scale: s.scale,
               alpha: s.alpha,
             };
             // Where it waits.
-            let p0: {
-              x: number;
-              y: number;
-              rot: number;
-              scale: number;
-              alpha: number;
+            const p0 = {
+              x: vw - RAIL - 14 - (SIZE * QUEUE_SCALE) / 2,
+              y: qb - (e.cum[k] + e.adv[k] / 2) * SIZE * QUEUE_SCALE,
+              rot: -90,
+              scale: QUEUE_SCALE,
+              alpha: 0.42,
             };
-            if (sourceRects) {
-              const r = sourceRects[k];
-              const px = r ? r.left + r.width / 2 : cx;
-              const py = r ? r.top + r.height / 2 : s.y;
-              const scale = r ? r.height / SIZE : 1;
-              p0 = { x: px, y: py, rot: 0, scale, alpha: 1 };
-            } else {
-              p0 = {
-                x: vw - RAIL - 14 - (SIZE * QUEUE_SCALE) / 2,
-                y: qb - (e.cum[k] + e.adv[k] / 2) * SIZE * QUEUE_SCALE,
-                rot: -90,
-                scale: QUEUE_SCALE,
-                alpha: 0.42,
-              };
-            }
             const c = {
-              x: (p0.x + p1.x) / 2 - (sourceRects ? 0 : 90 + k * 6),
-              y: (p0.y + p1.y) / 2 - (sourceRects ? 120 : 0),
+              x: (p0.x + p1.x) / 2 - (90 + k * 6),
+              y: (p0.y + p1.y) / 2,
             };
             const { x, y } = quad(p0, c, p1, d);
             const rot = p0.rot + (p1.rot - p0.rot) * d + Math.sin(Math.PI * d) * e.tumble[k];
             const scale = p0.scale + (p1.scale - p0.scale) * d;
-            let alpha = p0.alpha + (p1.alpha - p0.alpha) * d;
-            if (sourceRects) {
-              // Hand-off: the page letter shows until its twin leaves.
-              const away = d > 0.002;
-              // The page keeps an imprint of the word, outlined, where it lifted off.
-              const src = e.source![k];
-              if (src && src.hasAttribute("data-away") !== away) src.toggleAttribute("data-away", away);
-              if (!away) alpha = 0;
-              if (!sourceRects[k] || sourceRects[k].bottom < -200) alpha *= 1;
-            }
+            const alpha = p0.alpha + (p1.alpha - p0.alpha) * d;
             if (d > 0.9 && alpha > 0.05) {
               const hw = (e.adv[k] * SIZE * scale) / 2;
               const hh = (SIZE * scale) / 2;
@@ -595,6 +537,9 @@ function HudLayer() {
             }
             el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-50%) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
             el.style.opacity = (alpha * fade).toFixed(3);
+            // A name fading out of the dock can't be clicked through to its section.
+            const hit = alpha * fade > 0.2 ? "" : "none";
+            if (el.style.pointerEvents !== hit) el.style.pointerEvents = hit;
             setInvert(el, inBand(y, x));
             // A letter in flight drags the liquid with it.
             const pv = e.prev[k];
@@ -609,8 +554,8 @@ function HudLayer() {
                   y,
                   dx: vx * 0.35,
                   dy: vy * 0.35,
-                  ink: Math.min(0.05, sp * 0.00002),
-                  accent: Math.min(0.06, sp * 0.00003),
+                  ink: 0,
+                  accent: 0,
                   radius: 0.05,
                 });
               }
@@ -632,23 +577,23 @@ function HudLayer() {
         if (Math.abs(yieldP - (clash ? 1 : 0)) < 0.003) yieldP = clash ? 1 : 0;
 
         // 4. Frost pools follow the letters.
-        const topP = Math.max(0, ...entries.map((e) => e.flipP * (1 - e.detach))) * fade;
+        const topP = Math.max(0, ...entries.map((e) => e.flipP)) * fade;
         if (poolTop.current) {
           poolTop.current.style.opacity = topP.toFixed(3);
           if (topP > 0) tint(poolTop.current, bands);
         }
         if (poolBottom.current) {
-          let width = 200;
+          let width = 150;
           if (play) {
             const r = play.getBoundingClientRect();
             const vw = window.innerWidth;
             const poolTop = window.innerHeight - poolBottom.current.offsetHeight;
             // How far the device reaches into the frost, eased out as it scrolls up past its top.
             const over = Math.min(1, Math.max(0, (r.bottom - poolTop) / 120)) * (r.right > vw - 200 ? 1 : 0);
-            width = Math.round(200 - (200 - Math.max(140, vw - r.right + 8)) * over);
+            width = Math.round(150 - (150 - Math.max(120, vw - r.right + 8)) * over);
           }
           if (poolBottom.current.style.width !== `${width}px`) poolBottom.current.style.width = `${width}px`;
-          const queued = entries.some((e) => e.queued && e.flipP < 1);
+          const queued = entries.some((e) => e.flipP < 1);
           poolBottom.current.style.opacity = queued ? (1 - zoom).toFixed(3) : "0";
           if (queued) tint(poolBottom.current, bands);
         }
@@ -658,7 +603,7 @@ function HudLayer() {
         if (lenis && !dragging && !(window as { __hudNoSnap?: boolean }).__hudNoSnap) {
           still = Math.abs(velocity) < 30 ? still + dt : 0;
           if (anyMid && still > 0.4 && !snapping && performance.now() - inputAt > 400) {
-            const e = entries.find((o) => o.queued && o.flipP > 0.04 && o.flipP < 0.96);
+            const e = entries.find((o) => o.flipP > 0.04 && o.flipP < 0.96);
             if (e) {
               snapping = true;
               const top = e.anchor.getBoundingClientRect().top;
@@ -747,7 +692,6 @@ function HudLayer() {
         window.removeEventListener("wheel", onInput);
         window.removeEventListener("keydown", onInput);
         window.removeEventListener("touchstart", onInput);
-        for (const e of entries) e.source?.forEach((el) => el.removeAttribute("data-away"));
         name?.dispose();
       };
     };

@@ -44,8 +44,32 @@ test.describe("liquid world", () => {
       .toBeLessThan(200);
     const docked = await letters.last().boundingBox();
     expect(docked!.x).toBeGreaterThan(1100);
-    // Docked, and readable (it may already have shrunk into the breadcrumb under SYSTEMLAB).
+    // Docked, and readable.
     expect(Number(await letters.first().evaluate((el) => getComputedStyle(el).opacity))).toBeGreaterThan(0.3);
+  });
+
+  test("the corner holds one section name, never a stack of them, and project names stay on the page", async ({ page }) => {
+    await skipIntro(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript(() => ((window as unknown as { __hudNoSnap: boolean }).__hudNoSnap = true));
+    await page.goto("/");
+    await page.waitForLoadState("load");
+    await expect(page.locator(".hud-ltr").first()).toBeAttached();
+    // Projects are plain headings: nothing lifts off them and nothing is left outlined behind.
+    await expect(page.locator("main [data-hud-source]")).toHaveCount(0);
+    await expect(page.locator("#systemlab-title")).toHaveCSS("-webkit-text-stroke-width", "0px");
+    const docked = () =>
+      page.evaluate(() => {
+        const words = new Set<string>();
+        for (const el of Array.from(document.querySelectorAll<HTMLElement>(".hud-ltr"))) {
+          const r = el.getBoundingClientRect();
+          if (Number(getComputedStyle(el).opacity) > 0.5 && r.top < 260 && r.left > 1000) words.add(el.dataset.entry ?? "");
+        }
+        return words.size;
+      });
+    // Down at the contact section, after all five sections have arrived.
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(docked).toBe(1);
   });
 
   test("the résumé chapter is set in the opposite theme", async ({ page }) => {

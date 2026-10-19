@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Count, Letters } from "@/components/section";
+import { Count, InlineLetters } from "@/components/section";
 
 describe("Count", () => {
   it("renders the final value for readers without JavaScript, with the parts to count", () => {
@@ -23,11 +23,11 @@ describe("Count", () => {
   });
 });
 
-describe("Letters", () => {
+describe("InlineLetters", () => {
   it("reads as one word and shows one letter per span", () => {
-    const { container } = render(<Letters text="CYD" />);
-    expect(container.querySelector(".sr-only")?.textContent).toBe("CYD");
-    expect(container.querySelectorAll("[data-ltr]")).toHaveLength(3);
+    const { container } = render(<InlineLetters text="Work" mark="tl" />);
+    expect(container.querySelector(".sr-only")?.textContent).toBe("Work");
+    expect(container.querySelectorAll("[data-tl]")).toHaveLength(4);
     expect(container.querySelector("[aria-hidden='true']")).not.toBeNull();
   });
 });

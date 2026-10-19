@@ -1317,51 +1317,19 @@ html:has(.liquid-field) body {
 }
 
 /* ------------------------------------------------------------------
-   Poster type. Instrument Sans semi-condensed, heavy, very large: the
-   project names (whose letters the HUD lifts off the page), the tools
-   count, the experience odometer, and the contact title.
+   Poster type. Instrument Sans semi-condensed, heavy, large: the tools
+   count, the experience odometer and the contact title. Project names
+   are headings at reading size (.t-project), not posters: the giant
+   outlined names behind the work read as noise, not as titles.
    ------------------------------------------------------------------ */
-.poster {
+.t-project {
   font-family: var(--font-display);
+  font-size: clamp(2.125rem, 4.2vw, 3.75rem);
   font-weight: 650;
   font-stretch: 87.5%;
-  letter-spacing: -0.035em;
-  line-height: 0.84;
-}
-.poster-word {
-  display: block;
-  font-size: clamp(3.75rem, 12.5vw, 12rem);
-  margin-left: -0.04em;
-}
-.poster-rest {
-  display: block;
-  margin-top: 0.9rem;
-  font-size: clamp(1.75rem, 2.8vw, 2.5rem);
-  font-weight: 600;
-  font-stretch: 100%;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-}
-.letters {
-  white-space: nowrap;
-}
-.ltr {
-  display: inline-block;
   line-height: 1;
-  transition: color 500ms var(--ease-out);
-}
-/* A letter the HUD has lifted off leaves its outline behind. */
-.ltr[data-away] {
-  color: transparent;
-  -webkit-text-stroke: 1px var(--rule-strong);
-  transition-duration: 120ms;
-}
-.project-head-flip {
-  text-align: right;
-}
-.project-head-flip .poster-word {
-  margin-left: 0;
-  margin-right: -0.04em;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 .t-poster {
   font-family: var(--font-display);
@@ -1842,7 +1810,7 @@ html:has(.liquid-field) body {
   left: 0;
   top: 0;
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: 32px; /* SIZE in components/hud.tsx */
   font-weight: 650;
   font-stretch: 87.5%;
   line-height: 1;

@@ -9,7 +9,7 @@ import { LiquidField } from "@/components/liquid-field";
 import { LiveSystem } from "@/components/live-system";
 import { PageFx } from "@/components/page-fx";
 import { ProjectShot } from "@/components/project-shot";
-import { Count, InlineLetters, Letters, Section } from "@/components/section";
+import { Count, InlineLetters, Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SpanStrip } from "@/components/span-strip";
@@ -35,9 +35,6 @@ const formatMonth = (date: string) => new Date(date).toLocaleDateString("en-US",
 
 /** The home page shows only the most technical posts; the rest are one click away. */
 const HOME_POSTS = 3;
-
-/** The short name each project flies into the HUD as, and lifts off its poster. */
-const POSTER: Record<string, string> = { systemlab: "Systemlab", cyd: "CYD" };
 
 function ExternalLinks({ links }: { links: ContentLink[] }) {
   if (links.length === 0) return null;
@@ -184,12 +181,11 @@ export default async function Home() {
           <div className="space-y-28 sm:space-y-40">
             {featured.map((project, index) => {
               const flip = index % 2 === 1;
-              const word = POSTER[project.slug] ?? project.name;
-              const rest = project.name.startsWith(word) ? project.name.slice(word.length).trim() : "";
               return (
                 <article key={project.slug} aria-labelledby={`${project.slug}-title`} className="project relative">
                   <Station route={`/work/${project.slug}`} />
-                  <header className={`project-head ${flip ? "project-head-flip" : ""}`}>
+                  {/* A heading at reading size: the project, not a poster of its name. */}
+                  <header className="project-head">
                     <p className="t-mono text-graphite" data-calm="0.9">
                       <span className="text-signal-text">{String(index + 1).padStart(2, "0")}</span>
                       <span className="px-2" aria-hidden="true">
@@ -197,16 +193,10 @@ export default async function Home() {
                       </span>
                       {project.role}
                     </p>
-                    <h3 id={`${project.slug}-title`} className="poster" data-hud={word} data-hud-source="" data-calm="0.85">
-                      <Letters text={word} className="poster-word" />
-                      {rest && (
-                        <>
-                          {" "}
-                          <span className="poster-rest ml-auto w-fit" data-reveal="wipe">
-                            {rest}
-                          </span>
-                        </>
-                      )}
+                    <h3 id={`${project.slug}-title`} className="t-project mt-3" data-calm="0.85">
+                      <span className="block w-fit" data-reveal="wipe">
+                        {project.name}
+                      </span>
                     </h3>
                   </header>
 

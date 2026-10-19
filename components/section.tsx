@@ -72,22 +72,6 @@ export function InlineLetters({ text, mark }: { text: string; mark: string }) {
   );
 }
 
-/** A word set as separate letters (for the HUD to lift off the page), read once by screen readers. */
-export function Letters({ text, className = "" }: { text: string; className?: string }) {
-  return (
-    <>
-      <span className="sr-only">{text}</span>
-      <span aria-hidden="true" className={`letters ${className}`}>
-        {Array.from(text.toUpperCase()).map((ch, i) => (
-          <span key={i} data-ltr className="ltr">
-            {ch === " " ? " " : ch}
-          </span>
-        ))}
-      </span>
-    </>
-  );
-}
-
 /**
  * A figure that counts up when it scrolls in. The server renders the final value, and a hidden copy
  * of it holds the width, so the count never shifts the layout and reads right without JavaScript.
