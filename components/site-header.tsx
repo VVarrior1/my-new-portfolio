@@ -16,7 +16,7 @@ const links = [
   { href: "/#contact", label: "Contact" },
 ];
 
-/** `overlay`: the header starts transparent, over the liquid, and turns into frosted paper once you scroll. */
+/** `overlay`: the header starts transparent, over the liquid, and turns into solid paper once you scroll (a see-through frost smeared the text scrolling under it). */
 export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -59,7 +59,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
     <header
       data-site-header=""
       className={`sticky top-0 z-50 border-b transition-[background-color,border-color] duration-200 ${
-        scrolled || open ? "border-rule bg-paper/80 backdrop-blur-xl" : overlay ? "border-transparent bg-transparent" : "border-transparent bg-paper"
+        scrolled || open ? "border-rule bg-paper" : overlay ? "border-transparent bg-transparent" : "border-transparent bg-paper"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-[88rem] items-center justify-between gap-4 px-4 sm:px-8">

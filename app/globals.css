@@ -1283,9 +1283,10 @@ html:has(.liquid-field) body {
     margin-inline: -1rem;
     border-block: 1px solid var(--rule);
     border-radius: 0;
-    background: color-mix(in srgb, var(--pool) 62%, transparent);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
+    /* Solid, in the header's colour, so the bar reads as the header's second row with a crisp
+       edge. A see-through frost here showed the page scrolling under it as smeared, half-readable
+       lines (and any show-through at all reads as ghost text). */
+    background: var(--paper);
   }
   .sec-index {
     flex-basis: auto;
@@ -1832,18 +1833,18 @@ html:has(.liquid-field) body {
   right: 0;
   opacity: 0;
   transition: opacity 260ms ease;
-  -webkit-backdrop-filter: blur(9px);
-  backdrop-filter: blur(9px);
 }
 /* A frost's tint: the pool, and the opposite theme's pool where the chapter is under it (each layer
-   is clipped to its part by components/hud.tsx). */
+   is clipped to its part by components/hud.tsx). The pools behind the docked name and the queue
+   are a plain fade, with no blur: text sliding under a blur read as a smeared rendering glitch,
+   while under a fade it simply dims out of the way. */
 .hud-tint {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--pool) 55%, transparent);
+  background: color-mix(in srgb, var(--pool) 82%, transparent);
 }
 .hud-tint-x {
-  background: color-mix(in srgb, var(--pool-x) 55%, transparent);
+  background: color-mix(in srgb, var(--pool-x) 82%, transparent);
   clip-path: inset(0 0 100% 0);
 }
 .hud-mapfrost .hud-tint {
@@ -1854,14 +1855,14 @@ html:has(.liquid-field) body {
 }
 .hud-pool-top {
   top: 4rem;
-  width: min(48vw, 680px);
-  height: 330px;
+  width: min(34vw, 460px);
+  height: 230px;
   -webkit-mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
   mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
 }
 .hud-pool-bottom {
   bottom: 0;
-  width: 200px;
+  width: 150px;
   height: min(70vh, 640px);
   -webkit-mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
   mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
@@ -2132,9 +2133,8 @@ html[data-name-flight] [data-wl]:not([data-keep]) {
   pointer-events: none;
   opacity: 0;
   border-bottom: 1px solid var(--rule);
-  background: color-mix(in srgb, var(--pool) 72%, transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  /* Solid, like the header above it: a see-through frost smeared the text under it. */
+  background: var(--paper);
   transition: opacity 300ms ease, background-color 300ms ease, border-color 300ms ease;
 }
 .mhud-tags {
