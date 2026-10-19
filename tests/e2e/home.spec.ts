@@ -12,67 +12,41 @@ test.describe("home page", () => {
     await expect(page.getByRole("link", { name: /^Résumé/ }).first()).toHaveAttribute("href", "/Abdelrahman_Mohamed_Resume.pdf");
   });
 
-  test("the hero simulator reacts to traffic, servers and the cache", async ({ page }) => {
-    await page.goto("/");
-    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
-    const hint = sim.locator("p[aria-live]");
-    await expect(hint).toContainText("Healthy");
-
-    await sim.getByRole("slider").focus();
-    for (let i = 0; i < 44; i++) await page.keyboard.press("ArrowRight"); // 160 -> 600 req/s
-    await expect(sim.getByText("600 requests/s")).toBeVisible();
-    await expect(hint).toContainText("app servers are saturated", { timeout: 8000 });
-
-    await sim.getByRole("button", { name: "Add a server" }).click();
-    await sim.getByRole("button", { name: "Add a server" }).click();
-    await sim.getByRole("switch").click();
-    await expect(hint).toContainText("Healthy", { timeout: 10000 });
-
-    await sim.getByRole("button", { name: "Kill a server" }).click();
-    await expect(sim.getByRole("button", { name: /^Restart app \d$/ })).toBeVisible();
-  });
-
-  test("left alone, the simulator breaks itself once, and a touch hands it back", async ({ page }) => {
-    test.setTimeout(45_000);
-    const events: string[] = [];
-    await page.route("**/api/analytics/track", async (route) => {
-      const body = JSON.parse(route.request().postData() ?? "{}");
-      if (body.type === "event") events.push(body.name);
-      await route.fulfill({ status: 204 });
-    });
+  test("the hero shows his portrait beside the name, and the photo appears once on the page", async ({ page }) => {
     await page.addInitScript(() => {
-      // Playwright sets navigator.webdriver, which the tracker skips on purpose; look like a person here.
-      Object.defineProperty(navigator, "webdriver", { get: () => false });
       try {
         sessionStorage.setItem("intro", "1");
       } catch {}
     });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
-    const hint = sim.locator("p[aria-live]");
-    // A pointer that only passes over the device restarts the wait; it doesn't call the demo off.
-    await page.waitForTimeout(2500);
-    await sim.hover();
-    await page.mouse.move(5, 5);
-    // Nobody presses anything: after the idle wait it narrates, kills a server, and offers the restart.
-    await expect(hint).toContainText("Traffic climbs", { timeout: 15_000 });
-    await expect(sim.getByRole("button", { name: /^Restart app 2$/ })).toBeVisible({ timeout: 6000 });
-    expect(events).toContain("sim:demo");
-    // Hovering doesn't stop it either; a press does, and hands back the starting setup, every server up.
-    await sim.hover();
-    await page.waitForTimeout(400);
-    await expect(hint).not.toContainText("Demo stopped");
-    await sim.getByText("A small system you can break").click();
-    await expect(hint).toContainText("Demo stopped");
-    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
-    await expect(sim.getByText("160 requests/s")).toBeVisible();
-    // It does not come back, and watching it was never counted as playing with it.
-    await page.mouse.move(5, 5);
-    await page.waitForTimeout(7000);
-    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
-    await expect(hint).not.toContainText("Traffic climbs");
-    expect(events).not.toContain("sim:interact");
+    const portrait = page.locator("[data-hero-portrait] img");
+    await expect(portrait).toBeVisible();
+    await expect(portrait).toHaveAttribute("alt", /Abdelrahman Mohamed/);
+    const name = await page.getByRole("heading", { level: 1 }).boundingBox();
+    const photo = await portrait.boundingBox();
+    // On the right of the name, a modest frame rather than a slab, inside the first screen.
+    expect(photo!.x).toBeGreaterThan(name!.x + name!.width);
+    expect(photo!.width).toBeLessThanOrEqual(360);
+    expect(photo!.y + photo!.height).toBeLessThan(900);
+    // Contact doesn't show the same photo again.
+    await expect(page.locator('img[src*="portrait-snow"], img[srcset*="portrait-snow"]')).toHaveCount(1);
+    // The hero simulator is gone; the Systemlab entry still links to the live app.
+    await expect(page.getByText("A small system you can break")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /^Try it/ })).toHaveAttribute("href", /^https:\/\/system-design-playground/);
+  });
+
+  test("on a phone the portrait sits small above the name, and the hero fits the screen", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    const page = await context.newPage();
+    await page.goto("/");
+    const photo = await page.locator("[data-hero-portrait] img").boundingBox();
+    const name = await page.getByRole("heading", { level: 1 }).boundingBox();
+    expect(photo!.width).toBeLessThanOrEqual(112);
+    expect(photo!.y + photo!.height).toBeLessThan(name!.y);
+    const hero = await page.locator("#top").boundingBox();
+    expect(hero!.height).toBeLessThanOrEqual(844);
+    await context.close();
   });
 
   test("opens the command menu with the keyboard and finds the résumé", async ({ page }) => {
@@ -136,20 +110,6 @@ test.describe("other pages", () => {
 });
 
 test.describe("reduced motion", () => {
-  test("the simulator never runs its demo", async ({ page }) => {
-    test.setTimeout(30_000);
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/");
-    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
-    await expect(sim.locator("p[aria-live]")).toContainText("Healthy");
-    await page.waitForTimeout(9000);
-    await expect(sim.locator("p[aria-live]")).toContainText("Healthy");
-    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
-    await expect(sim.getByText("160 requests/s")).toBeVisible();
-  });
-
-
   test("shows everything without waiting on an animation", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");

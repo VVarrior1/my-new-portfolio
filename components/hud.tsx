@@ -59,7 +59,7 @@ export function Hud() {
  * the brand "Am. Mohamed": the A docks on the mark's A, the rest of the first name pours into the
  * mark's cobalt full stop, and the surname lands letter by letter on the surname. When the first
  * name has been delivered into the stop, the stop runs the mark's route like a request packet and
- * writes the m again. It is scrubbed by the scroll, not snapped, so the simulator under it can be
+ * writes the m again. It is scrubbed by the scroll, not snapped, so the hero's keys under it can be
  * used at any scroll position. Scroll back and the letters fly home (the mark stays; only the
  * surname empties). After getartcraft.com, where the hero wordmark docks as the first heading.
  */

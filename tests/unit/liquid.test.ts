@@ -1,20 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { strainFrom } from "@/lib/flow-bus";
 import { blotPath } from "@/lib/theme";
-
-describe("strainFrom", () => {
-  it("is zero for a healthy system", () => {
-    expect(strainFrom(60, 0, false)).toBe(0);
-  });
-  it("rises with latency, and errors push it to 1", () => {
-    expect(strainFrom(400, 0, false)).toBeGreaterThan(0);
-    expect(strainFrom(400, 0, false)).toBeLessThan(0.5);
-    expect(strainFrom(300, 0.4, false)).toBe(1);
-  });
-  it("a dead server always strains the field a little", () => {
-    expect(strainFrom(60, 0, true)).toBeCloseTo(0.35);
-  });
-});
 
 describe("blotPath", () => {
   // The theme flood and the screenshot reveals interpolate between frames, which browsers only do

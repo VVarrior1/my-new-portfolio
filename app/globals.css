@@ -2,9 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* The hero simulator's phone layout (components/live-system.tsx reads the same query). */
-@custom-variant compact (@media (width < 560px));
-
 /* shadcn's dark: variant, following the same rules as our tokens (OS preference unless data-theme is set). */
 @custom-variant dark {
   &:where([data-theme="dark"], [data-theme="dark"] *) {
@@ -29,12 +26,10 @@
    hue (OKLCH h≈265, chroma ≤ 0.016), so both themes share a temperature.
    Cobalt fills the things you press, marks "now", runs the spine and the
    ruler's needle, voices the serif labels, and is the only colour the
-   fluid can paint besides its neutral ink: there it means traffic (a
-   thread in the current), a killed server and the packet's thread, and
-   calm water holds it back from text like the ink. Status colours
-   (--trace, --fail, --screen-go) mean status only: the simulator's
-   screen, the spine's packet and wire while requests fail, and the
-   /stats chart.
+   fluid can paint besides its neutral ink: there it is the thread in the
+   hero's river, the packet's thread and the theme blot, and calm water
+   holds it back from text like the ink. Status colours (--trace, --fail,
+   --screen-go) mean status only: the /stats chart.
 
    Every theme token has an "-x" twin holding the opposite theme's value,
    for things that cross into the inverted chapter (HUD letters, the
@@ -57,12 +52,12 @@
   --graphite: #5d6067;
   --rule: #d9dadc;
   --rule-strong: #c2c4c8;
-  /* Cobalt. Fills (buttons you press, the kill key, the fader cap, "now"), and text that is a link
+  /* Cobalt. Fills (buttons you press, "now"), and text that is a link
      or an arrow. White on it is 6:1, and as text on the paper it is 5.6:1. */
   --signal: #2a46ff;
   --signal-ink: #ffffff;
   --signal-text: #2a46ff;
-  /* The simulator's screen is dark in both themes (its body is light in light, see .device). */
+  /* Screens (the /stats chart, the phone frames) are dark in both themes. */
   --screen: #0d0e11;
   --screen-raised: #16171b;
   --screen-ink: #eceef2;
@@ -100,7 +95,6 @@
   --fluid-accent-x: #5470ff;
   --fluid-shading-x: 0.5;
   --elevation: 0 1px 0 rgb(14 15 18 / 0.04), 0 24px 48px -28px rgb(14 15 18 / 0.35);
-  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.8) inset, 0 0 0 1px rgb(14 15 18 / 0.07), 0 40px 80px -44px rgb(14 15 18 / 0.42), 0 12px 24px -16px rgb(14 15 18 / 0.22);
   --scrim: rgb(14 15 18 / 0.42);
   /* Motion. A spring for things with weight, and an expo-out for things that glide. */
   --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
@@ -161,7 +155,6 @@
     --fluid-accent-x: #2a46ff;
     --fluid-shading-x: 0;
     --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
-    --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
     --scrim: rgb(0 0 0 / 0.62);
     --destructive: #ff6a55;
     color-scheme: dark;
@@ -198,7 +191,6 @@
   --fluid-accent-x: #2a46ff;
   --fluid-shading-x: 0;
   --elevation: 0 1px 0 rgb(0 0 0 / 0.3), 0 24px 48px -28px rgb(0 0 0 / 0.8);
-  --device-shadow: 0 1px 0 rgb(255 255 255 / 0.07) inset, 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 80px -40px rgb(0 0 0 / 0.9);
   --scrim: rgb(0 0 0 / 0.62);
   --destructive: #ff6a55;
   color-scheme: dark;
@@ -247,7 +239,7 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  /* Radii: 10 (nodes, small controls), 14 (frames, screens), 24 (the device, panels); buttons are pills. */
+  /* Radii: 10 (nodes, small controls), 14 (frames, screens), 24 (the portrait, panels); buttons are pills. */
   --radius-sm: 0.625rem;
   --radius-md: 0.625rem;
   --radius-lg: 0.625rem;
@@ -479,8 +471,7 @@ body {
       --graphite: color-mix(in srgb, var(--pour-ink, var(--paper)) 72%, transparent);
     }
   }
-  .key:active,
-  .key[data-latched="true"] {
+  .key:active {
     transform: scale(0.96);
     transition-duration: 120ms;
   }
@@ -649,96 +640,13 @@ body {
     background: var(--paper-raised);
   }
 
-  /* ------------------------------------------------------------------
-     The device: the simulator, an instrument floating on the fluid. In
-     light it is a pale body around a dark screen, its keys in the page's
-     own colours; in dark the body is the screen's black, and inside it the
-     page tokens are re-pointed at the screen's, so keys, labels and
-     hairlines follow without per-element colours.
-     ------------------------------------------------------------------ */
-  .device {
-    position: relative;
-    border-radius: 1.5rem;
-    background: color-mix(in srgb, var(--paper-raised) 86%, transparent);
-    color: var(--ink);
-    box-shadow: var(--device-shadow);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-  }
-  /* In dark the body is the screen's own black, so the whole instrument is one dark object. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .device {
-      background: color-mix(in srgb, var(--screen) 90%, transparent);
-      color: var(--screen-ink);
-      --ink: var(--screen-ink);
-      --ink-2: var(--screen-ink);
-      --graphite: var(--screen-graphite);
-      --rule: var(--screen-line);
-      --rule-strong: var(--screen-outline);
-      --paper: var(--screen);
-      --key-face: var(--screen-raised);
-      --signal-text: var(--screen-signal);
-    }
-  }
-  :root[data-theme="dark"] .device {
-    background: color-mix(in srgb, var(--screen) 90%, transparent);
-    color: var(--screen-ink);
-    --ink: var(--screen-ink);
-    --ink-2: var(--screen-ink);
-    --graphite: var(--screen-graphite);
-    --rule: var(--screen-line);
-    --rule-strong: var(--screen-outline);
-    --paper: var(--screen);
-    --key-face: var(--screen-raised);
-    --signal-text: var(--screen-signal);
-  }
-  /* A latching key (the cache): lit, filled with ink, while it is on. */
-  .key-latch[data-latched="true"] {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: var(--paper);
-    --graphite: color-mix(in srgb, var(--paper) 70%, transparent);
-    --pour: var(--ink);
-    --pour-ink: var(--paper);
-  }
-  /* The demo's tag on the status line. */
-  .sim-tag {
-    display: inline-block;
-    padding: 0.2em 0.5em;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--screen-signal) 22%, transparent);
-    color: var(--screen-ink);
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1;
-    vertical-align: 0.1em;
-  }
-
-  /* The contact block's portrait plate and the dark screens. */
+  /* A dark screen (the /stats chart). */
   .screen {
     border-radius: 0.875rem;
     background: var(--screen);
     color: var(--screen-ink);
     box-shadow: inset 0 0 0 1px var(--screen-line);
   }
-  /* The simulator's readouts: counts in the display face, condensed, so they read at a glance. */
-  .sim-num {
-    font-family: var(--font-display);
-    font-weight: 650;
-    font-stretch: 87.5%;
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
-  }
-  /* A node's load: a gauge along its foot, eased between the simulator's 200 ms readings. */
-  .sim-level {
-    transition: transform 240ms var(--ease-out);
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .sim-level {
-      transition: none;
-    }
-  }
-
   /* A screenshot in a browser frame. Captures with a dark copy swap by theme
      (components/project-shot.tsx); nothing is dimmed with a filter. */
   .shot-frame {
@@ -781,32 +689,6 @@ body {
     font-size: 0.9375rem;
     font-weight: 500;
     line-height: 1.5rem;
-  }
-
-  /* The fader cap in the simulator's control deck. */
-  .fader-cap {
-    position: relative;
-    display: block;
-    width: 22px;
-    height: 22px;
-    border-radius: 999px;
-    background: var(--signal);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 22%, transparent), 0 2px 6px rgb(0 0 0 / 0.4);
-    cursor: grab;
-    transition: transform 380ms var(--ease-spring), box-shadow 300ms ease;
-  }
-  .fader-cap::after {
-    content: "";
-    position: absolute;
-    inset: -12px;
-  }
-  .fader-cap:hover {
-    transform: scale(1.12);
-  }
-  .fader-cap:active {
-    cursor: grabbing;
-    transform: scale(0.92);
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--signal) 26%, transparent), 0 2px 6px rgb(0 0 0 / 0.4);
   }
 
   /* A row that floods with ink on hover (Writing, More projects): the fill rises from the bottom
@@ -1799,6 +1681,28 @@ html:has(.liquid-field) body {
 .portrait-img {
   border-radius: 1.5rem;
 }
+/* The hero's portrait: a modest frame on laptops, with the river leaving from behind it, and a
+   small one above the name on phones and tablets (where its corners follow its size). */
+.hero-portrait {
+  width: 5.5rem;
+}
+.hero-portrait .portrait-img {
+  border-radius: 1.125rem;
+}
+@media (min-width: 640px) {
+  .hero-portrait {
+    width: 7rem;
+  }
+}
+@media (min-width: 1024px) {
+  .hero-portrait {
+    width: min(100%, 25vw, 20rem);
+    justify-self: center;
+  }
+  .hero-portrait .portrait-img {
+    border-radius: 1.5rem;
+  }
+}
 
 /* The contact address: an underline that fills with cobalt from the left. */
 .email-link {
@@ -2253,15 +2157,6 @@ html[data-name-flight] [data-wl]:not([data-keep]) {
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal-text) 20%, transparent);
     transform: scale(1.15);
   }
-  /* While requests fail, the wire the packet has run is the fail colour. */
-  .spine[data-failing] .spine-lit,
-  .spine[data-failing] .spine-node[data-lit],
-  .spine[data-failing] .spine-branch {
-    background: var(--fail);
-  }
-  .spine[data-failing] .spine-node[data-lit] {
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--fail) 22%, transparent);
-  }
   /* The end: the wire branches across to the key it delivers to. */
   .spine-branch {
     position: absolute;
@@ -2336,10 +2231,6 @@ html[data-name-flight] [data-wl]:not([data-keep]) {
 .packet[data-delivered] .packet-capsule {
   transform: scaleY(0.5);
 }
-.packet[data-state="failing"] .packet-capsule {
-  background: var(--fail);
-  box-shadow: 0 0 0 3px var(--pool), 0 0 14px color-mix(in srgb, var(--fail) 55%, transparent);
-}
 .packet-tag {
   position: absolute;
   left: 7px;
@@ -2352,10 +2243,6 @@ html[data-name-flight] [data-wl]:not([data-keep]) {
   font-weight: 500;
   fill: var(--graphite);
 }
-.packet[data-state="failing"] [data-method] {
-  fill: var(--fail);
-}
-
 /* ------------------------------------------------------------------
    The cursor (components/cursor.tsx).
    ------------------------------------------------------------------ */

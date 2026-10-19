@@ -155,18 +155,6 @@ test.describe("liquid world", () => {
     await expect(page.locator('[data-chapter="invert"]')).toHaveCount(1);
   });
 
-  test("the simulator's packet reports a 503 once you break it", async ({ page }) => {
-    await skipIntro(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/");
-    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
-    await sim.getByRole("slider").focus();
-    for (let i = 0; i < 74; i++) await page.keyboard.press("ArrowRight");
-    await sim.getByRole("button", { name: "Kill a server" }).click();
-    await expect(page.locator(".packet")).toHaveAttribute("data-state", "failing", { timeout: 10000 });
-    await expect(page.locator(".packet [data-method]")).toHaveText("503");
-  });
-
   for (const width of [390, 1024, 1440]) {
     test(`nothing overflows sideways at ${width}px`, async ({ page }) => {
       await skipIntro(page);

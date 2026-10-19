@@ -6,7 +6,6 @@ import { CopyEmail } from "@/components/copy-email";
 import { DotList } from "@/components/dot-list";
 import { Intro } from "@/components/intro";
 import { LiquidField } from "@/components/liquid-field";
-import { LiveSystem } from "@/components/live-system";
 import { PageFx } from "@/components/page-fx";
 import { ProjectShot } from "@/components/project-shot";
 import { Count, InlineLetters, Section } from "@/components/section";
@@ -84,7 +83,7 @@ export default async function Home() {
 
   return (
     <>
-      <Intro />
+      <Intro year={profile.availableFrom.slice(-4)} left="available full-time" right={profile.location} />
       <SiteHeader overlay />
       <LiquidField />
       <PageFx />
@@ -92,11 +91,13 @@ export default async function Home() {
       <main id="main" className="relative">
         <Spine />
 
-        {/* Hero. The name and the facts on the left, held calm; the simulator floating on the right,
-            with the current flowing into it. */}
+        {/* Hero. The name and the facts on the left, held calm; on the right a quiet portrait, with
+            the current coming out from behind it and running round the name. On phones the portrait
+            sits small above the name. */}
         <section id="top" aria-labelledby="hero-name" className="relative">
-          {/* On laptops the hero stops short of the fold, so the Off the clock row below peeks in. */}
-          <div className="wrap grid min-h-[calc(100svh-4rem)] content-center gap-y-12 pb-20 pt-8 sm:pb-24 sm:pt-12 lg:min-h-[calc(100svh-12.5rem)] lg:grid-cols-12 lg:gap-x-8 lg:pb-16 lg:pt-4">
+          {/* On laptops the hero stops short of the fold, so the Off the clock row below peeks in (but
+              keeps room under the copy for the river on short screens). */}
+          <div className="wrap grid min-h-[calc(100svh-4rem)] content-center gap-y-7 pb-20 pt-8 sm:gap-y-9 sm:pb-24 sm:pt-12 lg:min-h-[max(calc(100svh-12.5rem),40.75rem)] lg:grid-cols-12 lg:gap-x-8 lg:pb-16 lg:pt-4">
             <div data-calm="0.92" className="@container min-w-0 lg:col-span-6 lg:self-center">
               <p className="t-mono fade-up text-graphite" style={{ ["--d" as string]: "80ms" }}>
                 {profile.role} · {profile.location}
@@ -154,9 +155,27 @@ export default async function Home() {
               </div>
             </div>
 
-            <div id="play" className="fade-up min-w-0 scroll-mt-20 lg:col-span-6 lg:mr-7 lg:self-center" style={{ ["--d" as string]: "260ms" }} data-calm="0.8">
-              <LiveSystem />
-            </div>
+            <figure
+              className="hero-portrait fade-up order-first min-w-0 lg:order-none lg:col-span-5 lg:col-start-8 lg:self-center"
+              style={{ ["--d" as string]: "260ms" }}
+              data-hero-portrait
+            >
+              <div className="portrait relative w-full" data-gl="portrait">
+                <Image
+                  src="/portrait-snow.jpg"
+                  width={1200}
+                  height={1500}
+                  priority
+                  alt="Abdelrahman Mohamed smiling outdoors in the snow"
+                  sizes="(min-width: 1024px) 320px, (min-width: 640px) 112px, 88px"
+                  className="portrait-img block aspect-[4/5] h-auto w-full object-cover object-top"
+                />
+              </div>
+              {/* From the photo's own metadata (2 January 2025, in Calgary). */}
+              <figcaption className="t-mono ml-auto mt-4 hidden w-fit text-graphite lg:block" data-calm="0.9">
+                Calgary, January 2025
+              </figcaption>
+            </figure>
           </div>
           <Station route="/" role="origin" className="spine-origin" />
         </section>
@@ -489,18 +508,10 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-3 lg:block lg:pt-10" data-part>
-                <div className="portrait relative w-full" data-gl="portrait">
-                  <Image
-                    src="/portrait-snow.jpg"
-                    width={1200}
-                    height={1500}
-                    alt="Abdelrahman Mohamed smiling outdoors in the snow"
-                    sizes="(min-width: 1024px) 300px, (min-width: 640px) 176px, 104px"
-                    className="portrait-img block aspect-[4/5] h-auto w-full object-cover object-top"
-                  />
-                </div>
-                <dl className="spec lg:mt-6" data-calm="0.95">
+              {/* The facts a recruiter checks, level with the keys. The portrait is in the hero, so the
+                  page doesn't show the same photo twice. */}
+              <div className="min-w-0 max-w-sm lg:col-span-3 lg:max-w-none lg:self-end" data-part>
+                <dl className="spec" data-calm="0.95">
                   {profile.plate.map((row) => (
                     <div key={row.label}>
                       <dt>{row.label}</dt>

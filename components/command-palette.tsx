@@ -11,7 +11,6 @@ import {
   MailIcon,
   MoonStarIcon,
   MusicIcon,
-  ServerIcon,
   UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -78,9 +77,6 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
             </CommandItem>
             <CommandItem keywords={["jobs", "career", "education"]} onSelect={() => go("/#experience")}>
               <UserIcon /> Experience
-            </CommandItem>
-            <CommandItem keywords={["simulator", "demo", "system design", "play"]} onSelect={() => go("/#play")}>
-              <ServerIcon /> The system you can break
             </CommandItem>
             <CommandItem keywords={["blog", "posts", "articles"]} onSelect={() => go("/blogs")}>
               <BookOpenIcon /> Writing

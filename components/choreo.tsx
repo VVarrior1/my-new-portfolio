@@ -10,7 +10,6 @@ import { lastFrame, onFrame } from "@/lib/ticker";
  * - rows (more projects, writing) fill with a tide from the edge the pointer came in by, and leave
  *   by the edge it goes out of, dropping a little ink into the liquid;
  * - the experience odometer rolls to the start date of the role you're reading, and its lane lights;
- * - on laptops the simulator sinks back into the liquid as you leave the hero;
  * - the contact card assembles from its parts as it arrives;
  * - after the intro, one drop lands in the liquid.
  */
@@ -161,26 +160,6 @@ export function Choreo() {
       );
     }
 
-    // Leaving the hero on a laptop: while the name flies into the header, the simulator sinks back
-    // into the liquid, tilting away and settling a little lower, like Lando Norris's head plane
-    // handing over to the page. Scrubbed by the scroll; it is still fully usable at any point.
-    // (The inner box, since #play's own entrance animation holds its transform.)
-    const device = document.getElementById("play")?.firstElementChild as HTMLElement | null | undefined;
-    if (device && window.matchMedia("(min-width: 1024px)").matches) {
-      let last = -1;
-      cleanups.push(
-        onFrame((fr) => {
-          const p = Math.max(0, Math.min(1, fr.y / (fr.vh * 0.85)));
-          if (Math.abs(p - last) < 0.001) return;
-          last = p;
-          const e = p * p * (3 - 2 * p);
-          device.style.transformOrigin = "50% 0%";
-          device.style.transform = e > 0 ? `perspective(1400px) translate3d(0,${(e * 70).toFixed(1)}px,0) rotateX(${(e * 14).toFixed(2)}deg) scale(${(1 - e * 0.08).toFixed(4)})` : "";
-        }, 55),
-      );
-      cleanups.push(() => (device.style.transform = ""));
-    }
-
     // Contact: the parts rise into place as the section arrives.
     const contact = document.querySelector<HTMLElement>("[data-contact]");
     if (contact) {
@@ -204,7 +183,7 @@ export function Choreo() {
     // The intro ends with a drop landing in the pool: in the hero it is poured into the river (a
     // burst at the foot of the screen rolls up into loose curls beside the copy).
     if (root.hasAttribute("data-intro")) {
-      // Ink only: the accent is kept for what the simulator does.
+      // Ink only: the accent is kept for the river's thread and the packet.
       const t = window.setTimeout(() => emitFlow({ kind: "drop", x: window.innerWidth * 0.5, y: window.innerHeight * 0.96, size: 0.9, accent: 0.04, river: true }), 1250);
       cleanups.push(() => window.clearTimeout(t));
     }
