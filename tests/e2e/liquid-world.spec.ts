@@ -22,55 +22,130 @@ test.describe("liquid world", () => {
     await expect(page.locator("html")).not.toHaveAttribute("data-intro", /.*/);
   });
 
-  test("section names fly into the corner as their section arrives", async ({ page }) => {
+  test("sections still to come wait in a queue on the right edge and leave as they arrive", async ({ page }) => {
     await skipIntro(page);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.addInitScript(() => ((window as unknown as { __hudNoSnap: boolean }).__hudNoSnap = true));
     await page.goto("/");
-    const letters = page.locator('.hud-ltr[data-entry="0"]');
-    await expect(letters).toHaveCount(4); // W O R K
-    // Waiting in the queue: small, sideways, at the bottom right.
-    const before = await letters.first().boundingBox();
-    expect(before!.y).toBeGreaterThan(450);
+    const work = page.locator('.hud-q[data-entry="0"]');
+    await expect(work).toHaveText("WORK");
+    await expect(page.locator(".hud-q")).toHaveCount(5);
+    // Waiting: small, sideways, at the bottom right, in the ruler's lane.
+    await expect.poll(async () => Number(await work.evaluate((el) => getComputedStyle(el).opacity))).toBeGreaterThan(0.3);
+    const box = await work.boundingBox();
+    expect(box!.y).toBeGreaterThan(450);
+    expect(box!.x).toBeGreaterThan(1352);
+    expect(box!.height).toBeGreaterThan(box!.width);
     await page.evaluate(() => {
-      const work = document.getElementById("work")!;
-      window.scrollTo(0, work.getBoundingClientRect().top + window.scrollY - 40);
+      const el = document.getElementById("work")!;
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 40);
     });
-    await expect
-      .poll(async () => {
-        const box = await letters.first().boundingBox();
-        return box ? box.y : 9999;
-      })
-      .toBeLessThan(200);
-    const docked = await letters.last().boundingBox();
-    expect(docked!.x).toBeGreaterThan(1100);
-    // Docked, and readable.
-    expect(Number(await letters.first().evaluate((el) => getComputedStyle(el).opacity))).toBeGreaterThan(0.3);
+    // Its section is here: the name has left, and nothing docks in the corner.
+    await expect.poll(async () => Number(await work.evaluate((el) => getComputedStyle(el).opacity))).toBeLessThan(0.02);
+    await expect(page.locator("#work .sec-head-row")).toContainText("Work");
   });
 
-  test("the corner holds one section name, never a stack of them, and project names stay on the page", async ({ page }) => {
+  test("project names are plain headings: nothing lifts off them or is left outlined", async ({ page }) => {
     await skipIntro(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.addInitScript(() => ((window as unknown as { __hudNoSnap: boolean }).__hudNoSnap = true));
     await page.goto("/");
-    await page.waitForLoadState("load");
-    await expect(page.locator(".hud-ltr").first()).toBeAttached();
-    // Projects are plain headings: nothing lifts off them and nothing is left outlined behind.
-    await expect(page.locator("main [data-hud-source]")).toHaveCount(0);
+    await expect(page.locator("main [data-hud-source], main [data-ltr]")).toHaveCount(0);
     await expect(page.locator("#systemlab-title")).toHaveCSS("-webkit-text-stroke-width", "0px");
-    const docked = () =>
-      page.evaluate(() => {
-        const words = new Set<string>();
-        for (const el of Array.from(document.querySelectorAll<HTMLElement>(".hud-ltr"))) {
-          const r = el.getBoundingClientRect();
-          if (Number(getComputedStyle(el).opacity) > 0.5 && r.top < 260 && r.left > 1000) words.add(el.dataset.entry ?? "");
-        }
-        return words.size;
-      });
-    // Down at the contact section, after all five sections have arrived.
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await expect.poll(docked).toBe(1);
+    expect(parseFloat(await page.locator("#systemlab-title").evaluate((el) => getComputedStyle(el).fontSize))).toBeLessThanOrEqual(60);
   });
+
+  // No fixed text (the HUD's queue and ruler, the hero's name in flight, the spine's packet label)
+  // may sit on the page's own text at any scroll stop. Page text that has scrolled under the solid
+  // header or a stuck section bar is hidden by them, so it is clipped to the area below them first.
+  for (const width of [1280, 1440, 1920]) {
+    for (const scheme of ["light", "dark"] as const) {
+      test(`no fixed text overlaps page text at ${width}px (${scheme})`, async ({ page }) => {
+        test.setTimeout(120_000);
+        await skipIntro(page);
+        await page.emulateMedia({ colorScheme: scheme });
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto("/");
+        await page.waitForLoadState("load");
+        await expect(page.locator(".hud-q").first()).toBeAttached();
+        const limit = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+        const stops: number[] = [];
+        for (let y = 0; y < limit; y += 300) stops.push(y);
+        stops.push(limit);
+        const clashes: string[] = [];
+        for (const y of stops) {
+          await page.evaluate((top) => window.scrollTo(0, top), y);
+          await page.waitForTimeout(450);
+          const found = await page.evaluate(() => {
+            type Box = { l: number; t: number; r: number; b: number };
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const styles = new Map<Element, CSSStyleDeclaration>();
+            const cs = (el: Element) => {
+              let s = styles.get(el);
+              if (!s) styles.set(el, (s = getComputedStyle(el)));
+              return s;
+            };
+            const within = (el: Element, pos: string) => {
+              for (let e: Element | null = el; e; e = e.parentElement) if (cs(e).position === pos) return true;
+              return false;
+            };
+            const alpha = (el: Element) => {
+              let a = 1;
+              for (let e: Element | null = el; e; e = e.parentElement) {
+                const s = cs(e);
+                if (s.display === "none" || s.visibility === "hidden") return 0;
+                a *= Number(s.opacity);
+              }
+              return a;
+            };
+            // Where an element's text can show: the viewport, cut by every clipping ancestor.
+            const clipOf = (el: Element): Box => {
+              let c: Box = { l: 0, t: 0, r: vw, b: vh };
+              for (let e: Element | null = el.parentElement; e; e = e.parentElement) {
+                const s = cs(e);
+                if (s.overflowX !== "visible" || s.overflowY !== "visible") {
+                  const r = e.getBoundingClientRect();
+                  c = { l: Math.max(c.l, r.left), t: Math.max(c.t, r.top), r: Math.min(c.r, r.right), b: Math.min(c.b, r.bottom) };
+                }
+                if (s.position === "fixed") break;
+              }
+              return c;
+            };
+            let chromeBottom = 0;
+            for (const el of Array.from(document.querySelectorAll("[data-site-header], .sec-head"))) {
+              const r = el.getBoundingClientRect();
+              if (cs(el).position === "sticky" && r.top <= 66 && r.bottom > 0) chromeBottom = Math.max(chromeBottom, r.bottom);
+            }
+            const fixed: Array<Box & { text: string }> = [];
+            const content: Array<Box & { text: string }> = [];
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+              const text = (n.textContent ?? "").trim();
+              const el = n.parentElement;
+              if (!text || !el || el.closest(".sr-only, script, style, noscript")) continue;
+              if (alpha(el) < 0.05) continue;
+              const isFixed = within(el, "fixed");
+              const clip = clipOf(el);
+              if (!isFixed && !within(el, "sticky")) clip.t = Math.max(clip.t, chromeBottom);
+              const range = document.createRange();
+              range.selectNodeContents(n);
+              for (const r of Array.from(range.getClientRects())) {
+                const box = { l: Math.max(r.left, clip.l), t: Math.max(r.top, clip.t), r: Math.min(r.right, clip.r), b: Math.min(r.bottom, clip.b), text: text.slice(0, 30) };
+                if (box.r - box.l < 2 || box.b - box.t < 2) continue;
+                (isFixed ? fixed : content).push(box);
+              }
+            }
+            const out: string[] = [];
+            for (const f of fixed)
+              for (const c of content)
+                if (Math.min(f.r, c.r) - Math.max(f.l, c.l) > 1 && Math.min(f.b, c.b) - Math.max(f.t, c.t) > 1)
+                  out.push(`"${f.text}" on "${c.text}" at ${Math.round(f.l)},${Math.round(f.t)}`);
+            return out;
+          });
+          for (const c of found) clashes.push(`y=${y}: ${c}`);
+        }
+        expect(clashes).toEqual([]);
+      });
+    }
+  }
 
   test("the résumé chapter is set in the opposite theme", async ({ page }) => {
     await skipIntro(page);
@@ -189,24 +264,15 @@ test.describe("liquid world", () => {
     expect(Math.abs(capsule!.y + capsule!.height / 2 - (key!.y + key!.height / 2))).toBeLessThan(12);
   });
 
-  test("the docked names never sit on the portrait, and step aside for the ruler's map", async ({ page }) => {
+  test("the queue steps aside for the ruler's map", async ({ page }) => {
     await skipIntro(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
     await page.waitForLoadState("load");
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await page.waitForTimeout(1500);
-    const overlaps = () =>
-      page.evaluate(() => {
-        const p = document.querySelector("[data-hud-avoid]")!.getBoundingClientRect();
-        return Array.from(document.querySelectorAll(".hud-ltr"))
-          .filter((el) => Number(getComputedStyle(el).opacity) > 0.05)
-          .map((el) => el.getBoundingClientRect())
-          .filter((l) => l.left < p.right && l.right > p.left && l.top < p.bottom && l.bottom > p.top).length;
-      });
-    expect(await overlaps()).toBe(0);
+    const queued = () => page.evaluate(() => Math.max(...Array.from(document.querySelectorAll(".hud-q")).map((el) => Number(getComputedStyle(el).opacity))));
+    await expect.poll(queued).toBeGreaterThan(0.3);
     await page.mouse.move(1415, 450);
-    await expect.poll(() => page.evaluate(() => Math.max(...Array.from(document.querySelectorAll(".hud-ltr")).map((el) => Number(getComputedStyle(el).opacity))))).toBeLessThan(0.05);
+    await expect.poll(queued).toBeLessThan(0.05);
     await expect.poll(() => page.locator(".hud-mapword").first().evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.9);
   });
 
@@ -225,7 +291,7 @@ test.describe("liquid world", () => {
     await expect(page.locator("#work-title [data-tl]").first()).toHaveAttribute("data-away", "");
     const box = await page.locator(".mhud-fly").first().boundingBox();
     expect(box!.y).toBeLessThan(110);
-    await expect(page.locator(".hud-ltr")).toHaveCount(0);
+    await expect(page.locator(".hud-q")).toHaveCount(0);
     await context.close();
   });
 
@@ -252,7 +318,7 @@ test.describe("liquid world, reduced motion", () => {
     await page.waitForLoadState("load");
     await page.waitForTimeout(800);
     await expect(page.locator("html")).not.toHaveAttribute("data-intro", /.*/);
-    await expect(page.locator(".hud-ltr")).toHaveCount(0);
+    await expect(page.locator(".hud-q")).toHaveCount(0);
     await expect(page.locator(".cursor-ring")).toHaveCount(0);
     await expect(page.locator(".offclock-list").getByText("Bullet, rated")).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Experience" })).toHaveCSS("opacity", "1");

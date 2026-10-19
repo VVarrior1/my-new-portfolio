@@ -440,10 +440,10 @@ export default async function Home() {
         </Section>
 
         {/* Contact: the page ends where it began, on open water. The card assembles as it arrives. */}
-        <section id="contact" aria-labelledby="contact-title" className="relative scroll-mt-16" data-hud="Contact" data-hud-index="05">
+        <section id="contact" aria-labelledby="contact-title" className="relative scroll-mt-16" data-hud="Contact">
           <Station route="/contact" />
           <div className="wrap pb-24 pt-20 sm:pb-36 sm:pt-32">
-            {/* On laptops the right two columns stay open: that corner is where the HUD's names dock. */}
+            {/* On laptops the right two columns stay open, so the page ends on open water. */}
             <div className="grid gap-x-10 gap-y-12 lg:grid-cols-12" data-contact>
               <div className="min-w-0 lg:col-span-7" data-calm="0.94">
                 <p className="t-mono mb-4 text-graphite" aria-hidden="true" data-mtitle="05" data-mword="Contact">
@@ -489,7 +489,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-3 lg:block lg:pt-10" data-part data-hud-avoid>
+              <div className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-start gap-x-5 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-8 lg:col-span-3 lg:block lg:pt-10" data-part>
                 <div className="portrait relative w-full" data-gl="portrait">
                   <Image
                     src="/portrait-snow.jpg"

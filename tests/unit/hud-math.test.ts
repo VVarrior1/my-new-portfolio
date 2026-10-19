@@ -1,19 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { easeInOutCubic, flipProgress, letterProgress, packetScreenY, quad } from "@/lib/hud-math";
+import { arrivalProgress, easeInOutCubic, letterProgress, packetScreenY, quad } from "@/lib/hud-math";
 
-describe("flipProgress", () => {
+describe("arrivalProgress", () => {
   const vh = 900;
   it("is 0 while a section is still well below the top, 1 once it reaches 12% of the screen", () => {
-    expect(flipProgress(800, vh, true)).toBe(0);
-    expect(flipProgress(0.12 * vh, vh, true)).toBe(1);
-    expect(flipProgress(0, vh, true)).toBe(1);
+    expect(arrivalProgress(800, vh)).toBe(0);
+    expect(arrivalProgress(0.12 * vh, vh)).toBe(1);
+    expect(arrivalProgress(0, vh)).toBe(1);
   });
-  it("takes 200px of scroll for a section name", () => {
-    expect(flipProgress(0.12 * vh + 100, vh, true)).toBeCloseTo(0.5);
-  });
-  it("starts a project name while its poster is still in full view", () => {
-    expect(flipProgress(0.3 * vh + 100, vh, false)).toBeGreaterThan(0);
-    expect(flipProgress(0.3 * vh + 100, vh, true)).toBe(0);
+  it("takes 200px of scroll", () => {
+    expect(arrivalProgress(0.12 * vh + 100, vh)).toBeCloseTo(0.5);
   });
 });
 

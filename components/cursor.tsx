@@ -58,7 +58,7 @@ function CursorLayer() {
       if (t.closest("input, textarea, select, [contenteditable='true'], [cmdk-input]")) next = "text";
       else if (t.closest(".hud-rail")) next = "rail";
       else if (labelled) next = "label";
-      else if (t.closest("a, button, [role='button'], [role='slider'], [role='switch'], [role='option'], label, .hud-ltr")) next = "link";
+      else if (t.closest("a, button, [role='button'], [role='slider'], [role='switch'], [role='option'], label, .hud-q")) next = "link";
       if (next === "label" && labelled) label.textContent = labelled.dataset.cursor ?? "";
       if (next !== mode) {
         mode = next;

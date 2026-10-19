@@ -5,12 +5,12 @@ export const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 /**
- * How far a name has flown, 0 to 1, from where its anchor's top sits on screen. A section name
- * flips over the 200px of scroll before its section reaches 12% of the viewport; a project name
- * starts higher, while its poster is still in full view, so you watch the letters lift off.
+ * How far a section has arrived, 0 to 1, from where its top sits on screen: over the 200px of
+ * scroll before it reaches 12% of the viewport. The HUD's queue lets the section's name go over
+ * that stretch.
  */
-export function flipProgress(top: number, vh: number, queued: boolean): number {
-  return queued ? clamp01((0.12 * vh + 200 - top) / 200) : clamp01((0.3 * vh + 170 - top) / 170);
+export function arrivalProgress(top: number, vh: number): number {
+  return clamp01((0.12 * vh + 200 - top) / 200);
 }
 
 /** Per-letter progress: the last letter leaves first and each one follows `stagger` behind. */

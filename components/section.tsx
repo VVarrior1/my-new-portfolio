@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 /**
  * A home-page section on the liquid. Its header is one element with two looks:
  * - phones, tablets, touch and reduced motion: an index and a very large title;
- * - laptops with motion (where the HUD runs): a sticky frosted bar, "01 / WORK", while the title
- *   itself flies into the top-right corner (components/hud.tsx reads data-hud on the section).
+ * - laptops with motion (where the HUD runs): a solid sticky bar under the header, "01 / WORK";
+ *   the section's name waits in the HUD's queue on the right edge until the section arrives
+ *   (components/hud.tsx reads data-hud on the section).
  * The switch is a media query, so nothing moves after load. `meta` is a short mono line.
  */
 export function Section({
@@ -26,7 +27,7 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={`relative scroll-mt-16 ${className}`} data-hud={hud} data-hud-index={index}>
+    <section id={id} aria-labelledby={`${id}-title`} className={`relative scroll-mt-16 ${className}`} data-hud={hud}>
       <SectionHead id={id} index={index} title={title} meta={meta} />
       <div className="wrap pb-24 pt-12 sm:pb-36 sm:pt-16">{children}</div>
     </section>

@@ -2,19 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { emitFlow } from "@/lib/flow-bus";
-import { clamp01, easeInOutCubic, flipProgress, letterProgress, quad } from "@/lib/hud-math";
+import { arrivalProgress, clamp01, easeInOutCubic, letterProgress, quad } from "@/lib/hud-math";
 import { getLenis, onFrame, scrollToTarget, type Frame } from "@/lib/ticker";
 import { redrawMark } from "./brand-mark";
 
 // The HUD: the page's scroll signature, after getartcraft.com/apps.
 //
-// Section names wait in a queue on the right edge, set sideways like the spines of books. When a
-// section reaches the top of the screen its name's letters fly one by one along curved paths,
-// tumbling as they go, and dock upright in the top-right corner. Only the current section's name
-// is docked: the one before it lifts away and fades as the next arrives, so the corner never
-// piles up into a stack of names. Flying letters push the liquid under them (no dye: a dotted
-// trail of ink drops is a row of loose dots). A flip left half-done when you stop scrolling
-// finishes (or reverts) on its own, so letters never rest mid-air.
+// The sections still to come wait in a queue on the right edge, set sideways like the spines of
+// books, small and quiet; as a section reaches the top of the screen its name leaves the queue
+// (it slides into the rail and fades) and the ones behind it close up. Click a name to travel to
+// its section. Nothing docks in the corner: the sticky "01 / WORK" bar under the header already
+// says where you are, and a name parked over the page sat on the text as it scrolled by.
 //
 // On the right edge, a ruler: tick tape that slides with the page, a needle and a rolling percent
 // readout; point at it and it zooms out into a map of the whole page with every section on it.
@@ -23,44 +21,23 @@ import { redrawMark } from "./brand-mark";
 // Laptops and desktops only (a fine pointer, 1024px and up, motion allowed). Everything here is
 // decoration (aria-hidden); the header nav and the in-page headings carry the same information.
 
-const SIZE = 32; // HUD letter size, px
-const STAGGER = 0.16;
-const QUEUE_SCALE = 0.45;
 const RAIL = 56;
 const NAV = 64;
+/** The queue's names: their line height across the rail (px) and the gap between them. */
+const QUEUE_LINE = 15;
+const QUEUE_GAP = 18;
 
 type Entry = {
   word: string;
-  index: string;
   anchor: HTMLElement;
-  letters: HTMLSpanElement[];
-  adv: number[];
-  cum: number[];
-  total: number;
-  tumble: number[];
-  flipP: number;
-  prev: Array<{ x: number; y: number }>;
+  el: HTMLSpanElement;
+  /** The name's length along the queue, px. */
+  length: number;
+  /** How far its section has arrived, 0 (still to come) to 1 (here). */
+  gone: number;
 };
 
 const ease = easeInOutCubic;
-
-function measure(word: string, font: string) {
-  const probe = document.createElement("span");
-  probe.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font:${font};left:-9999px;top:0`;
-  document.body.appendChild(probe);
-  const cum: number[] = [];
-  const adv: number[] = [];
-  let last = 0;
-  for (let k = 0; k < word.length; k++) {
-    probe.textContent = word.slice(0, k + 1);
-    const w = probe.getBoundingClientRect().width / 100;
-    cum.push(last);
-    adv.push(w - last);
-    last = w;
-  }
-  probe.remove();
-  return { cum, adv, total: last };
-}
 
 export function Hud() {
   const [on, setOn] = useState(false);
@@ -258,14 +235,12 @@ function createNameFlight(layer: HTMLElement) {
 }
 
 function HudLayer() {
-  const lettersRef = useRef<HTMLDivElement>(null);
+  const queueRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
-  const poolTop = useRef<HTMLDivElement>(null);
-  const poolBottom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const layer = lettersRef.current;
+    const layer = queueRef.current;
     const rail = railRef.current;
     const nameLayer = nameRef.current;
     if (!layer || !rail) return;
@@ -276,49 +251,23 @@ function HudLayer() {
 
     const build = () => {
       if (disposed) return;
-      const font = getComputedStyle(layer).getPropertyValue("--hud-font").trim() || `650 100px sans-serif`;
-      const nodes = Array.from(document.querySelectorAll<HTMLElement>("main [data-hud]"));
-      const entries: Entry[] = [];
-      nodes.forEach((anchor, i) => {
+      const entries: Entry[] = Array.from(document.querySelectorAll<HTMLElement>("main [data-hud]")).map((anchor, i) => {
         const word = (anchor.dataset.hud || "").toUpperCase();
-        const { cum, adv, total } = measure(word, font);
-        const letters = Array.from(word).map((ch, k) => {
-          const el = document.createElement("span");
-          el.className = "hud-ltr";
-          el.textContent = ch === " " ? " " : ch;
-          el.dataset.entry = String(entries.length);
-          el.dataset.k = String(k);
-          layer.appendChild(el);
-          return el;
-        });
-        // Each letter tumbles its own way, the same way on every visit.
-        const tumble = Array.from(word).map((_, k) => (((i * 7 + k * 13) % 9) - 4) * 11);
-        entries.push({
-          word,
-          index: anchor.dataset.hudIndex || "",
-          anchor,
-          letters,
-          adv,
-          cum,
-          total,
-          tumble,
-          flipP: 0,
-          prev: letters.map(() => ({ x: 0, y: 0 })),
-        });
+        const el = document.createElement("span");
+        el.className = "hud-q";
+        el.textContent = word;
+        el.dataset.entry = String(i);
+        layer.appendChild(el);
+        return { word, anchor, el, length: el.offsetWidth, gone: 0 };
       });
 
       const name = nameLayer ? createNameFlight(nameLayer) : null;
 
       // Click a name to travel to its section.
       const onClick = (event: MouseEvent) => {
-        const el = (event.target as HTMLElement).closest<HTMLElement>(".hud-ltr");
-        if (!el) return;
-        const entry = entries[Number(el.dataset.entry)];
-        if (entry)
-          scrollToTarget(entry.anchor, {
-            offset: -NAV,
-            duration: 1.25,
-          });
+        const el = (event.target as HTMLElement).closest<HTMLElement>(".hud-q");
+        const entry = el ? entries[Number(el.dataset.entry)] : undefined;
+        if (entry) scrollToTarget(entry.anchor, { offset: -NAV, duration: 1.25 });
       };
       layer.addEventListener("click", onClick);
 
@@ -398,26 +347,7 @@ function HudLayer() {
       rail.addEventListener("pointerdown", onDown);
       rail.addEventListener("pointerup", onUp);
 
-      // Snap-to-resolve: a flip left between 4% and 96% when scrolling stops finishes on its own.
-      let still = 0;
-      let snapping = false;
-      let inputAt = 0;
-      const onInput = () => {
-        inputAt = performance.now();
-        snapping = false;
-      };
-      window.addEventListener("wheel", onInput, { passive: true });
-      window.addEventListener("keydown", onInput);
-      window.addEventListener("touchstart", onInput, { passive: true });
-
       const chapterEls = Array.from(document.querySelectorAll<HTMLElement>('[data-chapter="invert"]'));
-      // Images the stack must never sit on (the portrait): if the docked names would overlap one,
-      // they step aside (fade) until it has scrolled past.
-      const avoidEls = Array.from(document.querySelectorAll<HTMLElement>("[data-hud-avoid]"));
-      let yieldP = 0;
-      // The hero's simulator sits beside the docked stack: its frost narrows so it never dims the
-      // device's keys (it still covers the names, which sit well right of the device).
-      const play = document.getElementById("play");
       const mapFrost = rail.querySelector<HTMLElement>("[data-mapfrost]")!;
       let lastPct = -1;
       let needleShown = -1;
@@ -427,8 +357,8 @@ function HudLayer() {
         lit.set(el, value);
         el.toggleAttribute("data-x", value);
       };
-      // A frost's tint is the pool's colour, and the opposite theme's where the chapter runs under
-      // it: two layers, each clipped to its part, so a frost never smears dark over light water.
+      // The map's frost is tinted the pool's colour, and the opposite theme's where the chapter runs
+      // under it: two layers, each clipped to its part, so it never smears dark over light water.
       const clips = new Map<HTMLElement, string>();
       const clip = (el: HTMLElement, value: string) => {
         if (clips.get(el) === value) return;
@@ -460,164 +390,26 @@ function HudLayer() {
         const bands = chapterEls.map((el) => el.getBoundingClientRect());
         const inBand = (py: number, px = vw) => bands.some((b) => py > b.top + 8 && py < b.bottom - 8 && px > b.left);
 
-        // 1. Flip progress per entry.
-        for (const e of entries) {
-          const top = e.anchor.getBoundingClientRect().top;
-          e.flipP = flipProgress(top, vh, true);
-        }
-
-        // 2. The dock (top-right) and queue positions (bottom-right), continuous. Every name docks
-        // in the same slot; as the next one flies in, the one there lifts a little, shrinks and
-        // fades, so the corner holds one name (two only for the moment they cross).
-        const right = vw - RAIL - 22;
-        const dockY = NAV + 62 + SIZE / 2;
-        const slot = new Map<Entry, { y: number; scale: number; alpha: number }>();
-        entries.forEach((e, i) => {
-          if (e.flipP <= 0) return;
-          const next = entries[i + 1];
-          const gone = next ? ease(next.flipP) : 0;
-          slot.set(e, { y: dockY - gone * SIZE * 0.9, scale: 1 - 0.25 * gone, alpha: 1 - gone });
-        });
-
+        // 1. The queue, bottom-right, closing up as each section arrives. It runs in the ruler's
+        // lane, right of the page's text column, on calm water (no fade needed behind it). While
+        // the ruler is zoomed into its map the names step aside, so its labels never sit on them.
+        const fade = 1 - zoom;
         let queueBottom = vh - 30;
-        const queuePos = new Map<Entry, number>();
+        const x = vw - RAIL - 14 - QUEUE_LINE / 2;
         for (const e of entries) {
-          queuePos.set(e, queueBottom);
-          queueBottom -= (e.total * SIZE * QUEUE_SCALE + 18) * (1 - e.flipP);
+          e.gone = arrivalProgress(e.anchor.getBoundingClientRect().top, vh);
+          const g = ease(e.gone);
+          const y = queueBottom - e.length / 2;
+          queueBottom -= (e.length + QUEUE_GAP) * (1 - g);
+          e.el.style.transform = `translate3d(${(x + g * 22).toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-50%) rotate(-90deg)`;
+          const alpha = 0.6 * (1 - g) * fade;
+          e.el.style.opacity = alpha.toFixed(3);
+          const hit = alpha > 0.2 ? "" : "none";
+          if (e.el.style.pointerEvents !== hit) e.el.style.pointerEvents = hit;
+          setInvert(e.el, inBand(y, x));
         }
 
-        // 3. Letters. While the ruler is zoomed into its map, or the stack would sit on an image,
-        // the names step aside, so nothing ever overlaps.
-        let anyMid = false;
-        let boxL = Infinity;
-        let boxT = Infinity;
-        let boxR = -Infinity;
-        let boxB = -Infinity;
-        const fade = (1 - zoom) * (1 - yieldP);
-        for (const e of entries) {
-          const n = e.letters.length;
-          const s = slot.get(e) ?? { y: dockY, scale: 1, alpha: 1 };
-          const qb = queuePos.get(e) ?? vh - 30;
-          if (e.flipP > 0.04 && e.flipP < 0.96) anyMid = true;
-          for (let k = 0; k < n; k++) {
-            const el = e.letters[k];
-            const d = ease(letterProgress(e.flipP, k, n, STAGGER));
-            // Where the letter docks.
-            const cx = right - (e.total - e.cum[k] - e.adv[k] / 2) * SIZE * s.scale;
-            const p1 = {
-              x: cx,
-              y: s.y,
-              rot: 0,
-              scale: s.scale,
-              alpha: s.alpha,
-            };
-            // Where it waits.
-            const p0 = {
-              x: vw - RAIL - 14 - (SIZE * QUEUE_SCALE) / 2,
-              y: qb - (e.cum[k] + e.adv[k] / 2) * SIZE * QUEUE_SCALE,
-              rot: -90,
-              scale: QUEUE_SCALE,
-              alpha: 0.42,
-            };
-            const c = {
-              x: (p0.x + p1.x) / 2 - (90 + k * 6),
-              y: (p0.y + p1.y) / 2,
-            };
-            const { x, y } = quad(p0, c, p1, d);
-            const rot = p0.rot + (p1.rot - p0.rot) * d + Math.sin(Math.PI * d) * e.tumble[k];
-            const scale = p0.scale + (p1.scale - p0.scale) * d;
-            const alpha = p0.alpha + (p1.alpha - p0.alpha) * d;
-            if (d > 0.9 && alpha > 0.05) {
-              const hw = (e.adv[k] * SIZE * scale) / 2;
-              const hh = (SIZE * scale) / 2;
-              boxL = Math.min(boxL, x - hw);
-              boxR = Math.max(boxR, x + hw);
-              boxT = Math.min(boxT, y - hh);
-              boxB = Math.max(boxB, y + hh);
-            }
-            el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-50%) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
-            el.style.opacity = (alpha * fade).toFixed(3);
-            // A name fading out of the dock can't be clicked through to its section.
-            const hit = alpha * fade > 0.2 ? "" : "none";
-            if (el.style.pointerEvents !== hit) el.style.pointerEvents = hit;
-            setInvert(el, inBand(y, x));
-            // A letter in flight drags the liquid with it.
-            const pv = e.prev[k];
-            if (d > 0.02 && d < 0.98 && pv.x) {
-              const vx = (x - pv.x) / dt;
-              const vy = (y - pv.y) / dt;
-              const sp = Math.hypot(vx, vy);
-              if (sp > 120 && (k + Math.round(fr.now / 16)) % 2 === 0) {
-                emitFlow({
-                  kind: "stir",
-                  x,
-                  y,
-                  dx: vx * 0.35,
-                  dy: vy * 0.35,
-                  ink: 0,
-                  accent: 0,
-                  radius: 0.05,
-                });
-              }
-            }
-            pv.x = x;
-            pv.y = y;
-          }
-        }
-
-        // Does the docked stack overlap an image it must keep clear of?
-        let clash = false;
-        if (boxR > boxL) {
-          for (const el of avoidEls) {
-            const r = el.getBoundingClientRect();
-            if (r.left < boxR + 16 && r.right > boxL - 16 && r.top < boxB + 16 && r.bottom > boxT - 16) clash = true;
-          }
-        }
-        yieldP += ((clash ? 1 : 0) - yieldP) * (1 - Math.exp(-9 * dt));
-        if (Math.abs(yieldP - (clash ? 1 : 0)) < 0.003) yieldP = clash ? 1 : 0;
-
-        // 4. Frost pools follow the letters.
-        const topP = Math.max(0, ...entries.map((e) => e.flipP)) * fade;
-        if (poolTop.current) {
-          poolTop.current.style.opacity = topP.toFixed(3);
-          if (topP > 0) tint(poolTop.current, bands);
-        }
-        if (poolBottom.current) {
-          let width = 150;
-          if (play) {
-            const r = play.getBoundingClientRect();
-            const vw = window.innerWidth;
-            const poolTop = window.innerHeight - poolBottom.current.offsetHeight;
-            // How far the device reaches into the frost, eased out as it scrolls up past its top.
-            const over = Math.min(1, Math.max(0, (r.bottom - poolTop) / 120)) * (r.right > vw - 200 ? 1 : 0);
-            width = Math.round(150 - (150 - Math.max(120, vw - r.right + 8)) * over);
-          }
-          if (poolBottom.current.style.width !== `${width}px`) poolBottom.current.style.width = `${width}px`;
-          const queued = entries.some((e) => e.flipP < 1);
-          poolBottom.current.style.opacity = queued ? (1 - zoom).toFixed(3) : "0";
-          if (queued) tint(poolBottom.current, bands);
-        }
-
-        // 5. Snap-to-resolve.
-        const lenis = getLenis();
-        if (lenis && !dragging && !(window as { __hudNoSnap?: boolean }).__hudNoSnap) {
-          still = Math.abs(velocity) < 30 ? still + dt : 0;
-          if (anyMid && still > 0.4 && !snapping && performance.now() - inputAt > 400) {
-            const e = entries.find((o) => o.flipP > 0.04 && o.flipP < 0.96);
-            if (e) {
-              snapping = true;
-              const top = e.anchor.getBoundingClientRect().top;
-              const target = e.flipP >= 0.5 ? scrollY + top - 0.12 * vh + 1 : scrollY + top - (0.12 * vh + 200) - 1;
-              lenis.scrollTo(Math.max(0, target), {
-                duration: 0.7,
-                easing: ease,
-                force: true,
-                onComplete: () => (snapping = false),
-              });
-            }
-          }
-        }
-
+        // 2. Ruler.
         // 6. Ruler.
         zoom += ((wantZoom ? 1 : 0) - zoom) * (1 - Math.exp(-10 * dt));
         if (Math.abs(zoom - (wantZoom ? 1 : 0)) < 0.002) zoom = wantZoom ? 1 : 0;
@@ -689,9 +481,6 @@ function HudLayer() {
         rail.removeEventListener("pointermove", onMove);
         rail.removeEventListener("pointerdown", onDown);
         rail.removeEventListener("pointerup", onUp);
-        window.removeEventListener("wheel", onInput);
-        window.removeEventListener("keydown", onInput);
-        window.removeEventListener("touchstart", onInput);
         name?.dispose();
       };
     };
@@ -716,15 +505,7 @@ function HudLayer() {
     <>
       <div ref={nameRef} aria-hidden="true" className="hud-name" />
       <div aria-hidden="true" className="hud">
-        <div ref={poolTop} className="hud-pool hud-pool-top">
-          <span className="hud-tint" />
-          <span className="hud-tint hud-tint-x" />
-        </div>
-        <div ref={poolBottom} className="hud-pool hud-pool-bottom">
-          <span className="hud-tint" />
-          <span className="hud-tint hud-tint-x" />
-        </div>
-        <div ref={lettersRef} className="hud-letters" />
+        <div ref={queueRef} className="hud-queue" />
         <div ref={railRef} className="hud-rail">
           <span className="hud-rail-frost" />
           <span className="hud-mapfrost" data-mapfrost>

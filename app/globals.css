@@ -1839,8 +1839,8 @@ html:has(.liquid-field) body {
 }
 
 /* ------------------------------------------------------------------
-   The HUD (components/hud.tsx): flying section names, the frost pools
-   behind them, and the ruler.
+   The HUD (components/hud.tsx): the queue of sections still to come
+   and the ruler.
    ------------------------------------------------------------------ */
 .hud {
   position: fixed;
@@ -1848,71 +1848,42 @@ html:has(.liquid-field) body {
   z-index: 40;
   pointer-events: none;
 }
-.hud-letters {
-  --hud-font: 650 semi-condensed 100px var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+.hud-queue {
   position: absolute;
   inset: 0;
 }
-.hud-ltr {
+/* A section still to come, sideways in the queue (its line height is QUEUE_LINE in hud.tsx). */
+.hud-q {
   position: absolute;
   left: 0;
   top: 0;
   font-family: var(--font-display);
-  font-size: 32px; /* SIZE in components/hud.tsx */
+  font-size: 14px;
   font-weight: 650;
   font-stretch: 87.5%;
-  line-height: 1;
+  line-height: 15px;
+  letter-spacing: 0.04em;
   white-space: pre;
   color: var(--ink);
   opacity: 0;
   pointer-events: auto;
   cursor: pointer;
   will-change: transform, opacity;
-  text-shadow: 0 0 16px var(--pool), 0 0 3px var(--pool);
   transition: color 240ms ease;
 }
-.hud-ltr[data-x] {
+.hud-q[data-x] {
   color: var(--ink-x);
-  text-shadow: 0 0 16px var(--pool-x), 0 0 3px var(--pool-x);
 }
-.hud-pool {
-  position: absolute;
-  right: 0;
-  opacity: 0;
-  transition: opacity 260ms ease;
-}
-/* A frost's tint: the pool, and the opposite theme's pool where the chapter is under it (each layer
-   is clipped to its part by components/hud.tsx). The pools behind the docked name and the queue
-   are a plain fade, with no blur: text sliding under a blur read as a smeared rendering glitch,
-   while under a fade it simply dims out of the way. */
+/* The map's frost tint: the pool, and the opposite theme's pool where the chapter is under it
+   (each layer is clipped to its part by components/hud.tsx). */
 .hud-tint {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--pool) 82%, transparent);
-}
-.hud-tint-x {
-  background: color-mix(in srgb, var(--pool-x) 82%, transparent);
-  clip-path: inset(0 0 100% 0);
-}
-.hud-mapfrost .hud-tint {
   background: color-mix(in srgb, var(--pool) 80%, transparent);
 }
-.hud-mapfrost .hud-tint-x {
+.hud-tint-x {
   background: color-mix(in srgb, var(--pool-x) 80%, transparent);
-}
-.hud-pool-top {
-  top: 4rem;
-  width: min(34vw, 460px);
-  height: 230px;
-  -webkit-mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
-  mask-image: radial-gradient(100% 100% at 100% 0%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
-}
-.hud-pool-bottom {
-  bottom: 0;
-  width: 150px;
-  height: min(70vh, 640px);
-  -webkit-mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
-  mask-image: radial-gradient(100% 100% at 100% 100%, #000 38%, rgb(0 0 0 / 0.82) 56%, rgb(0 0 0 / 0.48) 72%, rgb(0 0 0 / 0.2) 86%, rgb(0 0 0 / 0.05) 94%, transparent 97%);
+  clip-path: inset(0 0 100% 0);
 }
 .hud-rail {
   position: absolute;
