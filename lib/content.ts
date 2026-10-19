@@ -144,6 +144,15 @@ export const featured: FeaturedProject[] = [
   },
 ];
 
+/** The hero's index of the three strongest projects: a name, one line with a number from the
+ * facts above, and where the row goes (its entry in Work). `shot` is the preview a laptop shows
+ * while the row is pointed at; the third has no screenshot, so it has none. */
+export const heroIndex: Array<{ id: string; name: string; line: string; href: string; shot?: Shot }> = [
+  { id: "systemlab", name: "Systemlab", line: "System design trainer \u00b7 70 lessons", href: "#work-systemlab", shot: featured[0].shot },
+  { id: "cyd", name: "CYD Soccer Academy", line: "Booking and payments for ~300 families", href: "#work-cyd", shot: featured[1].shot },
+  { id: "road", name: "Road object detection", line: "YOLOv11 on a 12-class traffic dataset", href: "#more-projects" },
+];
+
 /** The home page's Writing list: the most technical posts, in this order of preference. */
 export const pinnedPosts = ["writing-a-shell-in-c", "ai-with-api-function-calls", "machine-learning", "leetcode"];
 

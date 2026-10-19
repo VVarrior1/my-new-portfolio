@@ -4,9 +4,9 @@ import { GithubMark, LinkedinMark } from "@/components/brand-icons";
 import { Choreo } from "@/components/choreo";
 import { CopyEmail } from "@/components/copy-email";
 import { DotList } from "@/components/dot-list";
+import { HeroIndex } from "@/components/hero-index";
 import { Intro } from "@/components/intro";
 import { LiquidField } from "@/components/liquid-field";
-import { LiveSystem } from "@/components/live-system";
 import { PageFx } from "@/components/page-fx";
 import { ProjectShot } from "@/components/project-shot";
 import { Count, InlineLetters, Letters, Section } from "@/components/section";
@@ -20,6 +20,7 @@ import {
   education,
   experience,
   featured,
+  heroIndex,
   otherProjects,
   pinnedPosts,
   profile,
@@ -95,8 +96,8 @@ export default async function Home() {
       <main id="main" className="relative">
         <Spine />
 
-        {/* Hero. The name and the facts on the left, held calm; the simulator floating on the right,
-            with the current flowing into it. */}
+        {/* Hero. The name and the facts on the left, held calm; on the right an index of the three
+            strongest projects, the river leaving from its active row. */}
         <section id="top" aria-labelledby="hero-name" className="relative">
           {/* On laptops the hero stops short of the fold, so the Off the clock row below peeks in. */}
           <div className="wrap grid min-h-[calc(100svh-4rem)] content-center gap-y-12 pb-20 pt-8 sm:pb-24 sm:pt-12 lg:min-h-[calc(100svh-12.5rem)] lg:grid-cols-12 lg:gap-x-8 lg:pb-16 lg:pt-4">
@@ -157,8 +158,8 @@ export default async function Home() {
               </div>
             </div>
 
-            <div id="play" className="fade-up min-w-0 scroll-mt-20 lg:col-span-6 lg:mr-7 lg:self-center" style={{ ["--d" as string]: "260ms" }} data-calm="0.8">
-              <LiveSystem />
+            <div id="hero-work" className="fade-up min-w-0 lg:col-span-5 lg:col-start-8 lg:mr-7 lg:self-stretch" style={{ ["--d" as string]: "260ms" }}>
+              <HeroIndex items={heroIndex} />
             </div>
           </div>
           <Station route="/" role="origin" className="spine-origin" />
@@ -187,7 +188,7 @@ export default async function Home() {
               const word = POSTER[project.slug] ?? project.name;
               const rest = project.name.startsWith(word) ? project.name.slice(word.length).trim() : "";
               return (
-                <article key={project.slug} aria-labelledby={`${project.slug}-title`} className="project relative">
+                <article key={project.slug} id={`work-${project.slug}`} aria-labelledby={`${project.slug}-title`} className="project relative scroll-mt-16">
                   <Station route={`/work/${project.slug}`} />
                   <header className={`project-head ${flip ? "project-head-flip" : ""}`}>
                     <p className="t-mono text-graphite" data-calm="0.9">
@@ -243,7 +244,7 @@ export default async function Home() {
             })}
           </div>
 
-          <div className="mt-28 sm:mt-40">
+          <div id="more-projects" className="mt-28 scroll-mt-16 sm:mt-40">
             <div className="flex items-baseline justify-between gap-4" data-calm="0.9">
               <h3 className="t-hud text-ink-2">More projects</h3>
               <p className="t-hud text-graphite">{otherProjects.length} more</p>

@@ -35,7 +35,6 @@ With no GCS credentials, set `CONTENT_SOURCE=local` to use the posts in `data/bl
 | `app/globals.css` | Design tokens (light and dark), shadcn token mapping, post typography |
 | `lib/analytics-core.ts` | Pure analytics logic, unit tested |
 | `lib/analytics.ts` | Analytics storage on GCS |
-| `lib/live-sim.ts` | The hero's simulation engine, unit tested |
 | `components/ui` | shadcn/ui primitives (generated, then themed) |
 
 ## Design
@@ -58,11 +57,13 @@ How the liquid behaves:
   shader draws that band of the pool, edged by a wobbling cobalt waterline the current pushes
   around, so entering it is a liquid hand-off. A `.chapter-ground` under the canvas carries the same
   colour for contrast checks and for browsers without WebGL.
-- The hero simulator drives it through `lib/flow-bus.ts`: the current comes out of the device, a
-  river of ink that leaves from under its lower-left corner, runs beneath the hero copy and turns up
-  the left lane beside the name, with a cobalt thread that thickens with load. More traffic is a
-  faster, denser river; strain makes it sway; failing requests tint the thread; a killed server
-  sends one cobalt bloom down it that settles back. An ambient curl-noise force keeps the whole
+- In the hero the current comes out of the work index: on laptops a river of ink runs in a steady
+  bed (`Fluid.bed`) from the index's active row (the first at rest, the one you point at
+  otherwise), down the gutter between the columns, beneath the hero copy and up the left lane, so
+  the name sits inside its loop, with a thin cobalt thread in it. When the row changes only the
+  short reach from the row moves, and it slides slower than the ink crosses it, so the river never
+  breaks into islands. Other parts of the page poke the liquid through `lib/flow-bus.ts`
+  (`emitFlow`: drops and stirs). An ambient curl-noise force keeps the whole
   pool drifting at idle. The pointer stirs it along its path (splats grow with its speed), the
   HUD's flying letters and the spine's packet drag it, rows and cards drop ink when you enter
   them, and below the hero drips (ink) and a slow current from the left keep it moving.
@@ -89,15 +90,14 @@ On top of it (`components/hud.tsx`, `components/spine.tsx`, `components/cursor.t
   to travel. The stack also steps aside rather than sit on the portrait. Laptops with motion only.
 - Phones and tablets get the small HUD (`components/mobile-hud.tsx`): each section's big title lifts
   off letter by letter, leaving its outline, and flies into a frosted "01 / Work" bar under the header.
-- The spine: a wire in the left lane from the simulator to the contact keys. A packet rides it at
-  mid-screen, lights each station, leaves a cobalt thread in the liquid, and carries the simulator's
-  health ("GET /work · 84 ms", or "503" in the fail colour once you've broken it, with the wire
-  behind it in the fail colour too). At the bottom of the page it is delivered beside "Email me"
+- The spine: a wire in the left lane from the hero to the contact keys. A packet rides it at
+  mid-screen, lights each station, leaves a cobalt thread in the liquid, and carries the route it
+  has reached ("GET /work"). At the bottom of the page it is delivered beside "Email me"
   ("200 /contact") and the wire branches across to the key.
 - The cursor: a cobalt drop on the pointer with an ink ring that trails and stretches; over things
   that say what they do it puts a labelled disc ("Enlarge", "Open", "Read") just below and right of
   the pointer, so the word you're pointing at stays readable.
-- The intro (`components/intro.tsx`): once per tab, a counter rolls to the simulator's 160 req/s
+- The intro (`components/intro.tsx`): once per tab, a counter rolls to the river's 160 req/s
   and the sheet lifts away with a bowed edge. Pure CSS, gated by the head script.
 - Smaller motions (`components/choreo.tsx`): count-ups, the off-the-clock "rivers of type" that run
   at scroll speed (the first one peeks in under the hero on laptops), tide rows and project cards
@@ -122,32 +122,23 @@ the name) with Instrument Serif italic as a second voice, and JetBrains Mono for
 numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--pool`, `--ink`, `--ink-2`,
 `--graphite`, `--rule`, `--signal`, `--screen`, `--fluid-*`, and `-x` twins for the opposite theme)
 exposed to Tailwind as `bg-paper`, `text-graphite` and so on. The object classes (`.wrap`,
-`.sec-head`, `.poster`, `.device`, `.screen`, `.key`, `.keycap`, `.spec`, `.stat-stack`,
+`.sec-head`, `.poster`, `.hero-index`, `.screen`, `.key`, `.keycap`, `.spec`, `.stat-stack`,
 `.tide-row`, `.lineup-grid`, `.chip`, `.tag-mono`, `.odometer`, `.marquee`) are in `app/globals.css`.
 
 **shadcn/ui** (Radix base, `components.json`) supplies the primitives in `components/ui`: dialog,
-command (⌘K menu), slider (the simulator's fader is built on its Radix primitive), sonner (toasts) and kbd. Its tokens (`--background`,
+command (⌘K menu), slider (the music player's volume), sonner (toasts) and kbd. Its tokens (`--background`,
 `--primary`, `--border`…) are mapped onto ours in `app/globals.css`, and its `dark:` variant
 follows the same `data-theme` rules. To add a component: `npx shadcn@latest add <name>`. It
 writes to `components/ui`. Check its colors in both themes.
 
-**The hero simulator** (`components/live-system.tsx`, engine in `lib/live-sim.ts`) is an
-instrument (`.device`) floating on the liquid: a pale body around a dark screen in light, all dark in
-dark. It is a seeded
-discrete-event simulation of balancer → app servers → cache → database that runs in the browser.
-Capacities are set so visitors find each bottleneck in turn: two servers saturate near 400 req/s,
-the database near 600 unless the cache is on. It starts when the page is idle, pauses off-screen
-and in background tabs, and draws no request dots under reduced motion. Status colours appear only
-on its screen; failed requests are drawn as × marks so they read without colour. `diagnose()` writes the
-hint line from where requests actually failed. The behavior is pinned by `tests/unit/live-sim.test.ts`.
-Left alone for 6 seconds with all of it on screen, it plays a short demo once per page load
-(`lib/sim-demo.ts`): traffic climbs, app 2 dies, p99 spikes and the river turns cobalt, then it
-restarts and recovers in about 14 seconds, narrated in five lines of about three seconds each. It
-scripts only the controls, so every number shown is still simulated. A pointer passing over, a wheel
-or a finger scrolling the page only restarts the 6 second wait; a press, a tap, focus or a key calls it
-off, or, mid-demo, hands back the starting setup with every server up. It never plays under reduced
-motion, and it sends `sim:demo` (never `sim:interact`). Below 560px
-the device is compact: the same left-to-right diagram at about half the height.
+**The hero's work index** (`components/hero-index.tsx`, entries in `heroIndex` in `lib/content.ts`)
+is the right column: the three strongest projects, one hairline row each (a name, one line with a
+number from that project's facts, an arrow), linking to the project's entry in Work. The active row
+carries the accent in its number and is where the river leaves from. On laptops with a fine pointer,
+pointing at or focusing a row shows its screenshot (the Work section's image, with its dark copy)
+as a preview above the list; it is decoration (`aria-hidden`), so touch screens and phones get the
+plain list under the copy. It replaced a hero system-design simulator in October 2026 (the owner
+found it cluttered); the `sim:interact` and `sim:demo` labels stay on `/stats` for the old events.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`
 (installed Chrome, retina resolution), then update `width`/`height` in `lib/content.ts` if they changed.

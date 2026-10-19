@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { emitFlow } from "@/lib/flow-bus";
 import { clamp01, packetScreenY } from "@/lib/hud-math";
-import { getReadout, subscribeReadout, type Readout } from "@/lib/sim-readout";
 import { onFrame } from "@/lib/ticker";
 
 /**
@@ -28,13 +27,12 @@ function topIn(el: HTMLElement, root: HTMLElement): number | null {
 }
 
 /**
- * The spine: one wire in the left lane, from the simulator down to the contact keys. A request
- * (the packet) rides it at the middle of the screen as you scroll, lighting each station it passes,
- * and leaves a thread of the accent in the liquid behind it. Its tag carries the simulator's health:
- * "GET /work · 84 ms" while it is healthy, "503" in the fail colour once you've broken it (and the
- * wire behind it turns the fail colour too). Over the last screen of scroll it drifts down from the
- * middle so that it arrives at the bottom of the page exactly beside "Email me": the wire branches
- * across to the key and the tag reads "200 /contact".
+ * The spine: one wire in the left lane, from the hero down to the contact keys. A request (the
+ * packet) rides it at the middle of the screen as you scroll, lighting each station it passes, and
+ * leaves a thread of the accent in the liquid behind it. Its tag reads the route it has reached
+ * ("GET /work"). Over the last screen of scroll it drifts down from the middle so that it arrives at
+ * the bottom of the page exactly beside "Email me": the wire branches across to the key and the tag
+ * reads "200 /contact".
  * Laptops and up; decoration only. Under reduced motion it is a finished drawing: the wire lit, the
  * packet delivered.
  */
@@ -52,7 +50,6 @@ export function Spine() {
     const main = line.parentElement!;
     const methodEl = packet.querySelector<HTMLElement>("[data-method]")!;
     const routeEl = packet.querySelector<HTMLElement>("[data-route]")!;
-    const latencyEl = packet.querySelector<HTMLElement>("[data-latency]")!;
     const terminal = document.querySelector<HTMLElement>("[data-terminal]");
     const desktop = window.matchMedia("(min-width: 1024px)");
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -97,18 +94,13 @@ export function Spine() {
       if (reduced.matches) rest();
     };
 
-    let health: Readout["state"] = "healthy";
-    let latency = "";
     let route = "/";
     let delivered = false;
     const label = () => {
-      const failing = health === "failing";
-      const method = failing ? "503" : delivered ? "200" : "GET";
+      const method = delivered ? "200" : "GET";
       if (methodEl.textContent !== method) methodEl.textContent = method;
       const r = delivered ? "/contact" : route;
       if (routeEl.textContent !== r) routeEl.textContent = r;
-      const l = latency ? `· ${latency}` : "";
-      if (latencyEl.textContent !== l) latencyEl.textContent = l;
     };
     const setDelivered = (value: boolean) => {
       if (value === delivered) return;
@@ -116,14 +108,6 @@ export function Spine() {
       packet.toggleAttribute("data-delivered", value);
       line.toggleAttribute("data-delivered", value);
       terminal?.toggleAttribute("data-delivered", value);
-      label();
-    };
-    const showHealth = (r: Readout) => {
-      if (r.state === "paused" || r.state === "idle") return;
-      health = r.state;
-      packet.dataset.state = r.state;
-      line.toggleAttribute("data-failing", r.state === "failing");
-      latency = r.p99 === null ? "" : r.p99 >= 1000 ? `${(r.p99 / 1000).toFixed(1)} s` : `${Math.round(r.p99)} ms`;
       label();
     };
 
@@ -142,14 +126,9 @@ export function Spine() {
     const ro = new ResizeObserver(place);
     ro.observe(main);
     document.fonts?.ready.then(place);
-    showHealth(getReadout());
-    const unsubscribe = subscribeReadout(() => showHealth(getReadout()));
 
     if (reduced.matches) {
-      return () => {
-        ro.disconnect();
-        unsubscribe();
-      };
+      return () => ro.disconnect();
     }
 
     let lastRoute = "";
@@ -180,23 +159,21 @@ export function Spine() {
         route = passed;
         label();
       }
-      // The packet stretches with speed and pulls a thread of the accent through the liquid (ink,
-      // when the system is failing: the liquid only ever holds the neutral and the accent).
+      // The packet stretches with speed and pulls a thread of the accent through the liquid.
       const v = fr.velocity;
       packet.style.setProperty("--stretch", (1 + Math.min(1.4, Math.abs(v) / 1400)).toFixed(3));
       trail += fr.dt;
       if (on && !delivered && Math.abs(v) > 40 && trail > 1 / 40) {
         trail = 0;
         const strength = Math.min(1, 0.25 + Math.abs(v) / 2000);
-        const failing = health === "failing";
         emitFlow({
           kind: "stir",
           x: lane,
           y: screenY + Math.sign(v) * 10,
           dx: 0,
           dy: Math.sign(v) * 260 * strength,
-          ink: failing ? 0.06 * strength : 0.01 * strength,
-          accent: failing ? 0 : 0.07 * strength,
+          ink: 0.01 * strength,
+          accent: 0.07 * strength,
           radius: 0.012,
         });
       }
@@ -204,7 +181,6 @@ export function Spine() {
 
     return () => {
       ro.disconnect();
-      unsubscribe();
       off();
     };
   }, []);
@@ -219,7 +195,7 @@ export function Spine() {
       <span ref={packetRef} aria-hidden="true" className="packet" data-on="false">
         <svg className="packet-tag" width="16" height="260" viewBox="0 0 16 260">
           <text transform="translate(12 252) rotate(-90)">
-            <tspan data-method>GET</tspan> <tspan data-route>/</tspan> <tspan data-latency />
+            <tspan data-method>GET</tspan> <tspan data-route>/</tspan>
           </text>
         </svg>
         <span className="packet-capsule" />

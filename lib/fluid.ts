@@ -937,8 +937,8 @@ export class Fluid {
     gl.uniform1i(p.uniforms.uVelocity, this.velocity.read.attach(0));
     gl.uniform2f(p.uniforms.uViewport, gl.drawingBufferWidth, gl.drawingBufferHeight);
     gl.uniform1f(p.uniforms.uDrag, 1 - Math.exp(-dt * 3));
-    // The current is slowed by each block's hold, not its strength: the device is calm to look at
-    // (its caption sits on the liquid) but lets the river through, since it is where it comes from.
+    // The current is slowed by each block's hold, not its strength: the work index is calm to look at
+    // (its rows sit on the liquid) but lets the river through, since it is where it comes from.
     this.setCalm(p, this.calmHold);
     this.blit(this.velocity.write);
     this.velocity.swap();

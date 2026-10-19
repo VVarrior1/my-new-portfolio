@@ -11,7 +11,6 @@ import {
   MailIcon,
   MoonStarIcon,
   MusicIcon,
-  ServerIcon,
   UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -73,14 +72,11 @@ export default function CommandPalette({ open, onOpenChange }: { open: boolean; 
         <CommandList className="max-h-[min(36rem,calc(88vh-6rem))] scroll-pb-2 pb-1">
           <CommandEmpty>Nothing matches that.</CommandEmpty>
           <CommandGroup heading="Go to">
-            <CommandItem keywords={["projects", "portfolio"]} onSelect={() => go("/#work")}>
+            <CommandItem keywords={["projects", "portfolio", "systemlab", "system design"]} onSelect={() => go("/#work")}>
               <BriefcaseIcon /> Work
             </CommandItem>
             <CommandItem keywords={["jobs", "career", "education"]} onSelect={() => go("/#experience")}>
               <UserIcon /> Experience
-            </CommandItem>
-            <CommandItem keywords={["simulator", "demo", "system design", "play"]} onSelect={() => go("/#play")}>
-              <ServerIcon /> The system you can break
             </CommandItem>
             <CommandItem keywords={["blog", "posts", "articles"]} onSelect={() => go("/blogs")}>
               <BookOpenIcon /> Writing

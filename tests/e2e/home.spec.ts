@@ -12,67 +12,59 @@ test.describe("home page", () => {
     await expect(page.getByRole("link", { name: /^Résumé/ }).first()).toHaveAttribute("href", "/Abdelrahman_Mohamed_Resume.pdf");
   });
 
-  test("the hero simulator reacts to traffic, servers and the cache", async ({ page }) => {
-    await page.goto("/");
-    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
-    const hint = sim.locator("p[aria-live]");
-    await expect(hint).toContainText("Healthy");
-
-    await sim.getByRole("slider").focus();
-    for (let i = 0; i < 44; i++) await page.keyboard.press("ArrowRight"); // 160 -> 600 req/s
-    await expect(sim.getByText("600 requests/s")).toBeVisible();
-    await expect(hint).toContainText("app servers are saturated", { timeout: 8000 });
-
-    await sim.getByRole("button", { name: "Add a server" }).click();
-    await sim.getByRole("button", { name: "Add a server" }).click();
-    await sim.getByRole("switch").click();
-    await expect(hint).toContainText("Healthy", { timeout: 10000 });
-
-    await sim.getByRole("button", { name: "Kill a server" }).click();
-    await expect(sim.getByRole("button", { name: /^Restart app \d$/ })).toBeVisible();
-  });
-
-  test("left alone, the simulator breaks itself once, and a touch hands it back", async ({ page }) => {
-    test.setTimeout(45_000);
-    const events: string[] = [];
-    await page.route("**/api/analytics/track", async (route) => {
-      const body = JSON.parse(route.request().postData() ?? "{}");
-      if (body.type === "event") events.push(body.name);
-      await route.fulfill({ status: 204 });
-    });
+  test("the hero indexes three projects, each linking to its entry in Work", async ({ page }) => {
     await page.addInitScript(() => {
-      // Playwright sets navigator.webdriver, which the tracker skips on purpose; look like a person here.
-      Object.defineProperty(navigator, "webdriver", { get: () => false });
       try {
         sessionStorage.setItem("intro", "1");
       } catch {}
     });
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/");
-    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
-    const hint = sim.locator("p[aria-live]");
-    // A pointer that only passes over the device restarts the wait; it doesn't call the demo off.
-    await page.waitForTimeout(2500);
-    await sim.hover();
-    await page.mouse.move(5, 5);
-    // Nobody presses anything: after the idle wait it narrates, kills a server, and offers the restart.
-    await expect(hint).toContainText("Traffic climbs", { timeout: 15_000 });
-    await expect(sim.getByRole("button", { name: /^Restart app 2$/ })).toBeVisible({ timeout: 6000 });
-    expect(events).toContain("sim:demo");
-    // Hovering doesn't stop it either; a press does, and hands back the starting setup, every server up.
-    await sim.hover();
-    await page.waitForTimeout(400);
-    await expect(hint).not.toContainText("Demo stopped");
-    await sim.getByText("A small system you can break").click();
-    await expect(hint).toContainText("Demo stopped");
-    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
-    await expect(sim.getByText("160 requests/s")).toBeVisible();
-    // It does not come back, and watching it was never counted as playing with it.
-    await page.mouse.move(5, 5);
-    await page.waitForTimeout(7000);
-    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
-    await expect(hint).not.toContainText("Traffic climbs");
-    expect(events).not.toContain("sim:interact");
+    const index = page.getByRole("navigation", { name: "Selected work" });
+    const rows = index.getByRole("link");
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0)).toContainText("Systemlab");
+    await expect(rows.nth(0)).toContainText("70 lessons");
+    await expect(rows.nth(1)).toContainText("~300 families");
+    for (const href of await rows.evaluateAll((links) => links.map((a) => a.getAttribute("href")))) {
+      expect(href).toMatch(/^#/);
+      await expect(page.locator(href!)).toHaveCount(1);
+    }
+    // At rest the first row is the river's source and no preview shows.
+    await expect(rows.nth(0)).toHaveAttribute("data-active", "");
+    const shots = page.locator(".hero-preview-shot");
+    await expect(page.locator(".hero-preview-shot[data-on]")).toHaveCount(0);
+    // Pointing at a row makes it the source and shows its screenshot; leaving hands it back.
+    await rows.nth(1).hover();
+    await expect(rows.nth(1)).toHaveAttribute("data-active", "");
+    await expect(rows.nth(0)).not.toHaveAttribute("data-active", /.*/);
+    await expect(shots.nth(1)).toHaveAttribute("data-on", "");
+    // (Read without its fade, so a busy machine can't catch it mid-transition.)
+    const settled = (i: number) => shots.nth(i).evaluate((el) => ((el as HTMLElement).style.transition = "none", Number(getComputedStyle(el).opacity)));
+    expect(await settled(1)).toBe(1);
+    expect(await settled(0)).toBe(0);
+    await page.mouse.move(5, 450);
+    await expect(rows.nth(0)).toHaveAttribute("data-active", "");
+    await expect(shots.nth(1)).not.toHaveAttribute("data-on", /.*/);
+    // A row takes you to the project, whose own links still go to the live app.
+    await rows.nth(0).click();
+    // It lands just under the header (the header's height plus the entry's scroll margin).
+    await expect.poll(() => page.locator("#work-systemlab").evaluate((el) => Math.round(el.getBoundingClientRect().top))).toBeLessThan(200);
+    expect(await page.locator("#work-systemlab").evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThan(40);
+    await expect(page.locator("#work-systemlab").getByRole("link", { name: /Try it/ })).toHaveAttribute("href", "https://system-design-playground-pi.vercel.app");
+  });
+
+  test("on a phone the index is a plain list under the copy, with no preview", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+    const page = await context.newPage();
+    await page.goto("/");
+    const index = page.getByRole("navigation", { name: "Selected work" });
+    await expect(index.getByRole("link")).toHaveCount(3);
+    await expect(page.locator(".hero-preview")).toBeHidden();
+    const intro = await page.locator("[data-name]").boundingBox();
+    const list = await index.boundingBox();
+    expect(list!.y).toBeGreaterThan(intro!.y + intro!.height);
+    await context.close();
   });
 
   test("opens the command menu with the keyboard and finds the résumé", async ({ page }) => {
@@ -136,20 +128,6 @@ test.describe("other pages", () => {
 });
 
 test.describe("reduced motion", () => {
-  test("the simulator never runs its demo", async ({ page }) => {
-    test.setTimeout(30_000);
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto("/");
-    const sim = page.getByRole("figure").filter({ hasText: "A small system you can break" });
-    await expect(sim.locator("p[aria-live]")).toContainText("Healthy");
-    await page.waitForTimeout(9000);
-    await expect(sim.locator("p[aria-live]")).toContainText("Healthy");
-    await expect(sim.getByRole("button", { name: "Kill a server" })).toBeVisible();
-    await expect(sim.getByText("160 requests/s")).toBeVisible();
-  });
-
-
   test("shows everything without waiting on an animation", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
