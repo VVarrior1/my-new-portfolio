@@ -60,6 +60,9 @@ const BELOW_CURL = 0.3;
 const RIVER_TRACE: [number, number] = [0.1, 0.3];
 const PAGE_TRACE: [number, number] = [0.24, 0.55];
 const POUR = 0.3;
+/** How hard the hero portrait answers the pointer, as a share of a screenshot's hover: a soft ripple
+ * and a faint lens, never enough to warp his face. */
+const PORTRAIT_HOVER = 0.32;
 
 function hex(value: string, fallback: [number, number, number]): [number, number, number] {
   const m = value.trim().match(/^#([0-9a-f]{6})$/i);
@@ -636,10 +639,16 @@ export function LiquidField() {
           const n = Math.min(4, Math.max(1, Math.ceil(dist / 36)));
           const radius = (coarse ? 0.16 : 0.07) + Math.min(1, v / 2600) * (coarse ? 0.22 : 0.17);
           // Over the hero's river the cursor stirs more gently, so it ripples the current rather than
-          // tearing it into eddies (the bed heals a ripple in a moment).
-          const push = (coarse ? 0.15 : 0.11) * Math.min(1, 0.4 + v / 1600) * (f.bed ? 0.1 : 1);
+          // tearing it into eddies (the bed heals a ripple in a moment). Over the portrait it barely
+          // pushes (a push behind the photo tears a gap in the river that runs all the way down it)
+          // and instead pours more ink into the river, which swells out from under the photo.
+          const photo = f.bed && planesOn ? document.querySelector<HTMLElement>("[data-hero-portrait] [data-gl]")?.getBoundingClientRect() : null;
+          const onPhoto = !!photo && pointer.x >= photo.left && pointer.x <= photo.right && pointer.y >= photo.top && pointer.y <= photo.bottom;
+          const push = (coarse ? 0.15 : 0.11) * Math.min(1, 0.4 + v / 1600) * (f.bed ? (onPhoto ? 0.03 : 0.1) : 1);
           // A faint smoke of ink: enough to see the stroke, too little to draw contour lines of its own.
-          const ink = Math.min(0.03, v * 0.000012) / n;
+          const ink = onPhoto ? 0 : Math.min(0.03, v * 0.000012) / n;
+          // The swell drains slower than the ink fades (see `settle`), so it never leaves a lump.
+          if (onPhoto) swell = Math.min(1.5, swell + Math.min(1, v / 1200) * dt * 3);
           for (let i = 0; i < n; i++) {
             const t = (i + 1) / n;
             const [x, y] = uv(pointer.x - pointer.dx * (1 - t), pointer.y - pointer.dy * (1 - t));
@@ -668,7 +677,11 @@ export function LiquidField() {
           if (plane.revealing) plane.reveal = Math.min(1, plane.reveal + dt / 1.1);
           const inside = pointer.has && pointer.x >= r.left && pointer.x <= r.right && pointer.y >= r.top && pointer.y <= r.bottom;
           // The portrait doesn't answer the pointer: no ripple or lens ever passes over his face.
-          plane.hover += ((inside && !plane.mode ? 1 : 0) - plane.hover) * (1 - Math.exp(-6 * dt));
+          // The portrait answers at a fraction of a screenshot's strength, and both settle back to the
+          // clean image within about a second of the pointer leaving.
+          const target = inside ? (plane.mode ? PORTRAIT_HOVER : 1) : 0;
+          plane.hover += (target - plane.hover) * (1 - Math.exp(-6 * dt));
+          if (!inside && plane.hover < 0.004) plane.hover = 0;
           const radius = parseFloat(getComputedStyle(plane.img).borderTopLeftRadius) || 0;
           f.drawPlane({
             texture: plane.texture,

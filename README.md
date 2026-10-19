@@ -135,7 +135,9 @@ writes to `components/ui`. Check its colors in both themes.
 **The hero portrait** (`public/portrait-snow.jpg`, rendered from the original RAW, its location
 metadata stripped) sits in the hero's right column on laptops, a modest 4:5 frame with a mono
 caption from the photo's own date and place, and small above the name on phones and tablets. On
-laptops it is drawn into the liquid (`data-gl="portrait"`) and the river leaves from behind it. It
+laptops it is drawn into the liquid (`data-gl="portrait"`) and the river leaves from behind it;
+the pointer over it raises a soft ripple and lens (settling back to the clean photo within a second)
+and swells the river out from under it. Touch screens and reduced motion keep the still photo. It
 is the only photo on the page: the contact section ends on the email, the keys and the spec plate.
 
 **Product screenshots** live in `public/work`. Refresh them with `node scripts/capture-work-shots.mjs`

@@ -101,8 +101,11 @@ Design and the token comments at the top of `app/globals.css`.
   cut (the bold A and a cobalt pixel), chosen inside `app/icon.svg` by a size media query.
 - The name is never printed twice in one viewport: the header wordmark waits on `/` until the h1
   scrolls out (on laptops it is assembled, letter by letter, by the name's own flight).
-- The hero portrait is the owner's real photo, shown as itself (no filters on his face; its liquid plane
-  never ripples or lenses under the pointer, it only bows a little while the page scrolls). It appears once on the page. Its caption comes from the
+- The hero portrait is the owner's real photo, shown as itself (no filters on his face). On fine
+  pointers its liquid plane answers the pointer at a third of a screenshot's strength
+  (`PORTRAIT_HOVER`: a soft ripple and lens) and is the clean photo again within a second of the
+  pointer leaving; moving over it swells the river out from under it, with almost no push (a push
+  behind the photo tears a gap down the river). Touch, phones and reduced motion keep the still photo. It appears once on the page. Its caption comes from the
   photo's own metadata; don't caption what isn't true. The owner found the hero simulator "ugly and
   clutter" and it was removed; don't bring a widget back into the hero.
 - shadcn components in `components/ui` are ours to edit. Theme them through the token mapping in
