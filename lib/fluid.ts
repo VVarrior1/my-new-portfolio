@@ -376,7 +376,7 @@ uniform float uTime; uniform float uDpr;
 uniform vec3 uBg; uniform vec3 uNeutral; uniform vec3 uAccent;
 uniform vec3 uBg2; uniform vec3 uNeutral2; uniform vec3 uAccent2;
 uniform float uNeutralMax; uniform float uAccentMax; uniform float uShading; uniform float uShading2;
-uniform float uFill; uniform float uLines; uniform float uSteps; uniform float uCalmLines;
+uniform float uFill; uniform float uLines; uniform float uSteps; uniform float uCalmLines; uniform vec2 uTrace;
 uniform vec4 uBands;
 ${CALM_GLSL}
 // A hairline on every 1/steps of v: g is v's gradient in buffer px, w the line's half width.
@@ -388,8 +388,8 @@ float contour (float v, float g, float steps, float w) {
   return l * (1.0 - smoothstep(0.14, 0.3, gs));
 }
 // The value a neutral line is traced on: the wide blur w where the dye is faint, the fine field c
-// where it is a body.
-float traced (float c, float w) { return mix(w, c, smoothstep(0.1, 0.3, w)); }
+// where it is a body (from uTrace.x to uTrace.y of the wide blur's density).
+float traced (float c, float w) { return mix(w, c, smoothstep(uTrace.x, uTrace.y, w)); }
 float edge (float y, float x) {
   float t = uTime;
   float w = sin(x * 0.0042 / uDpr + t * 0.7) * 7.0 + sin(x * 0.0113 / uDpr - t * 1.1 + 1.3) * 3.5 + sin(x * 0.027 / uDpr + t * 1.9) * 1.2;
@@ -577,6 +577,10 @@ export class Fluid {
   ambientScale = 2.4;
   /** A steady push on the whole pool, sim texels/s² (x right, y up). */
   drift: [number, number] = [0, 0];
+  /** Over what density of the wide blur the neutral lines move from tracing the wide blur to the
+   * fine field. Higher is smoother: a wrinkle inside a thin body of ink, traced on the fine field,
+   * closes into a small ring. */
+  trace: [number, number] = [0.1, 0.3];
   /** The river's bed, or null: a path in UV (0..1, y up) the current is drawn along at `speed`
    * (sim texels/s) within about `width` of it (a fraction of the screen's height), relaxing
    * toward that flow at `rate` per second. Ink well outside it fades `fade` per second faster.
@@ -1000,6 +1004,7 @@ export class Fluid {
     gl.uniform1f(p.uniforms.uLines, c.lines);
     gl.uniform1f(p.uniforms.uSteps, c.steps);
     gl.uniform1f(p.uniforms.uCalmLines, c.calmLines ?? 0);
+    gl.uniform2f(p.uniforms.uTrace, this.trace[0], this.trace[1]);
     const h = gl.drawingBufferHeight;
     const k = this.dpr;
     const b = [0, 0, 0, 0];

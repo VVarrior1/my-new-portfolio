@@ -86,7 +86,8 @@ export function Choreo() {
       row.dataset.tide = "pre";
       void row.offsetWidth;
       row.dataset.tide = "in";
-      emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: fromTop ? 300 : -300, ink: 0.12, accent: 0.06, radius: 0.08 });
+      // A push only: a drop of dye where the pointer enters is a loose blob in open water.
+      emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: fromTop ? 300 : -300, ink: 0, accent: 0, radius: 0.08 });
     };
     const onLeave = (e: PointerEvent) => {
       const row = e.currentTarget as HTMLElement;
@@ -115,7 +116,7 @@ export function Choreo() {
         card.style.setProperty("--from", fromTop ? "-101%" : "101%");
         void card.offsetWidth;
         card.toggleAttribute("data-fill", true);
-        emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: fromTop ? 260 : -260, ink: 0.08, accent: 0.04, radius: 0.07 });
+        emitFlow({ kind: "stir", x: e.clientX, y: e.clientY, dx: 0, dy: fromTop ? 260 : -260, ink: 0, accent: 0, radius: 0.07 });
       } else {
         card.style.setProperty("--from", fromTop ? "-101%" : "101%");
         card.toggleAttribute("data-fill", false);

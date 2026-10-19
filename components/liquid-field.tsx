@@ -21,8 +21,10 @@ import { onFrame, type Frame } from "@/lib/ticker";
 //   thickens with traffic (lib/flow-bus.ts). More traffic is a faster, denser river; a killed
 //   server swells the thread, and the swell runs down the river and settles back.
 //   An ambient curl-noise stir keeps the pool moving when nothing touches it, flying HUD letters
-//   and the spine's packet stir it, and below the hero two slow currents and the odd drip keep the
-//   gutters alive.
+//   and the spine's packet stir it, and below the hero two slow currents keep the gutters alive.
+//   Below the hero, ink only ever enters from the screen's left edge: a drop of ink landing in
+//   open water is a closed contour by definition (a ring, an island), so pushes there (the
+//   waterlines' wake, scroll eddies, hovered rows, flying letters) move the water but carry no dye.
 // It starts after the page has loaded and gone idle, pauses with the tab, caps the pixel ratio,
 // and under reduced motion renders one still frame. Without WebGL the page is plain paper.
 
@@ -50,6 +52,11 @@ const BED_SPEED = 34;
 const RIVER_FADE = 0.5;
 /** The share of the ambient stir the hero keeps while its river runs. */
 const RIVER_AMBIENT = 0.5;
+/** The share of the vorticity confinement the page keeps below the hero. */
+const BELOW_CURL = 0.3;
+/** Where the neutral ink's lines switch from the wide blur to the fine field (see Fluid.trace). */
+const RIVER_TRACE: [number, number] = [0.1, 0.3];
+const PAGE_TRACE: [number, number] = [0.24, 0.55];
 
 function hex(value: string, fallback: [number, number, number]): [number, number, number] {
   const m = value.trim().match(/^#([0-9a-f]{6})$/i);
@@ -402,7 +409,7 @@ export function LiquidField() {
           if (edge <= 8 || edge >= vh - 8) continue;
           for (let i = 0; i < 6; i++) {
             const [x, y] = uv(((i + 0.5) / 6) * vw, edge);
-            f.splat(x, y, (Math.random() - 0.5) * 220, push, Math.min(0.1, Math.abs(delta) * 0.002), 0, 0.3);
+            f.splat(x, y, (Math.random() - 0.5) * 220, push, 0, 0, 0.3);
           }
         }
       }
@@ -411,34 +418,16 @@ export function LiquidField() {
       if (speed > 0.15) {
         for (const side of [0.04, 0.96]) {
           const [x, y] = uv(side * vw, vh * (0.3 + Math.random() * 0.4));
-          f.splat(x, y, (side < 0.5 ? 1 : -1) * 260 * speed, push * 0.6, 0.04 * speed, 0, 0.25);
+          f.splat(x, y, (side < 0.5 ? 1 : -1) * 260 * speed, push * 0.6, 0, 0, 0.25);
         }
       }
     };
 
-    // Drips: when nothing else moves, a drop lands in an empty part of the screen now and then and
-    // spreads into rings (the contour lines of the drop), like ink on water.
-    let dripClock = 0.6;
-    const drip = (f: Fluid, dt: number, rand: () => number, vw: number, vh: number) => {
-      dripClock -= dt * tune.drip;
-      if (dripClock > 0) return;
-      dripClock = 0.7 + rand() * 1.1;
-      for (let attempt = 0; attempt < 6; attempt++) {
-        const px = vw * (0.04 + rand() * 0.92);
-        const py = vh * (0.12 + rand() * 0.8);
-        const inside = f.calm.some((r) => px > r.left - 30 && px < r.right + 30 && py > r.top - 30 && py < r.bottom + 30);
-        if (inside) continue;
-        const [x, y] = uv(px, py);
-        const accent = rand() < 0.16;
-        f.splat(x, y, (rand() - 0.5) * 120, (rand() - 0.5) * 120, accent ? 0.12 : 0.5, accent ? 0.3 : 0, 0.06 + rand() * 0.09);
-        break;
-      }
-    };
-
     // Below the hero the page has its own weather: two slow currents wander in from the side edges,
-    // so there is always marbling moving in the gutters around the text.
+    // so there is always marbling moving in the gutters around the text. (There used to be drips
+    // too, drops landing in empty water: each one spread into a ring of contours, a loose oval.)
     let weather = 0;
-    const ambient = (f: Fluid, dt: number, rand: () => number, vw: number, vh: number) => {
+    const ambient = (f: Fluid, dt: number, vw: number, vh: number) => {
       const { inlet } = flowState();
       const heroLive = inlet && inlet.y > 40 && inlet.y < vh - 40;
       if (heroLive) return;
@@ -448,15 +437,18 @@ export function LiquidField() {
         [1, 0.5 + 0.34 * Math.sin(weather * 0.17 + 2.1), -1],
       ];
       for (const [side, yy, dir] of sides) {
-        // From just inside the edge, so the ink starts on screen rather than banked against its side.
-        const [x, y] = uv((side === 0 ? 0.05 : 0.95) * vw, yy * vh);
+        // The ink is laid at the very edge, half of it off screen, so its body always reaches back to
+        // the side of the screen (where the display fades it out) and never closes into an island.
+        const [x, y] = uv((side === 0 ? 0.004 : 0.95) * vw, yy * vh);
         const angle = Math.sin(weather * 0.5 + side * 3) * 0.5;
         const speed = 240 + 80 * Math.sin(weather * 0.9 + side);
         // Only the left current carries ink: the right one is a push from behind the ruler, so dye
-        // never collects by the rail.
-        const ink = side === 0 ? 0.022 * dt * 60 * tune.drip : 0;
-        const accent = side === 0 && rand() < 0.08 ? 0.12 : 0;
-        f.splat(x, y, dir * Math.cos(angle) * speed, Math.sin(angle) * speed, ink, accent * dt * 60, 0.12);
+        // never collects by the rail. No accent: a flick of cobalt every so often was a loose dot.
+        f.splat(x, y, dir * Math.cos(angle) * speed, Math.sin(angle) * speed, 0, 0, 0.12);
+        // The ink goes in wider and thinner than the push (about the same amount as one narrow
+        // drop): a broad plume marbles into long smooth tongues, where a narrow one pinched into
+        // little hooks in the lane beside the text.
+        if (side === 0) f.ink(x, y, 0.009 * dt * 60 * tune.drip, 0, 0.3);
       }
     };
 
@@ -535,9 +527,15 @@ export function LiquidField() {
       // How much the pool is stirred on its own. In the hero the river is the motion, so while it
       // runs there is no vorticity confinement (it winds the river's fringe, and a failing
       // system's swell, into small closed curls beside the copy) and only half the ambient noise
-      // (the full stir tears the fringe into islands). Below the hero the page's weather keeps both.
-      const weatherFor = (fl: Fluid, live: boolean, strain: number, q: number) => {
-        fl.config.curl = live ? 0 : base.curl + strain * 2;
+      // (the full stir tears the fringe into islands). Below the hero the page's weather keeps the
+      // full stir but only a little confinement (BELOW_CURL), and none from the simulator's strain:
+      // the simulator is off screen there, and confinement is what rolled the left current's wisps
+      // into small closed curls in the lane beside the text.
+      const weatherFor = (fl: Fluid, live: boolean, q: number) => {
+        fl.config.curl = live ? 0 : base.curl * BELOW_CURL;
+        // Below the hero the ink's lines follow the smooth wide blur further into its bodies, so a
+        // wrinkle in a thin wisp can't close into a small ring (the hero's river keeps its detail).
+        fl.trace = live ? RIVER_TRACE : PAGE_TRACE;
         fl.ambient = AMBIENT * tune.ambient * (1 + q * 0.6) * (live ? RIVER_AMBIENT : 1);
       };
       f.resize(dpr());
@@ -583,9 +581,9 @@ export function LiquidField() {
         for (let i = 0; i < steps; i++) {
           f.time += dt;
           riverLive = river(f, dt, vw, vh);
-          weatherFor(f, riverLive, 0, 0);
+          weatherFor(f, riverLive, 0);
           if (f.bed) f.config.densityDissipation = base.densityDissipation * RIVER_FADE;
-          if (!riverLive) ambient(f, dt, rand, vw, vh);
+          if (!riverLive) ambient(f, dt, vw, vh);
           f.obstruct(dt);
           f.step(dt);
         }
@@ -675,7 +673,7 @@ export function LiquidField() {
           failGlow = Math.max(0, failGlow - dt * 0.5);
         }
         pulse += (kick - pulse) * Math.min(1, dt * 3);
-        weatherFor(f, riverLive, strain, q);
+        weatherFor(f, riverLive, q);
         // A busier system turns over its ink faster, so more traffic reads as more current, not
         // more mud.
         f.config.densityDissipation = base.densityDissipation * (1 + q * 0.9 + strain * 0.3) * (f.bed ? RIVER_FADE : 1);
@@ -684,8 +682,7 @@ export function LiquidField() {
         riverLive = river(f, dt, vw, vh);
         wake(f, delta, vh, vw);
         if (!riverLive) {
-          drip(f, dt, rand, vw, vh);
-          ambient(f, dt, rand, vw, vh);
+          ambient(f, dt, vw, vh);
         }
         if (pointer.moved) {
           // The cursor stirs along its whole path this frame (a fast sweep is several overlapping

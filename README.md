@@ -64,8 +64,10 @@ How the liquid behaves:
   faster, denser river; strain makes it sway; failing requests tint the thread; a killed server
   sends one cobalt bloom down it that settles back. An ambient curl-noise force keeps the whole
   pool drifting at idle. The pointer stirs it along its path (splats grow with its speed), the
-  HUD's flying letters and the spine's packet drag it, rows and cards drop ink when you enter
-  them, and below the hero drips (ink) and a slow current from the left keep it moving.
+  HUD's flying letters, the spine's packet and the rows and cards you enter push it, and below the
+  hero a slow current from the left edge keeps it moving. Below the hero ink only enters at that
+  edge: those pushes carry no dye, because a drop of ink in open water is a closed contour (a
+  ring, an island).
 - The display traces everything on a blurred copy of the dye: the fill is a smooth gradient and
   each contour is a constant-width, anti-aliased hairline (from the field's value and gradient);
   levels too close to resolve fade into the fill, and flecks too small to matter draw no lines.
