@@ -6,6 +6,19 @@ export function BlogDetail({ blog }: { blog: BlogPost }) {
   return (
     <div className="prose-post">
       {blog.content.map((block, index) => {
+        if (block.code !== undefined) {
+          // Shown as written: monospace, whitespace kept, and a long line scrolls inside the block
+          // (never the page). It can take focus so the scroll works from the keyboard too.
+          return (
+            <figure key={`code-${index}`} className="post-code">
+              {block.language && <figcaption className="post-code-lang">{block.language}</figcaption>}
+              <pre tabIndex={0}>
+                <code>{block.code}</code>
+              </pre>
+            </figure>
+          );
+        }
+
         if (block.image) {
           return (
             <figure key={`${block.image}-${index}`}>

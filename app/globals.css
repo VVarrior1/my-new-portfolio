@@ -1061,6 +1061,53 @@ html[data-motion="on"] [data-reveal="wipe"][data-in] {
   background: none;
   padding: 0;
 }
+/* A post's code block (BlogContentBlock.code): the screen's own dark glass in both themes, the way
+   the simulator shows its readouts, so it reads the same in light and dark. Long lines scroll
+   inside the block; the page never scrolls sideways. */
+.post-code {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid var(--screen-line);
+  background: var(--screen);
+}
+.post-code-lang {
+  padding: 0.6rem 1.15rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--screen-graphite);
+}
+.prose-post .post-code pre {
+  margin: 0;
+  border-radius: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  white-space: pre;
+  tab-size: 2;
+  /* Code as typed: JetBrains Mono's ligatures would turn => into an arrow and ++ into one glyph. */
+  font-variant-ligatures: none;
+  font-feature-settings: "calt" 0, "liga" 0;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  scrollbar-width: thin;
+  scrollbar-color: var(--screen-outline) transparent;
+}
+.prose-post .post-code-lang + pre {
+  padding-top: 0.5rem;
+}
+.prose-post .post-code pre:focus-visible {
+  outline: 2px solid var(--screen-signal);
+  outline-offset: -2px;
+}
+@media (min-width: 640px) {
+  .prose-post .post-code pre {
+    font-size: 0.875rem;
+  }
+}
 .prose-post img {
   border-radius: 0.75rem;
   border: 1px solid var(--rule);

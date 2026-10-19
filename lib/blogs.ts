@@ -1,10 +1,17 @@
 import { generateSignedUrl, ensureGcsConfig, gcsBucketName } from "@/lib/gcs";
 import localBlogsData from "@/data/blogs.json";
 
+/**
+ * One block of a post: a heading with paragraphs (Markdown), an image, or a code block. A code
+ * block is shown as written (monospace, whitespace kept, scrolling sideways when a line is long);
+ * `language` is only a label, there is no syntax highlighting.
+ */
 export type BlogContentBlock = {
   heading?: string;
   paragraph?: string[];
   image?: string;
+  code?: string;
+  language?: string;
 };
 
 export type BlogPost = {

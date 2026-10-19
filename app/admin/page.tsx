@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { parseBodyToBlocks } from "@/lib/blog-body";
 import { formatDate } from "@/lib/date-utils";
 
 function AdminBar() {
@@ -20,18 +21,6 @@ function AdminBar() {
 }
 
 type Status = { ok: boolean; message: string } | null;
-
-type PreviewBlock = {
-  heading?: string;
-  paragraph?: string[];
-};
-
-type PreviewPost = {
-  title: string;
-  date: string;
-  excerpt: string;
-  content: PreviewBlock[];
-};
 
 type GalleryItem = {
   id: string;
@@ -56,49 +45,6 @@ type MultiUploadItem = {
   uploaded?: boolean;
   error?: string;
 };
-
-function formatPreview(body: string): PreviewPost["content"] {
-  const lines = body.split(/\r?\n/);
-  const blocks: PreviewPost["content"] = [];
-  let current: PreviewBlock | null = null;
-
-  const push = () => {
-    if (current) {
-      blocks.push(current);
-      current = null;
-    }
-  };
-
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) {
-      push();
-      continue;
-    }
-
-    const imageMatch = line.match(/^!\[[^\]]*\]\(([^)]+)\)$/);
-    if (imageMatch) {
-      push();
-      blocks.push({ paragraph: [`[image] ${imageMatch[1]}`] });
-      continue;
-    }
-
-    if (line.startsWith("## ")) {
-      push();
-      current = { heading: line.replace(/^##\s+/, ""), paragraph: [] };
-      continue;
-    }
-
-    if (!current) {
-      current = { paragraph: [] };
-    }
-
-    current.paragraph = [...(current.paragraph ?? []), line];
-  }
-
-  push();
-  return blocks;
-}
 
 // Login Component
 function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
@@ -486,7 +432,8 @@ function AdminDashboard({ token }: { token: string }) {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [excerpt, setExcerpt] = useState("");
   const [body, setBody] = useState("");
-  const previewContent = useMemo(() => formatPreview(body), [body]);
+  // The same parser the API uses, so the preview shows the blocks the post will be saved as.
+  const previewContent = useMemo(() => parseBodyToBlocks(body), [body]);
 
   // Gallery state
   const [galleryTitle, setGalleryTitle] = useState("");
@@ -909,6 +856,13 @@ function AdminDashboard({ token }: { token: string }) {
                           {paragraph}
                         </p>
                       ))}
+                      {block.image && <p className="text-sm leading-relaxed">[image] {block.image}</p>}
+                      {block.code !== undefined && (
+                        <pre className="overflow-x-auto rounded-xl bg-black/40 p-4 font-mono text-xs leading-relaxed text-white/90">
+                          {block.language && <span className="mb-2 block uppercase tracking-widest text-white/50">{block.language}</span>}
+                          <code>{block.code}</code>
+                        </pre>
+                      )}
                     </div>
                   ))}
                 </div>

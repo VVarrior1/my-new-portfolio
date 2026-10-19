@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
+import { parseBodyToBlocks } from "@/lib/blog-body";
 import { getAllBlogs, appendBlog, type BlogPost } from "@/lib/blogs";
 
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN ?? process.env.BLOG_ADMIN_TOKEN;
@@ -19,61 +20,6 @@ function slugify(input: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-}
-
-function parseBodyToBlocks(body: string) {
-  const lines = body.split(/\r?\n/);
-  const blocks: BlogPost["content"] = [];
-  let currentBlock: { heading?: string; paragraph: string[] } | null = null;
-
-  const pushCurrent = () => {
-    if (currentBlock) {
-      blocks.push({ ...currentBlock });
-      currentBlock = null;
-    }
-  };
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line) {
-      if (currentBlock && currentBlock.paragraph.length) {
-        currentBlock.paragraph.push("");
-      }
-      continue;
-    }
-
-    const imageMatch = line.match(/^!\[[^\]]*\]\(([^)]+)\)$/);
-    if (imageMatch) {
-      pushCurrent();
-      blocks.push({ image: imageMatch[1] });
-      continue;
-    }
-
-    if (line.startsWith("## ")) {
-      pushCurrent();
-      currentBlock = { heading: line.replace(/^##\s+/, ""), paragraph: [] };
-      continue;
-    }
-
-    if (!currentBlock) {
-      currentBlock = { paragraph: [] };
-    }
-    currentBlock.paragraph.push(line);
-  }
-
-  pushCurrent();
-
-  return blocks
-    .map((block) => {
-      if (block.paragraph) {
-        const filtered = block.paragraph.filter((paragraph) => paragraph.trim().length);
-        return { ...block, paragraph: filtered };
-      }
-      return block;
-    })
-    .filter((block) =>
-      block.heading || block.paragraph?.length || block.image
-    );
 }
 
 export async function GET() {
@@ -114,7 +60,7 @@ export async function POST(request: NextRequest) {
   const content = parseBodyToBlocks(payload.body);
   if (content.length === 0) {
     return NextResponse.json(
-      { error: "Body must include at least one paragraph or heading" },
+      { error: "Body must include at least one paragraph, heading, image or code block" },
       { status: 400 }
     );
   }
