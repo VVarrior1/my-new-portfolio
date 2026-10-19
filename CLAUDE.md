@@ -58,20 +58,22 @@ Design and the token comments at the top of `app/globals.css`.
   push with dye). Points are viewport pixels.
 - Anything per-frame subscribes to `lib/ticker.ts` (`onFrame`), never its own rAF, so it reads the
   scroll Lenis just set. Smooth scrolls go through `scrollToTarget`.
-- The HUD (`components/hud.tsx`) reads `main [data-hud]`: a section's name queues and flies; an
-  element with `data-hud-source` (a poster built with `<Letters>`) lifts its own letters. It also
+- The HUD (`components/hud.tsx`) reads `main [data-hud]`: the sections still to come queue sideways
+  on the right edge, and each name slides into the rail and fades as its section arrives. Nothing
+  docks in the corner (a parked name sat on the page's text); the sticky "01 / WORK" bar says where
+  you are. Project titles are plain headings at reading size, no letters lift off them. It also
   flies the hero's name (`[data-name] [data-nl]`, built with `<InlineLetters>`, which keeps the
   kerning) into the header brand (`[data-wordmark] [data-wl]`; the "Am." mark's A and stop are
-  targets marked `data-keep`, which never hide; the surname's letters show as they land); that flight is scrubbed, never
-  snapped, so the simulator stays usable. Elements marked `data-hud-avoid` (the portrait) make the
-  docked stack step aside if it would overlap them, and the stack also steps aside while the ruler
-  is zoomed into its map. Its math is in `lib/hud-math.ts` with tests. It, the cursor and the
-  snap-to-resolve exist only on fine pointers ≥1024px with motion; section heads switch between a
-  big title and the sticky "01 / WORK" bar by the same media query, so nothing moves after load.
+  targets marked `data-keep`, which never hide; the surname's letters show as they land); that
+  flight is scrubbed, never snapped. The queue steps aside while the ruler is zoomed into its map.
+  An e2e test fails if any fixed text intersects visible page text at 1280/1440/1920. Its math is
+  in `lib/hud-math.ts` with tests. It, the cursor and the snap-to-resolve exist only on fine
+  pointers ≥1024px with motion; section heads switch between a big title and the sticky
+  "01 / WORK" bar by the same media query, so nothing moves after load.
   Everywhere else with motion (phones, tablets, touch laptops) `components/mobile-hud.tsx` flies each
-  section's big title (`[data-mtitle]`, letters marked `data-tl`) into a frosted bar under the
-  header, leaving the title's outline behind. On the contact section the corner the HUD docks in is
-  kept clear (the portrait column ends left of it).
+  section's big title (`[data-mtitle]`, letters marked `data-tl`) into a solid bar under the
+  header, leaving the title's outline behind. The bars under the header are solid, never frosted,
+  so text can't smear beneath them.
 - The spine (`components/spine.tsx`) runs from the hero's origin station to the end station beside
   the key marked `data-terminal` (Email me); over the last screen of scroll the packet drifts down
   (`packetScreenY`) to arrive there exactly at the bottom of the page.
