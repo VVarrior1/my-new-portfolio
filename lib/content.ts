@@ -82,7 +82,7 @@ export const featured: FeaturedProject[] = [
     role: "Solo project, open source",
     facts: [
       { value: "70", label: "lessons in 12 chapters" },
-      { value: "948", label: "tests" },
+      { value: "956", label: "tests" },
       { value: "180K", label: "requests simulated in under 2\u00a0s" },
     ],
     hardPart: {
@@ -114,7 +114,7 @@ export const featured: FeaturedProject[] = [
     facts: [
       { value: "~300", label: "active families" },
       { value: "5", label: "Calgary venues" },
-      { value: "~90", label: "API routes" },
+      { value: "~190", label: "API routes" },
     ],
     hardPart: {
       title: "Text messages that cost what they should",
