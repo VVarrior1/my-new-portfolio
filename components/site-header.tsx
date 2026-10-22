@@ -71,7 +71,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
             <BrandMark className="h-[19px] w-auto sm:h-[21px]" />
             <span
               data-surname=""
-              className={`wordmark-serif -mb-[0.16em] text-[0.9375rem] leading-none transition-[opacity,transform] duration-200 motion-reduce:transition-none sm:text-[1rem] ${
+              className={`wordmark-second -mb-[0.16em] text-[0.9375rem] leading-none transition-[opacity,transform] duration-200 motion-reduce:transition-none sm:text-[1rem] ${
                 hideMark ? "-translate-x-1 opacity-0" : "translate-x-0 opacity-100"
               }`}
             >

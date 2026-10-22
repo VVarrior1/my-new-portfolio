@@ -111,7 +111,7 @@ export default async function Home() {
                   </span>
                 </span>
                 <span className="rise-line">
-                  <span className="t-serif pr-[0.06em]" style={{ ["--d" as string]: "90ms" }}>
+                  <span className="t-second" style={{ ["--d" as string]: "90ms" }}>
                     <InlineLetters text={profile.lastName} mark="nl" />
                   </span>
                 </span>
@@ -474,7 +474,7 @@ export default async function Home() {
                     Hiring for
                   </span>{" "}
                   <span className="block w-fit" data-reveal="wipe" style={{ ["--d" as string]: "140ms" }}>
-                    <span className="t-serif">2027?</span>
+                    <span className="t-second">2027?</span>
                   </span>
                 </h2>
                 <p className="measure mt-7 text-[1.1875rem] leading-relaxed text-ink-2 sm:text-[1.375rem]" data-part>

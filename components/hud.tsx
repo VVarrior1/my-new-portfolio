@@ -64,6 +64,12 @@ export function Hud() {
  * surname empties). After getartcraft.com, where the hero wordmark docks as the first heading.
  */
 const NAME_START = 24;
+const STRETCH: Record<string, CanvasFontStretch> = {
+  "87.5%": "semi-condensed",
+  "100%": "normal",
+  "112.5%": "semi-expanded",
+  "125%": "expanded",
+};
 const NAME_RANGE = 330;
 const NAME_STAGGER = 0.022;
 
@@ -77,8 +83,8 @@ function createNameFlight(layer: HTMLElement) {
   // the surname to the surname, and the rest of the first name into the mark's full stop. The A and
   // the stop are the mark's own paths (data-keep): they never leave, so the hero's A dives into the
   // mark's A and dissolves into it over the last stretch rather than covering it.
-  const first = sources.filter((el) => !el.closest(".t-serif"));
-  const last = sources.filter((el) => el.closest(".t-serif"));
+  const first = sources.filter((el) => !el.closest(".t-second"));
+  const last = sources.filter((el) => el.closest(".t-second"));
   const dot = targets[1];
   const surname = targets.slice(2);
   type L = {
@@ -89,6 +95,8 @@ function createNameFlight(layer: HTMLElement) {
     size: number;
     /** Ink centre minus box centre, per px of font size, and cap height per px (for SVG targets). */
     ink: { x: number; y: number; cap: number };
+    /** Its weight at the start and where it lands: the hero's surname is lighter than the header's. */
+    weight: { from: number; to: number };
     tumble: number;
     prev: { x: number; y: number };
   };
@@ -105,6 +113,7 @@ function createNameFlight(layer: HTMLElement) {
       el,
       size: 0,
       ink: { x: 0, y: 0, cap: 0.7 },
+      weight: { from: 400, to: 400 },
       tumble: (((i * 5 + 3) % 7) - 3) * 4,
       prev: { x: 0, y: 0 },
     });
@@ -119,9 +128,13 @@ function createNameFlight(layer: HTMLElement) {
       l.size = parseFloat(cs.fontSize) || 100;
       // One property at a time: the font shorthand won't take a percentage width.
       Object.assign(l.el.style, { fontFamily: cs.fontFamily, fontStyle: cs.fontStyle, fontWeight: cs.fontWeight, fontStretch: cs.fontStretch, fontSize: `${l.size}px` });
+      const from = parseFloat(cs.fontWeight) || 400;
+      l.weight = { from, to: l.dst instanceof SVGElement ? from : parseFloat(getComputedStyle(l.dst).fontWeight) || from };
       // Where the glyph's ink sits in its box, so a letter can land ink to ink on a drawn mark.
       if (ctx && l.dst instanceof SVGElement) {
         ctx.font = `${cs.fontStyle} ${cs.fontWeight} 100px ${cs.fontFamily}`;
+        // The font string takes no width, so it is set on its own (canvas wants a keyword).
+        ctx.fontStretch = STRETCH[cs.fontStretch] ?? "normal";
         const m = ctx.measureText(l.el.textContent || "A");
         l.ink = {
           x: ((m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2 - m.width / 2) / 100,
@@ -192,6 +205,10 @@ function createNameFlight(layer: HTMLElement) {
       const alpha = l.pour ? 1 - clamp01((d - 0.55) / 0.4) : drawn ? 1 - clamp01((d - 0.72) / 0.26) : 1;
       l.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) translate(-50%,-50%) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
       l.el.style.opacity = alpha.toFixed(3);
+      // It takes on its landing weight over the last stretch, so it docks as the header's letter.
+      if (l.weight.to !== l.weight.from) {
+        l.el.style.fontWeight = (l.weight.from + (l.weight.to - l.weight.from) * clamp01((d - 0.6) / 0.4)).toFixed(0);
+      }
       // A letter in flight drags the liquid with it.
       if (l.prev.x) {
         const vx = (x - l.prev.x) / fr.dt;

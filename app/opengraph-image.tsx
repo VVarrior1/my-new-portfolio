@@ -22,8 +22,9 @@ const GO = "#18723f";
 const PHOTO = { w: 414, h: 518 };
 
 export default async function OpenGraphImage() {
-  const [display, body, mono, photo] = await Promise.all([
-    font("Archivo-SemiExpanded-600.woff"),
+  const [first, second, body, mono, photo] = await Promise.all([
+    font("Archivo-SemiCondensed-700.woff"),
+    font("Archivo-Expanded-300.woff"),
     font("Archivo-400.woff"),
     font("JetBrainsMono-500.woff"),
     readFile(join(process.cwd(), "public/portrait-snow.jpg")),
@@ -36,9 +37,10 @@ export default async function OpenGraphImage() {
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, paddingRight: 56 }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", fontFamily: "Mono", fontSize: 18, color: GRAPHITE }}>Full-stack and AI engineer</div>
-            <div style={{ display: "flex", flexDirection: "column", marginTop: 18, fontFamily: "ArchivoWide", fontSize: 76, lineHeight: 0.98, letterSpacing: "-0.025em" }}>
-              <span>{profile.firstName}</span>
-              <span>{profile.lastName}</span>
+            {/* The name as the hero sets it: heavy and narrow, then light and wide. */}
+            <div style={{ display: "flex", flexDirection: "column", marginTop: 18, fontSize: 84, lineHeight: 0.98 }}>
+              <span style={{ fontFamily: "ArchivoFirst", letterSpacing: "-0.04em" }}>{profile.firstName}</span>
+              <span style={{ fontFamily: "ArchivoSecond", letterSpacing: "-0.035em" }}>{profile.lastName}</span>
             </div>
             <div style={{ display: "flex", marginTop: 28, fontSize: 27, lineHeight: 1.38, color: INK_2 }}>{profile.intro}</div>
           </div>
@@ -60,7 +62,8 @@ export default async function OpenGraphImage() {
     {
       ...size,
       fonts: [
-        { name: "ArchivoWide", data: display, weight: 600, style: "normal" },
+        { name: "ArchivoFirst", data: first, weight: 700, style: "normal" },
+        { name: "ArchivoSecond", data: second, weight: 300, style: "normal" },
         { name: "Archivo", data: body, weight: 400, style: "normal" },
         { name: "Mono", data: mono, weight: 500, style: "normal" },
       ],

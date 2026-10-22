@@ -4,13 +4,13 @@ import { useEffect, useId, useRef, useState } from "react";
 import { MARK_A, MARK_DOT, MARK_FM, MARK_PEN, MARK_ROUTE, MARK_VIEWBOX } from "./brand-mark-data";
 import "./brand-mark.css";
 
-// The brand mark, "Am.": a heavy upright A whose crossbar runs out through its right leg, thins and
-// rises into an italic serif m, then a cobalt full stop. The bar writes the m: the sans voice turns
-// into the serif mid-stroke, as the hero sets "Abdelrahman" against an italic "Mohamed". Paths come
-// from scripts/brand/build_mark.py.
+// The brand mark, "Am.": a heavy semi-condensed Archivo A (700, 87.5%) fitted close to an expanded
+// Archivo m (400, 125%, the weight of the "Mohamed" set beside it), then a cobalt full stop. The two
+// letters change weight and width, not style, as the hero sets "Abdelrahman" (700, 87.5%) against
+// "Mohamed" (300, 125%). Paths come from scripts/brand/build_mark.py.
 //
-// It writes itself once on load: the stop runs in like a request packet along the crossbar, out
-// through the flick and through the m, drawing it behind it (a dash under a mask), then settles as
+// It writes itself once on load: the stop drops in at the top of the m's first stem and runs down it
+// and through the arches and stems, drawing the m behind it (a dash under a mask), then settles as
 // the full stop with a spring. The name flight (components/hud.tsx) replays that when the first name
 // has poured into the stop, and hover replays it with the m lit in cobalt. Under reduced motion,
 // and whenever no draw is running, it is simply the complete mark.

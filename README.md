@@ -118,8 +118,8 @@ load is the same size as before. The field caps the pixel ratio (1.5 desktop, 1.
 in background tabs, and on an M2 Pro uses about 0.2 ms of main-thread time a frame. `?tune` on the
 home page opens a tuner for the liquid's constants.
 
-Type is Instrument Sans (variable; semi-condensed and heavy for the poster type, tight and large for
-the name) with Instrument Serif italic as a second voice, and JetBrains Mono for dates, stacks,
+Type is Archivo (variable on weight and width; semi-condensed and heavy for the name and the poster
+type, light and expanded as the second voice), and JetBrains Mono for dates, stacks,
 numbers and readouts. Colors are CSS variables on `:root` (`--paper`, `--pool`, `--ink`, `--ink-2`,
 `--graphite`, `--rule`, `--signal`, `--screen`, `--fluid-*`, and `-x` twins for the opposite theme)
 exposed to Tailwind as `bg-paper`, `text-graphite` and so on. The object classes (`.wrap`,

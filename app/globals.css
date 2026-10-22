@@ -25,7 +25,7 @@
    One accent, cobalt (--signal), and neutrals that all sit on one cool
    hue (OKLCH h≈265, chroma ≤ 0.016), so both themes share a temperature.
    Cobalt fills the things you press, marks "now", runs the spine and the
-   ruler's needle, voices the serif labels, and is the only colour the
+   ruler's needle, lights the mark's full stop, and is the only colour the
    fluid can paint besides its neutral ink: there it is the thread in the
    hero's river, the packet's thread and the theme blot, and calm water
    holds it back from text like the ink. Status colours (--trace, --fail,
@@ -217,9 +217,8 @@
   --color-trace: var(--trace);
   --color-fail: var(--fail);
   --color-go: var(--go);
-  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -318,9 +317,10 @@ body {
 /* Type and objects live in the components layer, so Tailwind utilities can still override them. */
 @layer components {
   /* ------------------------------------------------------------------
-     Type. Instrument Sans throughout, tight and large where it speaks
-     (the name, section titles), with Instrument Serif italic as the
-     second voice, for one or two words per heading. JetBrains Mono is for
+     Type. Archivo throughout, heavy and semi-condensed where it speaks
+     (the name, section titles), with the same face light and expanded as
+     the second voice, for one or two words per heading: width and weight
+     change, never the style. JetBrains Mono is for
      data only: dates, numbers, stacks, URLs and everything on a screen.
      Steps: 13 (mono), 15 (labels, buttons), 17 (body), 20 (lead, items),
      32 (project titles), 48–88 (section titles), 64–148 (the name).
@@ -328,34 +328,30 @@ body {
   .t-display {
     font-family: var(--font-display);
     font-size: clamp(3.25rem, 9.6vw, 9.25rem);
-    font-weight: 600;
-    font-stretch: 94%;
-    line-height: 0.86;
-    letter-spacing: -0.052em;
+    font-weight: 700;
+    font-stretch: 87.5%;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
   }
-  .t-serif {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.02em;
+  /* The second voice: the same face, light and wide. */
+  .t-second {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-stretch: 125%;
+    letter-spacing: -0.035em;
   }
   /* The hero's name fills its column exactly: sized on the column (a container), not the viewport. */
   .t-name {
-    font-size: min(17.4cqi, 9.5rem);
-  }
-  .t-display .t-serif {
-    letter-spacing: -0.035em;
-    /* The serif runs smaller on the body; a little extra size matches the cap heights. */
-    font-size: 1.08em;
+    font-size: min(17.5cqi, 9.5rem);
   }
 
   .t-section {
     font-family: var(--font-display);
     font-size: clamp(2.875rem, 6.4vw, 5.5rem);
     font-weight: 600;
-    font-stretch: 94%;
+    font-stretch: 87.5%;
     line-height: 0.92;
-    letter-spacing: -0.045em;
+    letter-spacing: -0.035em;
   }
 
   .t-title {
@@ -1247,7 +1243,7 @@ html:has(.liquid-field) body {
 }
 
 /* ------------------------------------------------------------------
-   Poster type. Instrument Sans semi-condensed, heavy, large: the tools
+   Poster type. Archivo semi-condensed, heavy, large: the tools
    count, the experience odometer and the contact title. Project names
    are headings at reading size (.t-project), not posters: the giant
    outlined names behind the work read as noise, not as titles.
@@ -1258,7 +1254,7 @@ html:has(.liquid-field) body {
   font-weight: 650;
   font-stretch: 87.5%;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 .t-poster {
@@ -1266,12 +1262,9 @@ html:has(.liquid-field) body {
   font-size: clamp(3.5rem, 9vw, 9rem);
   font-weight: 650;
   font-stretch: 87.5%;
-  line-height: 0.88;
-  letter-spacing: -0.045em;
-}
-.t-poster .t-serif {
-  font-size: 1.06em;
-  letter-spacing: -0.03em;
+  /* 0.94 keeps the g of "Hiring" clear of the line under it. */
+  line-height: 0.94;
+  letter-spacing: -0.035em;
 }
 .t-role {
   font-family: var(--font-display);
@@ -1951,8 +1944,8 @@ html:has(.liquid-field) body {
   will-change: transform, opacity;
 }
 /* The brand (components/brand-mark.tsx, components/site-header.tsx): the "Am." mark, then the
-   surname in the serif, as in the hero. The mark is ink (currentColor) with the one accent in its
-   full stop. It writes itself on load: the stop runs the pen route as the dash draws the flick and
+   surname in the second voice (wide), as in the hero. The mark is ink (currentColor) with the one
+   accent in its full stop. It writes itself on load: the stop runs the pen route as the dash draws
    the m, then settles with a spring. Hover lifts it, lights the m in cobalt and writes it again.
    Under reduced motion, and whenever no draw runs, it is the complete mark. */
 .am {
@@ -2024,12 +2017,12 @@ html:has(.liquid-field) body {
   .brand:hover .am:not([data-draw]) .am-fill { animation-name: am-fill-h; }
   .brand:hover .am:not([data-draw]) .am-dot { animation-name: am-run-h, am-pop-h; }
 }
-.wordmark-serif {
-  font-family: var(--font-serif);
-  font-style: italic;
+.wordmark-second {
+  font-family: var(--font-display);
   font-weight: 400;
-  font-size: 1.14em;
-  letter-spacing: -0.01em;
+  font-stretch: 125%;
+  font-size: 1.08em;
+  letter-spacing: -0.02em;
 }
 /* While the name flight runs, the surname's letters show one by one as their twins land, whatever
    the header's own fade says. The mark's A and stop are targets too, but they stay (data-keep). */

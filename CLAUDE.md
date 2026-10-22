@@ -30,7 +30,7 @@ Design and the token comments at the top of `app/globals.css`.
   them at the opposite theme; check both themes and the chapter in both. Neutrals sit on one cool
   hue (OKLCH h≈265, chroma ≤ 0.016). Check new neutrals and contrast with a script, not by eye.
 - One accent. `--signal` (cobalt) fills what you press, marks "now", runs the spine, the ruler's
-  needle, the waterline and the wipe reveals, and voices the serif labels. The fluid may only paint
+  needle, the waterline and the wipe reveals, and lights the mark's full stop. The fluid may only paint
   the neutral dye and the accent (red and green channels of its dye texture); never add a hue. In
   the liquid, cobalt is the thread in the hero's river, the packet's thread and the theme blot;
   drips and the intro drop are ink. Calm water holds the
@@ -89,9 +89,10 @@ Design and the token comments at the top of `app/globals.css`.
   hover, and the fills only run under `(hover: hover) and (pointer: fine)` (CSS and JS), so a tap
   can never leave one stuck. A key's label changes colour only once its fill has covered it. The
   cursor's label disc sits below and right of the pointer, never on the word you're pointing at.
-- Type: Instrument Sans for everything (semi-condensed 650 for posters, the odometer, counts and the
-  HUD), Instrument Serif italic for one or two words (the surname, "2027?", the rivers' labels),
-  JetBrains Mono for data and HUD labels. The name is sized on its column (`.t-name`).
+- Type: Archivo (variable weight and width) for everything: 700 at 87.5% for the name, semi-condensed
+  650 for posters, the odometer, counts and the HUD, and 300 at 125% (`.t-second`) for one or two
+  words (the surname, "2027?"). No serif and no italic: the second voice changes width and weight,
+  not style. JetBrains Mono for data and HUD labels. The name is sized on its column (`.t-name`).
 - Layout: one 12-column grid inside `.wrap`; on laptops `.wrap` leaves a left lane for the spine
   and room on the right for the ruler. Radii: 10px (nodes), 14px (screenshots, screens), 24px
   (portrait); buttons are pills.

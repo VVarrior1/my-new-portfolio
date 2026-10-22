@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AudioProvider } from "@/contexts/audio-context";
 import { playlist } from "@/lib/playlist";
@@ -9,21 +9,13 @@ import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL, profile } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-// Instrument Sans is variable on weight and width: set tight and large it is the display voice
-// (the name, section titles, big numbers), and at text sizes it is the body. Instrument Serif
-// italic is the second voice, for one or two words in a heading.
-const sans = Instrument_Sans({
+// Archivo is variable on weight and width, so one file carries both voices: the display (the name,
+// section titles, big numbers) is heavy and semi-condensed, the second voice (the surname, "2027?")
+// is light and expanded, and at text sizes it is the body.
+const sans = Archivo({
   subsets: ["latin"],
   axes: ["wdth"],
-  variable: "--font-instrument",
-  display: "swap",
-});
-
-const serif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: "italic",
-  variable: "--font-instrument-serif",
+  variable: "--font-archivo",
   display: "swap",
 });
 
@@ -101,7 +93,7 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={cn(sans.variable, serif.variable, mono.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn(sans.variable, mono.variable)} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: headScript }} />
         <script
